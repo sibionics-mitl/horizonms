@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.engine &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.losses" href="horizonms.losses.html" />
+    <link rel="prev" title="horizonms.datasets" href="horizonms.datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">horizonms.engine</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.base">horizonms.engine.base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.base.CheckpointMetric"><code class="docutils literal notranslate"><span class="pre">CheckpointMetric</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.early_stop">horizonms.engine.early_stop</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.early_stop.EarlyStopping"><code class="docutils literal notranslate"><span class="pre">EarlyStopping</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.ema">horizonms.engine.ema</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.ema.EMA"><code class="docutils literal notranslate"><span class="pre">EMA</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.lr_finder">horizonms.engine.lr_finder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.lr_finder.PYTORCH_VERSION"><code class="docutils literal notranslate"><span class="pre">PYTORCH_VERSION</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.lr_finder.LRFinder"><code class="docutils literal notranslate"><span class="pre">LRFinder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.lr_finder.LinearLR"><code class="docutils literal notranslate"><span class="pre">LinearLR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.lr_finder.ExponentialLR"><code class="docutils literal notranslate"><span class="pre">ExponentialLR</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.lr_finder.StateCacher"><code class="docutils literal notranslate"><span class="pre">StateCacher</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#horizonms-engine-optimizer">horizonms.engine.optimizer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.trainer">horizonms.engine.trainer</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.trainer.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.trainer.save_checkpoints_update"><code class="docutils literal notranslate"><span class="pre">save_checkpoints_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.trainer.summary_update"><code class="docutils literal notranslate"><span class="pre">summary_update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.engine.utils">horizonms.engine.utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.SmoothedValue"><code class="docutils literal notranslate"><span class="pre">SmoothedValue</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.all_gather"><code class="docutils literal notranslate"><span class="pre">all_gather()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.reduce_dict"><code class="docutils literal notranslate"><span class="pre">reduce_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.MetricLogger"><code class="docutils literal notranslate"><span class="pre">MetricLogger</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.collate_fn"><code class="docutils literal notranslate"><span class="pre">collate_fn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.warmup_lr_scheduler"><code class="docutils literal notranslate"><span class="pre">warmup_lr_scheduler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.mkdir"><code class="docutils literal notranslate"><span class="pre">mkdir()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.setup_for_distributed"><code class="docutils literal notranslate"><span class="pre">setup_for_distributed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.is_dist_avail_and_initialized"><code class="docutils literal notranslate"><span class="pre">is_dist_avail_and_initialized()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.get_world_size"><code class="docutils literal notranslate"><span class="pre">get_world_size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.get_rank"><code class="docutils literal notranslate"><span class="pre">get_rank()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.is_main_process"><code class="docutils literal notranslate"><span class="pre">is_main_process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.save_on_master"><code class="docutils literal notranslate"><span class="pre">save_on_master()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.init_distributed_mode"><code class="docutils literal notranslate"><span class="pre">init_distributed_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.engine.utils.init_distributed_mode_wj"><code class="docutils literal notranslate"><span class="pre">init_distributed_mode_wj()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.html">horizonms.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+      <li class="breadcrumb-item active">horizonms.engine</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.engine.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-engine">
+<h1>horizonms.engine<a class="headerlink" href="#horizonms-engine" title="Link to this heading"></a></h1>
+<section id="module-horizonms.engine.base">
+<span id="horizonms-engine-base"></span><h2>horizonms.engine.base<a class="headerlink" href="#module-horizonms.engine.base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.base.CheckpointMetric">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.base.</span></span><span class="sig-name descname"><span class="pre">CheckpointMetric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/base.html#CheckpointMetric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.base.CheckpointMetric" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.base.CheckpointMetric.value_update">
+<span class="sig-name descname"><span class="pre">value_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/base.html#CheckpointMetric.value_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.base.CheckpointMetric.value_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.engine.early_stop">
+<span id="horizonms-engine-early-stop"></span><h2>horizonms.engine.early_stop<a class="headerlink" href="#module-horizonms.engine.early_stop" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.early_stop.EarlyStopping">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.early_stop.</span></span><span class="sig-name descname"><span class="pre">EarlyStopping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'min'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/early_stop.html#EarlyStopping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.early_stop.EarlyStopping" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.early_stop.EarlyStopping.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/early_stop.html#EarlyStopping.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.early_stop.EarlyStopping.step" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.engine.ema">
+<span id="horizonms-engine-ema"></span><h2>horizonms.engine.ema<a class="headerlink" href="#module-horizonms.engine.ema" title="Link to this heading"></a></h2>
+<p>Pytorch EMA</p>
+<p>Implementation class for Exponential Moving Averages(EMA).</p>
+<p>Based on Tensorflow Implementation:
+<a class="reference external" href="https://github.com/tensorflow/tensorflow/blob/v2.5.0/tensorflow/python/training/moving_averages.py">https://github.com/tensorflow/tensorflow/blob/v2.5.0/tensorflow/python/training/moving_averages.py</a></p>
+<p>Codes from <a class="reference external" href="https://github.com/nachiket273/pytorch_resnet_rs">https://github.com/nachiket273/pytorch_resnet_rs</a></p>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.ema.</span></span><span class="sig-name descname"><span class="pre">EMA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Parameter</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decay_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_updates</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Implementation of Exponential Moving Averages(EMA) for model parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> – model parameters.
+Iterable(torch.nn.Parameter)</p></li>
+<li><p><strong>decay_rate</strong> – decay rate for moving average.
+Value is between 0. and 1.0</p></li>
+<li><p><strong>num_updates</strong> – Number of updates to adjust decay_rate.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Parameter</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.update" title="Link to this definition"></a></dt>
+<dd><p>Update the EMA of parametes with current decay rate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.store">
+<span class="sig-name descname"><span class="pre">store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Parameter</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.store" title="Link to this definition"></a></dt>
+<dd><p>Save the model parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Parameter</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.copy" title="Link to this definition"></a></dt>
+<dd><p>Copy the EMA parmeters to model parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.copy_back">
+<span class="sig-name descname"><span class="pre">copy_back</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">Parameter</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.copy_back"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.copy_back" title="Link to this definition"></a></dt>
+<dd><p>Copy the saved parameters to model parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.to">
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.to" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.state_dict">
+<span class="sig-name descname"><span class="pre">state_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.state_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.ema.EMA.load_state_dict">
+<span class="sig-name descname"><span class="pre">load_state_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/engine/ema.html#EMA.load_state_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.ema.EMA.load_state_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.engine.lr_finder">
+<span id="horizonms-engine-lr-finder"></span><h2>horizonms.engine.lr_finder<a class="headerlink" href="#module-horizonms.engine.lr_finder" title="Link to this heading"></a></h2>
+<dl class="py data">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.PYTORCH_VERSION">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.lr_finder.</span></span><span class="sig-name descname"><span class="pre">PYTORCH_VERSION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;Version('1.12.1')&gt;</span></em><a class="headerlink" href="#horizonms.engine.lr_finder.PYTORCH_VERSION" title="Link to this definition"></a></dt>
+<dd><p>//github.com/davidtvs/pytorch-lr-finder</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>codes from</p>
+</dd>
+<dt class="field-even">Type<span class="colon">:</span></dt>
+<dd class="field-even"><p>https</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.LRFinder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.lr_finder.</span></span><span class="sig-name descname"><span class="pre">LRFinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#LRFinder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.LRFinder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Learning rate range test.</p>
+<p>The learning rate range test increases the learning rate in a pre-training run
+between two boundaries in a linear or exponential manner. It provides valuable
+information on how well the network can be trained over a range of learning rates
+and what is the optimal learning rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>torch.nn.Module</em>) – wrapped model.</p></li>
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – wrapped optimizer where the defined learning
+is assumed to be the lower boundary of the range test.</p></li>
+<li><p><strong>criterion</strong> (<em>torch.nn.Module</em>) – wrapped loss function.</p></li>
+<li><p><strong>device</strong> (<em>str</em><em> or </em><em>torch.device</em><em>, </em><em>optional</em>) – a string (“cpu” or “cuda”) with an
+optional ordinal for the device type (e.g. “cuda:X”, where is the ordinal).
+Alternatively, can be an object representing the device on which the
+computation will take place. Default: None, uses the same device as <cite>model</cite>.</p></li>
+<li><p><strong>memory_cache</strong> (<em>boolean</em><em>, </em><em>optional</em>) – if this flag is set to True, <cite>state_dict</cite> of
+model and optimizer will be cached in memory. Otherwise, they will be saved
+to files under the <cite>cache_dir</cite>.</p></li>
+<li><p><strong>cache_dir</strong> (<em>string</em><em>, </em><em>optional</em>) – path for storing temporary files. If no path is
+specified, system-wide temporary directory is used. Notice that this
+parameter will be ignored if <cite>memory_cache</cite> is True.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span> <span class="o">=</span> <span class="n">LRFinder</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span> <span class="c1"># to inspect the loss-learning rate graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span> <span class="c1"># to reset the model and optimizer to their initial state</span>
+</pre></div>
+</div>
+<p>Reference:
+Cyclical Learning Rates for Training Neural Networks: <a class="reference external" href="https://arxiv.org/abs/1506.01186">https://arxiv.org/abs/1506.01186</a>
+fastai/lr_find: <a class="reference external" href="https://github.com/fastai/fastai">https://github.com/fastai/fastai</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.LRFinder.range_test">
+<span class="sig-name descname"><span class="pre">range_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'exp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diverge_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_blocking_transfer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#LRFinder.range_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.LRFinder.range_test" title="Link to this definition"></a></dt>
+<dd><p>Performs the learning rate range test.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>torch.utils.data.DataLoader</strong> (<em>val_loader</em>) – or child of <cite>TrainDataLoaderIter</cite>, optional):
+the training set data loader.
+If your dataset (data loader) returns a tuple (inputs, labels,*) then
+Pytorch data loader object can be provided. However, if a dataset
+returns different outputs e.g. dicts, then you should inherit
+from <cite>TrainDataLoaderIter</cite> class and redefine <cite>inputs_labels_from_batch</cite>
+method so that it outputs (inputs, labels).</p></li>
+<li><p><strong>(</strong><strong>torch.utils.data.DataLoader</strong> – or child of <cite>ValidDataLoaderIter</cite>, optional): if <cite>None</cite> the range test
+will only use the training loss. When given a data loader, the model is
+evaluated after each iteration on that dataset and the evaluation loss
+is used. Note that in this mode the test takes significantly longer but
+generally produces more precise results.
+Similarly to <cite>train_loader</cite>, if your dataset outputs are not standard
+you should inherit from <cite>ValidDataLoaderIter</cite> class and
+redefine method <cite>inputs_labels_from_batch</cite> so that
+it outputs (inputs, labels). Default: None.</p></li>
+<li><p><strong>start_lr</strong> (<em>float</em><em>, </em><em>optional</em>) – the starting learning rate for the range test.
+Default: None (uses the learning rate from the optimizer).</p></li>
+<li><p><strong>end_lr</strong> (<em>float</em><em>, </em><em>optional</em>) – the maximum learning rate to test. Default: 10.</p></li>
+<li><p><strong>num_iter</strong> (<em>int</em><em>, </em><em>optional</em>) – the number of iterations over which the test
+occurs. Default: 100.</p></li>
+<li><p><strong>step_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – one of the available learning rate policies,
+linear or exponential (“linear”, “exp”). Default: “exp”.</p></li>
+<li><p><strong>smooth_f</strong> (<em>float</em><em>, </em><em>optional</em>) – the loss smoothing factor within the [0, 1]
+interval. Disabled if set to 0, otherwise the loss is smoothed using
+exponential smoothing. Default: 0.05.</p></li>
+<li><p><strong>diverge_th</strong> (<em>int</em><em>, </em><em>optional</em>) – the test is stopped when the loss surpasses the
+threshold:  diverge_th * best_loss. Default: 5.</p></li>
+<li><p><strong>accumulation_steps</strong> (<em>int</em><em>, </em><em>optional</em>) – steps for gradient accumulation. If it
+is 1, gradients are not accumulated. Default: 1.</p></li>
+<li><p><strong>non_blocking_transfer</strong> (<em>bool</em><em>, </em><em>optional</em>) – when non_blocking_transfer is set,
+tries to convert/move data to the device asynchronously if possible,
+e.g., moving CPU Tensors with pinned memory to CUDA devices. Default: True.</p></li>
+</ul>
+</dd>
+</dl>
+<dl>
+<dt>Example (fastai approach):</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span> <span class="o">=</span> <span class="n">LRFinder</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Example (Leslie Smith’s approach):</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span> <span class="o">=</span> <span class="n">LRFinder</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">lr_finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="n">val_loader</span><span class="o">=</span><span class="n">val_loader</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">step_mode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+<dt>Gradient accumulation is supported; example:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">train_data</span> <span class="o">=</span> <span class="o">...</span>    <span class="c1"># prepared dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">desired_bs</span><span class="p">,</span> <span class="n">real_bs</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">4</span>         <span class="c1"># batch size</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">accumulation_steps</span> <span class="o">=</span> <span class="n">desired_bs</span> <span class="o">//</span> <span class="n">real_bs</span>     <span class="c1"># required steps for accumulation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">dataloader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">train_data</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">real_bs</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acc_lr_finder</span> <span class="o">=</span> <span class="n">LRFinder</span><span class="p">(</span><span class="n">net</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">criterion</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">acc_lr_finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">accumulation_steps</span><span class="o">=</span><span class="n">accumulation_steps</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<p>If your DataLoader returns e.g. dict, or other non standard output, intehit from TrainDataLoaderIter,
+redefine method <cite>inputs_labels_from_batch</cite> so that it outputs (inputs, lables) data:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">torch_lr_finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">TrainIter</span><span class="p">(</span><span class="n">torch_lr_finder</span><span class="o">.</span><span class="n">TrainDataLoaderIter</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="nf">inputs_labels_from_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_data</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="k">return</span> <span class="p">(</span><span class="n">batch_data</span><span class="p">[</span><span class="s1">&#39;user_features&#39;</span><span class="p">],</span> <span class="n">batch_data</span><span class="p">[</span><span class="s1">&#39;user_history&#39;</span><span class="p">]),</span> <span class="n">batch_data</span><span class="p">[</span><span class="s1">&#39;y_labels&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">train_data_iter</span> <span class="o">=</span> <span class="n">TrainIter</span><span class="p">(</span><span class="n">train_dl</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finder</span> <span class="o">=</span> <span class="n">torch_lr_finder</span><span class="o">.</span><span class="n">LRFinder</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">_train_loss</span><span class="p">,</span> <span class="n">need_one_hot</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">train_data_iter</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">diverge_th</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Reference:
+[Training Neural Nets on Larger Batches: Practical Tips for 1-GPU, Multi-GPU &amp; Distributed setups](
+<a class="reference external" href="https://medium.com/huggingface/ec88c3e51255">https://medium.com/huggingface/ec88c3e51255</a>)
+[thomwolf/gradient_accumulation](<a class="reference external" href="https://gist.github.com/thomwolf/ac7a7da6b1888c2eeac8ac8b9b05d3d3">https://gist.github.com/thomwolf/ac7a7da6b1888c2eeac8ac8b9b05d3d3</a>)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.LRFinder.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skip_start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_end</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suggest_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#LRFinder.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.LRFinder.plot" title="Link to this definition"></a></dt>
+<dd><p>Plots the learning rate range test.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>skip_start</strong> (<em>int</em><em>, </em><em>optional</em>) – number of batches to trim from the start.
+Default: 10.</p></li>
+<li><p><strong>skip_end</strong> (<em>int</em><em>, </em><em>optional</em>) – number of batches to trim from the start.
+Default: 5.</p></li>
+<li><p><strong>log_lr</strong> (<em>bool</em><em>, </em><em>optional</em>) – True to plot the learning rate in a logarithmic
+scale; otherwise, plotted in a linear scale. Default: True.</p></li>
+<li><p><strong>show_lr</strong> (<em>float</em><em>, </em><em>optional</em>) – if set, adds a vertical line to visualize the
+specified learning rate. Default: None.</p></li>
+<li><p><strong>ax</strong> (<em>matplotlib.axes.Axes</em><em>, </em><em>optional</em>) – the plot is created in the specified
+matplotlib axes object and the figure is not be shown. If <cite>None</cite>, then
+the figure and axes object are created in this method and the figure is
+shown . Default: None.</p></li>
+<li><p><strong>suggest_lr</strong> (<em>bool</em><em>, </em><em>optional</em>) – suggest a learning rate by
+- ‘steepest’: the point with steepest gradient (minimal gradient)
+you can use that point as a first guess for an LR. Default: True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The matplotlib.axes.Axes object that contains the plot,
+and the suggested learning rate (if set suggest_lr=True).</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.LinearLR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.lr_finder.</span></span><span class="sig-name descname"><span class="pre">LinearLR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_lr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#LinearLR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.LinearLR" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_LRScheduler</span></code></p>
+<p>Linearly increases the learning rate between two boundaries over a number of
+iterations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – wrapped optimizer.</p></li>
+<li><p><strong>end_lr</strong> (<em>float</em>) – the final learning rate.</p></li>
+<li><p><strong>num_iter</strong> (<em>int</em>) – the number of iterations over which the test occurs.</p></li>
+<li><p><strong>last_epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – the index of last epoch. Default: -1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.LinearLR.get_lr">
+<span class="sig-name descname"><span class="pre">get_lr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#LinearLR.get_lr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.LinearLR.get_lr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.ExponentialLR">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.lr_finder.</span></span><span class="sig-name descname"><span class="pre">ExponentialLR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_lr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#ExponentialLR"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.ExponentialLR" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_LRScheduler</span></code></p>
+<p>Exponentially increases the learning rate between two boundaries over a number of
+iterations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>optimizer</strong> (<em>torch.optim.Optimizer</em>) – wrapped optimizer.</p></li>
+<li><p><strong>end_lr</strong> (<em>float</em>) – the final learning rate.</p></li>
+<li><p><strong>num_iter</strong> (<em>int</em>) – the number of iterations over which the test occurs.</p></li>
+<li><p><strong>last_epoch</strong> (<em>int</em><em>, </em><em>optional</em>) – the index of last epoch. Default: -1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.ExponentialLR.get_lr">
+<span class="sig-name descname"><span class="pre">get_lr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#ExponentialLR.get_lr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.ExponentialLR.get_lr" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.StateCacher">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.lr_finder.</span></span><span class="sig-name descname"><span class="pre">StateCacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_memory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#StateCacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.StateCacher" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.StateCacher.store">
+<span class="sig-name descname"><span class="pre">store</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#StateCacher.store"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.StateCacher.store" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.lr_finder.StateCacher.retrieve">
+<span class="sig-name descname"><span class="pre">retrieve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/lr_finder.html#StateCacher.retrieve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.lr_finder.StateCacher.retrieve" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="horizonms-engine-optimizer">
+<h2>horizonms.engine.optimizer<a class="headerlink" href="#horizonms-engine-optimizer" title="Link to this heading"></a></h2>
+</section>
+<section id="module-horizonms.engine.trainer">
+<span id="horizonms-engine-trainer"></span><h2>horizonms.engine.trainer<a class="headerlink" href="#module-horizonms.engine.trainer" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'epoch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_metric</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_sampler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">80</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_blocking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_stop_patience</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.set_lr_scheduler">
+<span class="sig-name descname"><span class="pre">set_lr_scheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_metric</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.set_lr_scheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.set_lr_scheduler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.get_warmup_lr_scheduler">
+<span class="sig-name descname"><span class="pre">get_warmup_lr_scheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">warmup_epochs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.get_warmup_lr_scheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.get_warmup_lr_scheduler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.lr_finder">
+<span class="sig-name descname"><span class="pre">lr_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_f</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diverge_th</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accumulation_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.lr_finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.lr_finder" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sub_epoch=1,</span> <span class="pre">epoch_per_save=1,</span> <span class="pre">epoch_save_start=0,</span> <span class="pre">save_checkpoints=[&lt;horizonms.engine.base.CheckpointMetric</span> <span class="pre">object&gt;],</span> <span class="pre">clipnorm=0.001,</span> <span class="pre">print_freq=20</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.train_one_epoch">
+<span class="sig-name descname"><span class="pre">train_one_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clipnorm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.train_one_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.train_one_epoch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.Trainer.evaluate_one_epoch">
+<span class="sig-name descname"><span class="pre">evaluate_one_epoch</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#Trainer.evaluate_one_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.Trainer.evaluate_one_epoch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.save_checkpoints_update">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.trainer.</span></span><span class="sig-name descname"><span class="pre">save_checkpoints_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_metric_logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#save_checkpoints_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.save_checkpoints_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.trainer.summary_update">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.trainer.</span></span><span class="sig-name descname"><span class="pre">summary_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_save</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'epoch':</span> <span class="pre">[]}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_metric_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/trainer.html#summary_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.trainer.summary_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.engine.utils">
+<span id="horizonms-engine-utils"></span><h2>horizonms.engine.utils<a class="headerlink" href="#module-horizonms.engine.utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">SmoothedValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#SmoothedValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Track a series of values and provide access to smoothed values over a
+window or the global series average.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#SmoothedValue.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.synchronize_between_processes">
+<span class="sig-name descname"><span class="pre">synchronize_between_processes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#SmoothedValue.synchronize_between_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.synchronize_between_processes" title="Link to this definition"></a></dt>
+<dd><p>Warning: does not synchronize the deque!</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.median">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">median</span></span><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.median" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.avg">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">avg</span></span><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.avg" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.global_avg">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">global_avg</span></span><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.global_avg" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.max">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max</span></span><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.max" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.engine.utils.SmoothedValue.value">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#horizonms.engine.utils.SmoothedValue.value" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.all_gather">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">all_gather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#all_gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.all_gather" title="Link to this definition"></a></dt>
+<dd><p>Run all_gather on arbitrary picklable data (not necessarily tensors)
+:param data: any picklable object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of data gathered from each rank</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list[data]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.reduce_dict">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">reduce_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#reduce_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.reduce_dict" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dict</strong> (<em>dict</em>) – all the values will be reduced</p></li>
+<li><p><strong>average</strong> (<em>bool</em>) – whether to do average or sum</p></li>
+</ul>
+</dd>
+</dl>
+<p>Reduce the values in the dictionary from all processes so that all processes
+have the averaged results. Returns a dict with the same fields as
+input_dict, after reduction.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.engine.utils.MetricLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">MetricLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\t'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#MetricLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.MetricLogger" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.MetricLogger.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#MetricLogger.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.MetricLogger.update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.MetricLogger.synchronize_between_processes">
+<span class="sig-name descname"><span class="pre">synchronize_between_processes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#MetricLogger.synchronize_between_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.MetricLogger.synchronize_between_processes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.MetricLogger.add_meter">
+<span class="sig-name descname"><span class="pre">add_meter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#MetricLogger.add_meter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.MetricLogger.add_meter" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.engine.utils.MetricLogger.log_every">
+<span class="sig-name descname"><span class="pre">log_every</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#MetricLogger.log_every"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.MetricLogger.log_every" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.collate_fn">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.collate_fn" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.warmup_lr_scheduler">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">warmup_lr_scheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_iters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#warmup_lr_scheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.warmup_lr_scheduler" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.mkdir">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">mkdir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#mkdir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.mkdir" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.setup_for_distributed">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">setup_for_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_master</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#setup_for_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.setup_for_distributed" title="Link to this definition"></a></dt>
+<dd><p>This function disables printing when not in master process</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.is_dist_avail_and_initialized">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">is_dist_avail_and_initialized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#is_dist_avail_and_initialized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.is_dist_avail_and_initialized" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.get_world_size">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">get_world_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#get_world_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.get_world_size" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.get_rank">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">get_rank</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#get_rank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.get_rank" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.is_main_process">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">is_main_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#is_main_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.is_main_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.save_on_master">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">save_on_master</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#save_on_master"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.save_on_master" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.init_distributed_mode">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">init_distributed_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#init_distributed_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.init_distributed_mode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.engine.utils.init_distributed_mode_wj">
+<span class="sig-prename descclassname"><span class="pre">horizonms.engine.utils.</span></span><span class="sig-name descname"><span class="pre">init_distributed_mode_wj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/engine/utils.html#init_distributed_mode_wj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.engine.utils.init_distributed_mode_wj" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.datasets.html" class="btn btn-neutral float-left" title="horizonms.datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.losses.html" class="btn btn-neutral float-right" title="horizonms.losses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

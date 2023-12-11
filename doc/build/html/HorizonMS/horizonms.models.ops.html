@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.ops &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models.segmentation" href="horizonms.models.segmentation.html" />
+    <link rel="prev" title="horizonms.models.nets" href="horizonms.models.nets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="horizonms.models.html">horizonms.models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">horizonms.models.ops</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.ops.bn">horizonms.models.ops.bn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.ops.misc">horizonms.models.ops.misc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.ops.stochastic_depth">horizonms.models.ops.stochastic_depth</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.batch_image">horizonms.models.batch_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.model_base">horizonms.models.model_base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+          <li class="breadcrumb-item"><a href="horizonms.models.html">horizonms.models</a></li>
+      <li class="breadcrumb-item active">horizonms.models.ops</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.ops.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models-ops">
+<h1>horizonms.models.ops<a class="headerlink" href="#horizonms-models-ops" title="Link to this heading"></a></h1>
+<section id="module-horizonms.models.ops.bn">
+<span id="horizonms-models-ops-bn"></span><h2>horizonms.models.ops.bn<a class="headerlink" href="#module-horizonms.models.ops.bn" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.bn.</span></span><span class="sig-name descname"><span class="pre">BatchNormBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_running_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#BatchNormBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.num_features">
+<span class="sig-name descname"><span class="pre">num_features</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.num_features" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.eps">
+<span class="sig-name descname"><span class="pre">eps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.eps" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.momentum">
+<span class="sig-name descname"><span class="pre">momentum</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.momentum" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.affine">
+<span class="sig-name descname"><span class="pre">affine</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.affine" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.track_running_stats">
+<span class="sig-name descname"><span class="pre">track_running_stats</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.track_running_stats" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.reset_running_stats">
+<span class="sig-name descname"><span class="pre">reset_running_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#BatchNormBase.reset_running_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.reset_running_stats" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNormBase.reset_parameters">
+<span class="sig-name descname"><span class="pre">reset_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#BatchNormBase.reset_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.BatchNormBase.reset_parameters" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNorm2d">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.bn.</span></span><span class="sig-name descname"><span class="pre">BatchNorm2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_running_stats</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#BatchNorm2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.BatchNorm2d" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#horizonms.models.ops.bn.BatchNormBase" title="horizonms.models.ops.bn.BatchNormBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.BatchNorm2d.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#BatchNorm2d.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.BatchNorm2d.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.ExpectedBatchNorm2d">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.bn.</span></span><span class="sig-name descname"><span class="pre">ExpectedBatchNorm2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#ExpectedBatchNorm2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.ExpectedBatchNorm2d" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#horizonms.models.ops.bn.BatchNormBase" title="horizonms.models.ops.bn.BatchNormBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.ExpectedBatchNorm2d.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#ExpectedBatchNorm2d.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.ExpectedBatchNorm2d.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.SampleExpectedBatchNorm2d">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.bn.</span></span><span class="sig-name descname"><span class="pre">SampleExpectedBatchNorm2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#SampleExpectedBatchNorm2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.SampleExpectedBatchNorm2d" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#horizonms.models.ops.bn.BatchNormBase" title="horizonms.models.ops.bn.BatchNormBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.SampleExpectedBatchNorm2d.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#SampleExpectedBatchNorm2d.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.SampleExpectedBatchNorm2d.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.SampleGExpectedBatchNorm2d">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.bn.</span></span><span class="sig-name descname"><span class="pre">SampleGExpectedBatchNorm2d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affine</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_momentum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#SampleGExpectedBatchNorm2d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.SampleGExpectedBatchNorm2d" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#horizonms.models.ops.bn.BatchNormBase" title="horizonms.models.ops.bn.BatchNormBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BatchNormBase</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.bn.SampleGExpectedBatchNorm2d.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/bn.html#SampleGExpectedBatchNorm2d.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.bn.SampleGExpectedBatchNorm2d.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.ops.misc">
+<span id="horizonms-models-ops-misc"></span><h2>horizonms.models.ops.misc<a class="headerlink" href="#module-horizonms.models.ops.misc" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.misc.PseudomaxPooling2D">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.misc.</span></span><span class="sig-name descname"><span class="pre">PseudomaxPooling2D</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'alpha-softmax'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/misc.html#PseudomaxPooling2D"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.misc.PseudomaxPooling2D" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.misc.PseudomaxPooling2D.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/misc.html#PseudomaxPooling2D.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.misc.PseudomaxPooling2D.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.misc.ConvNormActivation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.misc.</span></span><span class="sig-name descname"><span class="pre">ConvNormActivation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">in_channels:</span> <span class="pre">int,</span> <span class="pre">out_channels:</span> <span class="pre">int,</span> <span class="pre">kernel_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">3,</span> <span class="pre">stride:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">padding:</span> <span class="pre">int</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">None,</span> <span class="pre">groups:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">norm_layer:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~torch.nn.modules.module.Module]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.batchnorm.BatchNorm2d'&gt;,</span> <span class="pre">activation_layer:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~torch.nn.modules.module.Module]</span> <span class="pre">|</span> <span class="pre">None</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.activation.ReLU'&gt;,</span> <span class="pre">dilation:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">1,</span> <span class="pre">inplace:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True,</span> <span class="pre">named:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/misc.html#ConvNormActivation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.misc.ConvNormActivation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Sequential</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.misc.SqueezeExcitation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.misc.</span></span><span class="sig-name descname"><span class="pre">SqueezeExcitation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">input_channels:</span> <span class="pre">int,</span> <span class="pre">squeeze_channels:</span> <span class="pre">int,</span> <span class="pre">activation:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~torch.nn.modules.module.Module]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.activation.ReLU'&gt;,</span> <span class="pre">scale_activation:</span> <span class="pre">~typing.Callable[[...],</span> <span class="pre">~torch.nn.modules.module.Module]</span> <span class="pre">=</span> <span class="pre">&lt;class</span> <span class="pre">'torch.nn.modules.activation.Sigmoid'&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/misc.html#SqueezeExcitation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.misc.SqueezeExcitation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.misc.SqueezeExcitation.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/misc.html#SqueezeExcitation.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.misc.SqueezeExcitation.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.ops.stochastic_depth">
+<span id="horizonms-models-ops-stochastic-depth"></span><h2>horizonms.models.ops.stochastic_depth<a class="headerlink" href="#module-horizonms.models.ops.stochastic_depth" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.ops.stochastic_depth.stochastic_depth">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.stochastic_depth.</span></span><span class="sig-name descname"><span class="pre">stochastic_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/stochastic_depth.html#stochastic_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.stochastic_depth.stochastic_depth" title="Link to this definition"></a></dt>
+<dd><p>Implements the Stochastic Depth from <a class="reference external" href="https://arxiv.org/abs/1603.09382">“Deep Networks with Stochastic Depth”</a> used for randomly dropping residual
+branches of residual architectures.
+:param input: The input tensor or arbitrary dimensions with the first one</p>
+<blockquote>
+<div><p>being its batch i.e. a batch with <code class="docutils literal notranslate"><span class="pre">N</span></code> rows.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>float</em>) – probability of the input to be zeroed.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;batch&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;row&quot;</span></code>.
+<code class="docutils literal notranslate"><span class="pre">&quot;batch&quot;</span></code> randomly zeroes the entire input, <code class="docutils literal notranslate"><span class="pre">&quot;row&quot;</span></code> zeroes
+randomly selected rows from the batch.</p></li>
+<li><p><strong>training</strong> – apply stochastic depth if is <code class="docutils literal notranslate"><span class="pre">True</span></code>. Default: <code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The randomly zeroed tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor[N, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.ops.stochastic_depth.StochasticDepth">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.ops.stochastic_depth.</span></span><span class="sig-name descname"><span class="pre">StochasticDepth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/ops/stochastic_depth.html#StochasticDepth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.stochastic_depth.StochasticDepth" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>See <a class="reference internal" href="#horizonms.models.ops.stochastic_depth.stochastic_depth" title="horizonms.models.ops.stochastic_depth.stochastic_depth"><code class="xref py py-func docutils literal notranslate"><span class="pre">stochastic_depth()</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.ops.stochastic_depth.StochasticDepth.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/ops/stochastic_depth.html#StochasticDepth.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.ops.stochastic_depth.StochasticDepth.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.models.nets.html" class="btn btn-neutral float-left" title="horizonms.models.nets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.segmentation.html" class="btn btn-neutral float-right" title="horizonms.models.segmentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

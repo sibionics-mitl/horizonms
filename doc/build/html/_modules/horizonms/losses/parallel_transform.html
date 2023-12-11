@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.losses.parallel_transform &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.losses.parallel_transform</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.losses.parallel_transform</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">torch.jit.annotations</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">functional_tensor</span>
+
+
+<span class="n">torch</span><span class="o">.</span><span class="n">pi</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">acos</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">2</span>
+
+
+<span class="k">def</span> <span class="nf">_get_inverse_affine_matrix</span><span class="p">(</span>
+        <span class="n">center</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">translate</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">shear</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]:</span>
+    <span class="c1"># Helper method to compute inverse matrix for affine transformation</span>
+
+    <span class="c1"># As it is explained in PIL.Image.rotate</span>
+    <span class="c1"># We need compute INVERSE of affine transformation matrix: M = T * C * RSS * C^-1</span>
+    <span class="c1"># where T is translation matrix: [1, 0, tx | 0, 1, ty | 0, 0, 1]</span>
+    <span class="c1">#       C is translation matrix to keep center: [1, 0, cx | 0, 1, cy | 0, 0, 1]</span>
+    <span class="c1">#       RSS is rotation with scale and shear matrix</span>
+    <span class="c1">#       RSS(a, s, (sx, sy)) =</span>
+    <span class="c1">#       = R(a) * S(s) * SHy(sy) * SHx(sx)</span>
+    <span class="c1">#       = [ s*cos(a - sy)/cos(sy), s*(-cos(a - sy)*tan(x)/cos(y) - sin(a)), 0 ]</span>
+    <span class="c1">#         [ s*sin(a + sy)/cos(sy), s*(-sin(a - sy)*tan(x)/cos(y) + cos(a)), 0 ]</span>
+    <span class="c1">#         [ 0                    , 0                                      , 1 ]</span>
+    <span class="c1">#</span>
+    <span class="c1"># where R is a rotation matrix, S is a scaling matrix, and SHx and SHy are the shears:</span>
+    <span class="c1"># SHx(s) = [1, -tan(s)] and SHy(s) = [1      , 0]</span>
+    <span class="c1">#          [0, 1      ]              [-tan(s), 1]</span>
+    <span class="c1">#</span>
+    <span class="c1"># Thus, the inverse is M^-1 = C * RSS^-1 * C^-1 * T^-1</span>
+
+    <span class="n">rot</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="n">sx</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">shear</span><span class="p">]</span>
+
+    <span class="n">cx</span><span class="p">,</span> <span class="n">cy</span> <span class="o">=</span> <span class="n">center</span>
+    <span class="n">tx</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="n">translate</span>
+
+    <span class="c1"># RSS without scaling</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot</span> <span class="o">-</span> <span class="n">sy</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot</span> <span class="o">-</span> <span class="n">sy</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">sx</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot</span> <span class="o">-</span> <span class="n">sy</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">rot</span> <span class="o">-</span> <span class="n">sy</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">sx</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">sy</span><span class="p">)</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">rot</span><span class="p">)</span>
+
+    <span class="c1"># Inverted rotation matrix with scale and shear</span>
+    <span class="c1"># det([[a, b], [c, d]]) == 1, since det(rotation) = 1 and det(shear) = 1</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">c</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">/</span> <span class="n">scale</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">matrix</span><span class="p">]</span>
+
+    <span class="c1"># Apply inverse of translation and of center translation: RSS^-1 * C^-1 * T^-1</span>
+    <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">cx</span> <span class="o">-</span> <span class="n">tx</span><span class="p">)</span> <span class="o">+</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">cy</span> <span class="o">-</span> <span class="n">ty</span><span class="p">)</span>
+    <span class="n">matrix</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">cx</span> <span class="o">-</span> <span class="n">tx</span><span class="p">)</span> <span class="o">+</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="n">cy</span> <span class="o">-</span> <span class="n">ty</span><span class="p">)</span>
+
+    <span class="c1"># Apply center translation: C * RSS^-1 * C^-1 * T^-1</span>
+    <span class="n">matrix</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cx</span>
+    <span class="n">matrix</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">+=</span> <span class="n">cy</span>
+
+    <span class="k">return</span> <span class="n">matrix</span>
+
+
+<div class="viewcode-block" id="rotate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.parallel_transform.rotate">[docs]</a>
+<span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span>
+        <span class="n">img</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">resample</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">expand</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">center</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">fill</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Rotate the image by angle.</span>
+<span class="sd">    The image can be a PIL Image or a Tensor, in which case it is expected</span>
+<span class="sd">    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        img (PIL Image or Tensor): image to be rotated.</span>
+<span class="sd">        angle (float or int): rotation angle value in degrees, counter-clockwise.</span>
+<span class="sd">        resample (``PIL.Image.NEAREST`` or ``PIL.Image.BILINEAR`` or ``PIL.Image.BICUBIC``, optional):</span>
+<span class="sd">            An optional resampling filter. See `filters`_ for more information.</span>
+<span class="sd">            If omitted, or if the image has mode &quot;1&quot; or &quot;P&quot;, it is set to ``PIL.Image.NEAREST``.</span>
+<span class="sd">        expand (bool, optional): Optional expansion flag.</span>
+<span class="sd">            If true, expands the output image to make it large enough to hold the entire rotated image.</span>
+<span class="sd">            If false or omitted, make the output image the same size as the input image.</span>
+<span class="sd">            Note that the expand flag assumes rotation around the center and no translation.</span>
+<span class="sd">        center (list or tuple, optional): Optional center of rotation. Origin is the upper left corner.</span>
+<span class="sd">            Default is the center of the image.</span>
+<span class="sd">        fill (n-tuple or int or float): Pixel fill value for area outside the rotated</span>
+<span class="sd">            image. If int or float, the value is used for all bands respectively.</span>
+<span class="sd">            Defaults to 0 for all bands. This option is only available for ``pillow&gt;=5.2.0``.</span>
+<span class="sd">            This option is not supported for Tensor input. Fill value for the area outside the transform in the output</span>
+<span class="sd">            image is always 0.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        PIL Image or Tensor: Rotated image.</span>
+
+<span class="sd">    .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument angle should be int or float&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument center should be a sequence&quot;</span><span class="p">)</span>
+
+    <span class="n">center_f</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">img_size</span> <span class="o">=</span> <span class="n">functional_tensor</span><span class="o">.</span><span class="n">_get_image_size</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="c1"># Center values should be in pixel coordinates but translated such that (0, 0) corresponds to image center.</span>
+        <span class="n">center_f</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">c</span> <span class="o">-</span> <span class="n">s</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">img_size</span><span class="p">)]</span>
+
+    <span class="c1"># due to current incoherence of rotation angle direction between affine and rotate implementations</span>
+    <span class="c1"># we need to set -angle.</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">_get_inverse_affine_matrix</span><span class="p">(</span><span class="n">center_f</span><span class="p">,</span> <span class="o">-</span><span class="n">angle</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">functional_tensor</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">matrix</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="n">resample</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="n">expand</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="n">fill</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parallel_transform">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.parallel_transform.parallel_transform">[docs]</a>
+<span class="k">def</span> <span class="nf">parallel_transform</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">box_height</span><span class="p">,</span> <span class="n">box_width</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">is_mask</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span><span class="o">&gt;</span><span class="n">epsilon</span><span class="p">:</span>
+        <span class="n">image_rot</span> <span class="o">=</span> <span class="n">rotate</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">resample</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">image_rot</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">is_mask</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="o">/</span><span class="mf">180.</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+        <span class="n">rot_h</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">box_height</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span>
+        <span class="n">rot_w</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">box_width</span><span class="o">*</span><span class="n">scale</span><span class="p">)</span>
+        <span class="c1"># print(&#39;**********&#39;,angle,scale,rot_h,rot_w)</span>
+        <span class="c1"># print(torch.sum(image_rot&gt;=0.5,dim=(0,1)))</span>
+        <span class="c1"># print(torch.sum(image_rot&gt;=0.5,dim=(0,2)))</span>
+        
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image_rot</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span><span class="o">&lt;</span><span class="n">rot_h</span><span class="o">-</span><span class="mf">0.5</span>
+        <span class="n">rot0</span> <span class="o">=</span> <span class="n">image_rot</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">rot0</span><span class="p">[:,:,</span><span class="n">flag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image_rot</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span><span class="o">&lt;</span><span class="n">rot_w</span><span class="o">-</span><span class="mf">0.5</span>
+        <span class="n">rot1</span> <span class="o">=</span> <span class="n">image_rot</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="n">rot1</span><span class="p">[:,</span><span class="n">flag</span><span class="p">,:]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">rot0</span><span class="p">,</span> <span class="n">rot1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image_rot</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

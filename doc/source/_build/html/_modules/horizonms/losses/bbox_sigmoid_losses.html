@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.losses.bbox_sigmoid_losses &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.losses.bbox_sigmoid_losses</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.losses.bbox_sigmoid_losses</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.bbox_sigmoid_func</span> <span class="kn">import</span> <span class="n">mil_unary_baseline_sigmoid_loss</span><span class="p">,</span>\
+    <span class="n">mil_approx_unary_baseline_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_unary_baseline_pos_generalized_neg_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_approx_unary_baseline_pos_generalized_neg_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_unary_parallel_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_approx_unary_parallel_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_approx_polar_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_unary_bbox_pos_generalized_neg_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_approx_unary_bbox_pos_generalized_neg_sigmoid_loss</span><span class="p">,</span> \
+    <span class="n">mil_pairwise_loss</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">LOSSES</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;MILUnaryBaselineSigmoidLoss&quot;</span><span class="p">,</span> <span class="s2">&quot;MILApproxUnaryBaselineSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILUnaryBaselinePosGeneralizedNegSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILUnaryParallelSigmoidLoss&quot;</span><span class="p">,</span> <span class="s2">&quot;MILApproxUnaryParallelSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILApproxUnaryPolarSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILUnaryBboxPosGeneralizedNegSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;MILPairwiseLoss&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MILUnaryBaselineSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILUnaryBaselineSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILUnaryBaselineSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil baseline unary loss. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;ce_all&#39;</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILUnaryBaselineSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_unary_baseline_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILApproxUnaryBaselineSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILApproxUnaryBaselineSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILApproxUnaryBaselineSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil baseline unary loss while applying smooth maximum function. </span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        approx_method (str): name of smooth maximum function. It is `&#39;softmax&#39;` or `&#39;quasimax&#39;`.</span>
+<span class="sd">        approx_alpha (float): parameter of smooth maximum function.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;ce_all&#39;</span><span class="p">,</span> <span class="n">approx_method</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILApproxUnaryBaselineSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span> <span class="o">=</span> <span class="n">approx_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span> <span class="o">=</span> <span class="n">approx_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_approx_unary_baseline_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span>
+            <span class="n">approx_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span><span class="p">,</span> 
+            <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILUnaryBaselinePosGeneralizedNegSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILUnaryBaselinePosGeneralizedNegSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILUnaryBaselinePosGeneralizedNegSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil baseline unary loss, in which the generalized negative bag is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;ce_all&#39;</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILUnaryBaselinePosGeneralizedNegSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_unary_baseline_pos_generalized_neg_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span>
+            <span class="n">gt_boxes_xxyy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil baseline unary loss while applying smooth maximum function,</span>
+<span class="sd">        in which the generalized negative bag is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        approx_method (str): name of smooth maximum function. It is `&#39;softmax&#39;` or `&#39;quasimax&#39;`.</span>
+<span class="sd">        approx_alpha (float): parameter of smooth maximum function.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;ce_all&#39;</span><span class="p">,</span> <span class="n">approx_method</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span> <span class="o">=</span> <span class="n">approx_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span> <span class="o">=</span> <span class="n">approx_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_approx_unary_baseline_pos_generalized_neg_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> 
+            <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">approx_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span><span class="p">,</span> 
+            <span class="n">approx_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> 
+            <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILUnaryParallelSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILUnaryParallelSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILUnaryParallelSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil generalized unary loss while no smooth maximum function is applied.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        angle_params (tuple): degree of parallel crossing lines in the format of (start, stop, step).</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">angle_params</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span><span class="mi">61</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span> 
+                <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILUnaryParallelSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angle_params</span> <span class="o">=</span> <span class="n">angle_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_unary_parallel_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">angle_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">angle_params</span><span class="p">,</span>
+            <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILApproxUnaryParallelSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILApproxUnaryParallelSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILApproxUnaryParallelSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil generalized unary loss.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        angle_params (tuple): degree of parallel crossing lines in the format of (start, stop, step).</span>
+<span class="sd">        approx_method (str): name of smooth maximum function. It is `&#39;softmax&#39;` or `&#39;quasimax&#39;`.</span>
+<span class="sd">        approx_alpha (float): parameter of smooth maximum function.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;focal&#39;</span><span class="p">,</span> <span class="n">angle_params</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">60</span><span class="p">,</span><span class="mi">61</span><span class="p">,</span><span class="mi">30</span><span class="p">),</span> 
+                <span class="n">approx_method</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILApproxUnaryParallelSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">angle_params</span> <span class="o">=</span> <span class="n">angle_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span> <span class="o">=</span> <span class="n">approx_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span> <span class="o">=</span> <span class="n">approx_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_approx_unary_parallel_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">angle_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">angle_params</span><span class="p">,</span>
+            <span class="n">approx_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span><span class="p">,</span>
+            <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILApproxUnaryPolarSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILApproxUnaryPolarSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILApproxUnaryPolarSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil unary loss based on polar transformation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        weight_min (float): minimum weight of the samples in a polar line.</span>
+<span class="sd">        center_mode (str): center of the polar transformation. It is `&#39;fixed&#39;` or `&#39;estimated&#39;`.</span>
+<span class="sd">        approx_method (str): name of smooth maximum function. It is `&#39;softmax&#39;` or `&#39;quasimax&#39;`.</span>
+<span class="sd">        approx_alpha (float): parameter of smooth maximum function.</span>
+<span class="sd">        pt_params (Dict): parameters of polar transformation. Keys in the dictionary are `&#39;output_shape&#39;` and `&#39;scaling&#39;`.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2022. Polar Transformation Based Multiple Instance </span>
+<span class="sd">        Learning Assisting Weakly Supervised Image Segmentation With Loose </span>
+<span class="sd">        Bounding Box Annotations. arXiv preprint arXiv:2203.06000.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;focal&#39;</span><span class="p">,</span> <span class="n">weight_min</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">center_mode</span><span class="o">=</span><span class="s1">&#39;fixed&#39;</span><span class="p">,</span> 
+        <span class="n">approx_method</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+        <span class="n">pt_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;output_shape&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">90</span><span class="p">,</span> <span class="mi">30</span><span class="p">],</span> <span class="s2">&quot;scaling&quot;</span><span class="p">:</span> <span class="s2">&quot;linear&quot;</span><span class="p">},</span>
+        <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILApproxUnaryPolarSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_min</span> <span class="o">=</span> <span class="n">weight_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">center_mode</span> <span class="o">=</span> <span class="n">center_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span> <span class="o">=</span> <span class="n">approx_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span> <span class="o">=</span> <span class="n">approx_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pt_params</span> <span class="o">=</span> <span class="n">pt_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_approx_polar_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_cr</span><span class="p">,</span> 
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> <span class="n">weight_min</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_min</span><span class="p">,</span> <span class="n">center_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">center_mode</span><span class="p">,</span> 
+                <span class="n">approx_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span><span class="p">,</span>
+                <span class="n">pt_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pt_params</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span>
+                <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+
+<div class="viewcode-block" id="MILUnaryBboxPosGeneralizedNegSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILUnaryBboxPosGeneralizedNegSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILUnaryBboxPosGeneralizedNegSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil unary loss. A positive bag is defined as all pixels in a bounding box;</span>
+<span class="sd">        generalized negative bag is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;focal&#39;</span><span class="p">,</span> <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILUnaryBboxPosGeneralizedNegSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_unary_bbox_pos_generalized_neg_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> 
+            <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> 
+            <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the mil unary loss. A positive bag is defined as all pixels in a bounding box;</span>
+<span class="sd">        generalized negative bag is used.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        loss_mode (str): type of loss. It is `&#39;ce_all&#39;` for cross entropy loss for all samples, </span>
+<span class="sd">            `&#39;ce_balance&#39;` for cross entropy loss for positive and negative classes , or `&#39;focal&#39;` for focal loss.</span>
+<span class="sd">        approx_method (str): name of smooth maximum function. It is `&#39;softmax&#39;` or `&#39;quasimax&#39;`.</span>
+<span class="sd">        approx_alpha (float): parameter of smooth maximum function.</span>
+<span class="sd">        focal_params (Dict): parameters for focal loss.</span>
+<span class="sd">        epsilon (float): a small number for the stability of the loss calcualtion.</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Wang, J. and Xia, B., 2021, September. Bounding box tightness prior</span>
+<span class="sd">        for weakly supervised image segmentation. In International Conference on </span>
+<span class="sd">        Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). </span>
+<span class="sd">        Springer, Cham.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss_mode</span><span class="o">=</span><span class="s1">&#39;focal&#39;</span><span class="p">,</span> <span class="n">approx_method</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">focal_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span> <span class="o">=</span> <span class="n">loss_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span> <span class="o">=</span> <span class="n">approx_method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span> <span class="o">=</span> <span class="n">approx_alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span> <span class="o">=</span> <span class="n">focal_params</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_approx_unary_bbox_pos_generalized_neg_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> 
+            <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">gt_boxes_xxyy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_mode</span><span class="p">,</span> 
+            <span class="n">approx_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_method</span><span class="p">,</span> <span class="n">approx_alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">approx_alpha</span><span class="p">,</span> 
+            <span class="n">focal_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">focal_params</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+
+
+<div class="viewcode-block" id="MILPairwiseLoss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.bbox_sigmoid_losses.MILPairwiseLoss">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">MILPairwiseLoss</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the pair-wise loss.</span>
+<span class="sd">        As defined in Weakly Supervised Instance Segmentation using the Bounding Box Tightness Prior.</span>
+<span class="sd">        </span>
+<span class="sd">    Args:</span>
+<span class="sd">        softmax (bool): If True, the network outputs softmax probability.</span>
+<span class="sd">        exp_coef (float): coefficient of exponential function applied to network output&gt; It should be positive. </span>
+<span class="sd">            -1 denotes coefficient of exponential function is not applied.  Default: -1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exp_coef</span><span class="o">=-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MILPairwiseLoss</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">softmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exp_coef</span> <span class="o">=</span> <span class="n">exp_coef</span>
+        
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">):</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">mil_pairwise_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes_mask</span><span class="p">,</span> <span class="n">softmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">,</span> <span class="n">exp_coef</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exp_coef</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

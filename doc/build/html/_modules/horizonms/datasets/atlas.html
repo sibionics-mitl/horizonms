@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.datasets.atlas &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.datasets.atlas</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.datasets.atlas</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseDataset</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">skimage</span> <span class="kn">import</span> <span class="n">measure</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">remove_small_objects</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;AtlasSegmentation&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AtlasSegmentation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.atlas.AtlasSegmentation">[docs]</a>
+<span class="k">class</span> <span class="nc">AtlasSegmentation</span><span class="p">(</span><span class="n">BaseDataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;`Atlas Dataset.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        root (string): Root directory where images are downloaded to.</span>
+<span class="sd">        annFile (string): Path to json annotation file.</span>
+<span class="sd">        transform (callable, optional): A function/transform that  takes in an PIL image</span>
+<span class="sd">            and returns a transformed version. E.g, ``transforms.ToTensor``</span>
+<span class="sd">        target_transform (callable, optional): A function/transform that takes in the</span>
+<span class="sd">            target and transforms it.</span>
+<span class="sd">        transforms (callable, optional): A function/transform that takes input sample and its target as entry</span>
+<span class="sd">            and returns a transformed version.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">image_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">gt_folder</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+            <span class="n">margin</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">random</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+            <span class="n">transforms_pt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">transforms_cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">to_tensor</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AtlasSegmentation</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">transforms_pt</span><span class="p">,</span> <span class="n">transforms_cv</span><span class="p">,</span> <span class="n">to_tensor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">categories</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span><span class="s1">&#39;lesion&#39;</span><span class="p">,</span><span class="s1">&#39;id&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">}]</span>         
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">image_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span><span class="n">gt_folder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_names</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_folder</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_folder</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">=</span> <span class="n">margin</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">random</span> <span class="o">=</span> <span class="n">random</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">=</span> <span class="p">[]</span><span class="c1">#self.load_images(self.image_folder, in_memory=True)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gt</span> <span class="o">=</span> <span class="p">[]</span><span class="c1">#self.load_images(gt_folder, in_memory=True)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">random_margin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">),</span> <span class="mi">4</span><span class="p">))</span>
+            
+<div class="viewcode-block" id="AtlasSegmentation.load_images">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.atlas.AtlasSegmentation.load_images">[docs]</a>
+    <span class="k">def</span> <span class="nf">load_images</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">,</span> <span class="n">in_memory</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">in_memory</span><span class="p">:</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+                <span class="k">return</span> <span class="n">res</span>
+            <span class="k">return</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="n">in_memory</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">quiet</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&gt; Loading the data in memory...&quot;</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">load</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">]</span> 
+
+        <span class="k">return</span> <span class="n">files</span></div>
+
+
+<div class="viewcode-block" id="AtlasSegmentation.getitem">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.atlas.AtlasSegmentation.getitem">[docs]</a>
+    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            index (int): Index</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: Tuple (image, target). target is the object returned by ``coco.loadAnns``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">[</span><span class="n">index</span><span class="p">])),</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gt_folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_names</span><span class="p">[</span><span class="n">index</span><span class="p">])),</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span>
+        <span class="n">img_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ids</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">bbox</span><span class="p">,</span> <span class="n">errors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">binary2boxcoords</span><span class="p">(</span><span class="n">remove_small_objects</span><span class="p">(</span><span class="n">gt</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">index</span><span class="p">)</span>
+        
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">errors</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;masks&quot;</span><span class="p">,</span> <span class="n">gt</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;masks&quot;</span><span class="p">)</span>
+        <span class="c1"># target.update(self.get_target_single_item(&quot;iscrowd&quot;, np.array([img_id]), type=None))</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;labels&quot;</span><span class="p">))</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">img_id</span><span class="p">]),</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;errors&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="n">boxes</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;bboxes&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">img</span><span class="p">,</span> <span class="n">target</span></div>
+
+    
+<div class="viewcode-block" id="AtlasSegmentation.binary2boxcoords">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.atlas.AtlasSegmentation.binary2boxcoords">[docs]</a>
+    <span class="k">def</span> <span class="nf">binary2boxcoords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seg</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">seg</span><span class="p">))</span><span class="o">.</span><span class="n">issubset</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">seg</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">==</span><span class="mi">2</span>  <span class="c1"># ensure the 2d shape</span>
+        
+        <span class="n">blobs</span><span class="p">,</span> <span class="n">n_blob</span> <span class="o">=</span> <span class="n">measure</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">background</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_num</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>            
+        <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">blobs</span><span class="p">))</span> <span class="o">&lt;=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_blob</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">blobs</span><span class="p">)</span>
+    
+        <span class="n">obj_coords</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">obj_seg</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_blob</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">blob_mask</span> <span class="o">=</span> <span class="n">blobs</span> <span class="o">==</span> <span class="n">b</span>
+            <span class="n">obj_seg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">blob_mask</span><span class="p">)</span>
+    
+            <span class="k">assert</span> <span class="n">blob_mask</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">blob_mask</span><span class="o">.</span><span class="n">dtype</span>
+            <span class="c1"># assert set(np.unique(blob_mask)) == set([0, 1])</span>
+    
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argwhere</span><span class="p">(</span><span class="n">blob_mask</span><span class="p">)</span>
+    
+            <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">xo_1</span><span class="p">,</span> <span class="n">xo_2</span><span class="p">,</span> <span class="n">yo_1</span><span class="p">,</span> <span class="n">yo_2</span> <span class="o">=</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">y2</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">random</span><span class="p">:</span>
+                    <span class="n">y1</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_margin</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+                    <span class="n">x1</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_margin</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">y2</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_margin</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+                    <span class="n">x2</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">random_margin</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">y1</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+                    <span class="n">x1</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+                    <span class="n">y2</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+                    <span class="n">x2</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">margin</span>
+                <span class="n">y1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y1</span><span class="p">)</span>
+                <span class="n">x1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">x1</span><span class="p">)</span>
+                <span class="n">y2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">y2</span><span class="p">,</span> <span class="n">seg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">x2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">seg</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">x1</span><span class="o">&lt;</span><span class="n">x2</span><span class="p">)</span><span class="o">&amp;</span><span class="p">(</span><span class="n">y1</span><span class="o">&lt;</span><span class="n">y2</span><span class="p">):</span>
+                <span class="n">obj_coords</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">y1</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y2</span><span class="p">,</span> <span class="n">x2</span><span class="p">])</span>
+            <span class="n">diff_x</span><span class="p">,</span> <span class="n">diff_y</span> <span class="o">=</span> <span class="n">xo_2</span> <span class="o">-</span> <span class="n">xo_1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">yo_2</span> <span class="o">-</span> <span class="n">yo_1</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="p">[(</span><span class="n">xo_1</span><span class="o">-</span><span class="n">x1</span><span class="p">)</span><span class="o">/</span><span class="n">diff_x</span><span class="p">,</span> <span class="p">(</span><span class="n">x2</span><span class="o">-</span><span class="n">xo_2</span><span class="p">)</span><span class="o">/</span><span class="n">diff_x</span><span class="p">,</span> <span class="p">(</span><span class="n">yo_1</span><span class="o">-</span><span class="n">y1</span><span class="p">)</span><span class="o">/</span><span class="n">diff_y</span><span class="p">,</span> <span class="p">(</span><span class="n">y2</span><span class="o">-</span><span class="n">yo_2</span><span class="p">)</span><span class="o">/</span><span class="n">diff_y</span><span class="p">]</span>
+            <span class="n">errs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+    
+        <span class="k">return</span> <span class="n">obj_seg</span><span class="p">,</span> <span class="n">obj_coords</span><span class="p">,</span> <span class="n">errs</span></div>
+
+
+<div class="viewcode-block" id="AtlasSegmentation.get_images">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.atlas.AtlasSegmentation.get_images">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_names</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

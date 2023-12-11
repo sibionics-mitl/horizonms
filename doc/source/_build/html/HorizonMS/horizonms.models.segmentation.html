@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.segmentation &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.samplers" href="horizonms.samplers.html" />
+    <link rel="prev" title="horizonms.models.ops" href="horizonms.models.ops.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="horizonms.models.html">horizonms.models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">horizonms.models.segmentation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.decoder">horizonms.models.segmentation.decoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.enet">horizonms.models.segmentation.enet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.residualunet">horizonms.models.segmentation.residualunet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.segmentation">horizonms.models.segmentation.segmentation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.segmentation_base">horizonms.models.segmentation.segmentation_base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.segmentation_bbox">horizonms.models.segmentation.segmentation_bbox</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.simpleunet">horizonms.models.segmentation.simpleunet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.segmentation.unet">horizonms.models.segmentation.unet</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.batch_image">horizonms.models.batch_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.model_base">horizonms.models.model_base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+          <li class="breadcrumb-item"><a href="horizonms.models.html">horizonms.models</a></li>
+      <li class="breadcrumb-item active">horizonms.models.segmentation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.segmentation.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models-segmentation">
+<h1>horizonms.models.segmentation<a class="headerlink" href="#horizonms-models-segmentation" title="Link to this heading"></a></h1>
+<section id="module-horizonms.models.segmentation.decoder">
+<span id="horizonms-models-segmentation-decoder"></span><h2>horizonms.models.segmentation.decoder<a class="headerlink" href="#module-horizonms.models.segmentation.decoder" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.UnetSimpleDecoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.decoder.</span></span><span class="sig-name descname"><span class="pre">UnetSimpleDecoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#UnetSimpleDecoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.UnetSimpleDecoder" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.UnetSimpleDecoder.make_layers">
+<span class="sig-name descname"><span class="pre">make_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#UnetSimpleDecoder.make_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.UnetSimpleDecoder.make_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.UnetSimpleDecoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#UnetSimpleDecoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.UnetSimpleDecoder.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.Up_Light">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.decoder.</span></span><span class="sig-name descname"><span class="pre">Up_Light</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#Up_Light"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.Up_Light" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.Up_Light.make_layers">
+<span class="sig-name descname"><span class="pre">make_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#Up_Light.make_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.Up_Light.make_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.decoder.Up_Light.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/decoder.html#Up_Light.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.decoder.Up_Light.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.enet">
+<span id="horizonms-models-segmentation-enet"></span><h2>horizonms.models.segmentation.enet<a class="headerlink" href="#module-horizonms.models.segmentation.enet" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.conv_block_1">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">conv_block_1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#conv_block_1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.conv_block_1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.conv_block_3_3">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">conv_block_3_3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#conv_block_3_3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.conv_block_3_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.conv_block_Asym">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">conv_block_Asym</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernelSize</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#conv_block_Asym"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.conv_block_Asym" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.convBatch">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">convBatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layer=&lt;class</span> <span class="pre">'torch.nn.modules.conv.Conv2d'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation=1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#convBatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.convBatch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.upSampleConv">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">upSampleConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nout</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upscale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#upSampleConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.upSampleConv" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.interpolate">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">interpolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nearest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#interpolate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.interpolate" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.interpolate.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cin</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#interpolate.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.interpolate.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckDownSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSampling" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSampling.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSampling.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSampling.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckNormal">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckNormal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropoutRate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckNormal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckNormal" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckNormal.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckNormal.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckNormal.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckDownSamplingDilatedConv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSamplingDilatedConv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSamplingDilatedConv.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckNormal_Asym">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckNormal_Asym</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropoutRate</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckNormal_Asym"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckNormal_Asym" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckNormal_Asym.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckNormal_Asym.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckNormal_Asym.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckDownSamplingDilatedConvLast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSamplingDilatedConvLast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckDownSamplingDilatedConvLast.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckUpSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">BottleNeckUpSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectionFactor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckUpSampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckUpSampling" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.BottleNeckUpSampling.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#BottleNeckUpSampling.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.BottleNeckUpSampling.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.ENet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.enet.</span></span><span class="sig-name descname"><span class="pre">ENet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">16</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#ENet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.ENet" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">Enet from paper:
+Adam Paszke, Abhishek Chaurasia, Sangpil Kim, and Eugenio Culurciello.
+Enet: A deep neural network architecture for real-time semantic segmentation.
+arXiv preprint arXiv:1606.02147, 2016.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes for segmentation.</p></li>
+<li><p><strong>channels_in</strong> (<em>int</em>) – the number of channels used in the first Conv layer.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.ENet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#ENet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.ENet.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.enet.ENet.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/enet.html#ENet.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.enet.ENet.init_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.residualunet">
+<span id="horizonms-models-segmentation-residualunet"></span><h2>horizonms.models.segmentation.residualunet<a class="headerlink" href="#module-horizonms.models.segmentation.residualunet" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.maxpool">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">maxpool</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#maxpool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.maxpool" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.conv_block">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">conv_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dilation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#conv_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.conv_block" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.conv_block_3">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">conv_block_3</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#conv_block_3"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.conv_block_3" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.conv_decod_block">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">conv_decod_block</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#conv_decod_block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.conv_decod_block" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.Conv_residual_conv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">Conv_residual_conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act_fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#Conv_residual_conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.Conv_residual_conv" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.Conv_residual_conv.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#Conv_residual_conv.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.Conv_residual_conv.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.ResidualUNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.residualunet.</span></span><span class="sig-name descname"><span class="pre">ResidualUNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#ResidualUNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.ResidualUNet" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">ResidualUNet from paper:
+Hoel Kervadec, Jose Dolz, Shanshan Wang, Eric Granger, and Ismail Ben Ayed.
+Bounding boxes for weakly supervised segmentation: Global constraints get close to full supervision.
+In Medical Imaging with Deep Learning, pages 365–381. PMLR, 2020.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes for segmentation.</p></li>
+<li><p><strong>channels_in</strong> (<em>int</em>) – the number of channels used in the first Conv layer.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.ResidualUNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#ResidualUNet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.ResidualUNet.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.residualunet.ResidualUNet.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/residualunet.html#ResidualUNet.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.residualunet.ResidualUNet.init_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.segmentation">
+<span id="horizonms-models-segmentation-segmentation"></span><h2>horizonms.models.segmentation.segmentation<a class="headerlink" href="#module-horizonms.models.segmentation.segmentation" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation.Segmentation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.segmentation.</span></span><span class="sig-name descname"><span class="pre">Segmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_activation=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image=&lt;class</span> <span class="pre">'horizonms.models.batch_image.BatchImage'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divisible=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_transforms=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation.html#Segmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation.Segmentation" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation" title="horizonms.models.segmentation.segmentation_base.BaseSegmentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSegmentation</span></code></a></p>
+<p class="linemarker linemarker-1">Class of the segmentation task for network training and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net_params</strong> (<em>Dict</em>) – the configuration of the network.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+<li><p><strong>loss_params</strong> (<em>Dict</em>) – the configuration of losses for training.</p></li>
+<li><p><strong>metric_params</strong> (<em>Dict</em>) – the configuration of the metrics for validation.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>divisible</strong> (<em>int</em>) – it determines the size of the batched input such that it is divisible by <cite>divisible</cite> and larger than the size of the input.</p></li>
+<li><p><strong>batch_transforms</strong> – batch transformation for network training.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation.Segmentation.calculate_loss">
+<span class="sig-name descname"><span class="pre">calculate_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation.html#Segmentation.calculate_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation.Segmentation.calculate_loss" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation.Segmentation.calculate_losses">
+<span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation.html#Segmentation.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation.Segmentation.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation.Segmentation.calculate_metric">
+<span class="sig-name descname"><span class="pre">calculate_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation.html#Segmentation.calculate_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation.Segmentation.calculate_metric" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation.Segmentation.calculate_metrics">
+<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation.html#Segmentation.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation.Segmentation.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.segmentation_base">
+<span id="horizonms-models-segmentation-segmentation-base"></span><h2>horizonms.models.segmentation.segmentation_base<a class="headerlink" href="#module-horizonms.models.segmentation.segmentation_base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.segmentation_base.</span></span><span class="sig-name descname"><span class="pre">BaseSegmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_activation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divisible</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="horizonms.models.html#horizonms.models.model_base.BaseModel" title="horizonms.models.model_base.BaseModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p class="linemarker linemarker-1">Base class for segmentation task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>nn.Module</em>) – Deep learning network.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>divisible</strong> – it determines the size of the batched input such that it is divisible by <cite>divisible</cite> and larger than the size of the input.</p></li>
+<li><p><strong>batch_transforms</strong> – batch transformation for network training.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.preprocessing_input">
+<span class="sig-name descname"><span class="pre">preprocessing_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.preprocessing_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.preprocessing_input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_losses">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_metrics">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.forward_train">
+<span class="sig-name descname"><span class="pre">forward_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.forward_train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.forward_train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.test_one_batch">
+<span class="sig-name descname"><span class="pre">test_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.test_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.test_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.BaseSegmentation.predict_one_batch">
+<span class="sig-name descname"><span class="pre">predict_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#BaseSegmentation.predict_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation.predict_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_base.get_segmentation_net">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.segmentation_base.</span></span><span class="sig-name descname"><span class="pre">get_segmentation_net</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_base.html#get_segmentation_net"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_base.get_segmentation_net" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.segmentation_bbox">
+<span id="horizonms-models-segmentation-segmentation-bbox"></span><h2>horizonms.models.segmentation.segmentation_bbox<a class="headerlink" href="#module-horizonms.models.segmentation.segmentation_bbox" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.segmentation_bbox.</span></span><span class="sig-name descname"><span class="pre">BboxSegmentation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_activation=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image=&lt;class</span> <span class="pre">'horizonms.models.batch_image.BatchImage'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divisible=32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="#horizonms.models.segmentation.segmentation_base.BaseSegmentation" title="horizonms.models.segmentation.segmentation_base.BaseSegmentation"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseSegmentation</span></code></a></p>
+<p class="linemarker linemarker-1">Class of the weakly supervised image segmentation based on bounding boxes for network training and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net_params</strong> (<em>Dict</em>) – the configuration of the network.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+<li><p><strong>loss_params</strong> (<em>Dict</em>) – the configuration of losses for training.</p></li>
+<li><p><strong>metric_params</strong> (<em>Dict</em>) – the configuration of the metrics for validation.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>divisible</strong> (<em>int</em>) – it determines the size of the batched input such that it is divisible by <cite>divisible</cite> and larger than the size of the input.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.preprocessing_input">
+<span class="sig-name descname"><span class="pre">preprocessing_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.preprocessing_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.preprocessing_input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_sigmoid_losses">
+<span class="sig-name descname"><span class="pre">calculate_sigmoid_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_sigmoid_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_sigmoid_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_softmax_losses">
+<span class="sig-name descname"><span class="pre">calculate_softmax_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg_preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_softmax_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_softmax_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_loss">
+<span class="sig-name descname"><span class="pre">calculate_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_loss" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_losses">
+<span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metric">
+<span class="sig-name descname"><span class="pre">calculate_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metric" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metrics">
+<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/segmentation_bbox.html#BboxSegmentation.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.simpleunet">
+<span id="horizonms-models-segmentation-simpleunet"></span><h2>horizonms.models.segmentation.simpleunet<a class="headerlink" href="#module-horizonms.models.segmentation.simpleunet" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleEnconderModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.simpleunet.</span></span><span class="sig-name descname"><span class="pre">SimpleEnconderModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleEnconderModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleEnconderModule" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleEnconderModule.make_layers">
+<span class="sig-name descname"><span class="pre">make_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleEnconderModule.make_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleEnconderModule.make_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleEnconderModule.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleEnconderModule.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleEnconderModule.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleUNet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.simpleunet.</span></span><span class="sig-name descname"><span class="pre">SimpleUNet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channels_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleUNet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleUNet" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">A simple Unet. Its encoder and decoder are composed of simple cascade of Conv, BN and ReLu layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes for segmentation.</p></li>
+<li><p><strong>num_block</strong> (<em>int</em>) – the number of blocks, each block is associated with a downsampling in encoder.</p></li>
+<li><p><strong>channels_in</strong> (<em>int</em>) – the number of channels in the first Conv.</p></li>
+<li><p><strong>prior</strong> (<em>float</em>) – the parameter used to estimate the initilization of the bias of the last Conv.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleUNet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleUNet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleUNet.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.simpleunet.SimpleUNet.init_weights">
+<span class="sig-name descname"><span class="pre">init_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/simpleunet.html#SimpleUNet.init_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.simpleunet.SimpleUNet.init_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.segmentation.unet">
+<span id="horizonms-models-segmentation-unet"></span><h2>horizonms.models.segmentation.unet<a class="headerlink" href="#module-horizonms.models.segmentation.unet" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V1">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.unet.</span></span><span class="sig-name descname"><span class="pre">UNet_V1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg_up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg_seg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[128,</span> <span class="pre">64]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V1" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">A simple Unet. Its encoder is obtained from backbone, and its decoder is a simple cascade of Conv, BN and ReLu layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>Dict</em>) – the configuration of the backbone.</p></li>
+<li><p><strong>cfg_up</strong> (<em>Dict</em>) – the configuration of the decoder, which is  a simple cascade of Conv, BN and ReLu layers.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+<li><p><strong>cfg_seg</strong> (<em>Dict</em>) – the configuration of the head in decoder.</p></li>
+<li><p><strong>nb_features</strong> (<em>int</em>) – the number of the levels of the features.</p></li>
+<li><p><strong>nb_output</strong> (<em>int</em>) – the number of the multiple resolution outputs.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes for segmentation.</p></li>
+<li><p><strong>prior</strong> (<em>float</em>) – the parameter used to estimate the initilization of the bias of the last Conv.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V1.make_layers">
+<span class="sig-name descname"><span class="pre">make_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V1.make_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V1.make_layers" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V1.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V1.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V1.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V2">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.segmentation.unet.</span></span><span class="sig-name descname"><span class="pre">UNet_V2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg_up</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg_seg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[128,</span> <span class="pre">64]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V2" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="#horizonms.models.segmentation.unet.UNet_V1" title="horizonms.models.segmentation.unet.UNet_V1"><code class="xref py py-class docutils literal notranslate"><span class="pre">UNet_V1</span></code></a></p>
+<p class="linemarker linemarker-1">A simple Unet. Its encoder is obtained from backbone, and its decoder is a simple cascade of Conv, BN and ReLu layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>Dict</em>) – the configuration of the backbone.</p></li>
+<li><p><strong>cfg_up</strong> (<em>Dict</em>) – the configuration of the decoder, which is  a simple cascade of Conv, BN and ReLu layers.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+<li><p><strong>cfg_seg</strong> (<em>Dict</em>) – the configuration of the head in decoder.</p></li>
+<li><p><strong>nb_features</strong> (<em>int</em>) – the number of the levels of the features.</p></li>
+<li><p><strong>nb_output</strong> (<em>int</em>) – the number of the multiple resolution outputs.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes for segmentation.</p></li>
+<li><p><strong>prior</strong> (<em>float</em>) – the parameter used to estimate the initilization of the bias of the last Conv.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V2.pred_upsampling">
+<span class="sig-name descname"><span class="pre">pred_upsampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale_factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V2.pred_upsampling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V2.pred_upsampling" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.segmentation.unet.UNet_V2.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/segmentation/unet.html#UNet_V2.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.segmentation.unet.UNet_V2.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.models.ops.html" class="btn btn-neutral float-left" title="horizonms.models.ops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.samplers.html" class="btn btn-neutral float-right" title="horizonms.samplers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

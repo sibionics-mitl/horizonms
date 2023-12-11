@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.segmentation.enet &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.segmentation.enet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.segmentation.enet</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">...builder</span> <span class="kn">import</span> <span class="n">NETS</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;ENet&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="conv_block_1">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_1">[docs]</a>
+<span class="k">def</span> <span class="nf">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">out_dim</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="conv_block_3_3">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_3_3">[docs]</a>
+<span class="k">def</span> <span class="nf">conv_block_3_3</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">out_dim</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="conv_block_Asym">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_Asym">[docs]</a>
+<span class="k">def</span> <span class="nf">conv_block_Asym</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernelSize</span><span class="p">):</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="n">kernelSize</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="nb">tuple</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">out_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">kernelSize</span><span class="p">],</span> <span class="n">padding</span><span class="o">=</span><span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">])),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">out_dim</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="convBatch">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.convBatch">[docs]</a>
+<span class="k">def</span> <span class="nf">convBatch</span><span class="p">(</span><span class="n">nin</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">layer</span><span class="o">=</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">layer</span><span class="p">(</span><span class="n">nin</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">nout</span><span class="p">),</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="upSampleConv">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.upSampleConv">[docs]</a>
+<span class="k">def</span> <span class="nf">upSampleConv</span><span class="p">(</span><span class="n">nin</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">upscale</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="c1"># nn.Upsample(scale_factor=upscale),</span>
+        <span class="n">interpolate</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="n">upscale</span><span class="p">),</span>
+        <span class="n">convBatch</span><span class="p">(</span><span class="n">nin</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">),</span>
+        <span class="n">convBatch</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span> <span class="n">nout</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="interpolate">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.interpolate">[docs]</a>
+<span class="k">class</span> <span class="nc">interpolate</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span> <span class="o">=</span> <span class="n">scale_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+
+<div class="viewcode-block" id="interpolate.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.interpolate.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cin</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">cin</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckDownSampling">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSampling">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckDownSampling</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># Main branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxpool0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Secondary branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BottleNeckDownSampling.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSampling.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="c1"># Main branch</span>
+        <span class="n">maxpool_output</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxpool0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn0</span><span class="p">(</span><span class="n">c0</span><span class="p">)</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU0</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+
+        <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+
+        <span class="c1"># Zero padding the feature maps from the main branch</span>
+        <span class="n">depth_to_pad</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">maxpool_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">do</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">padding</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">maxpool_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">depth_to_pad</span><span class="p">,</span> <span class="n">maxpool_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                              <span class="n">maxpool_output</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">maxpool_output</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">maxpool_output_pad</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">maxpool_output</span><span class="p">,</span> <span class="n">padding</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">maxpool_output_pad</span> <span class="o">+</span> <span class="n">do</span>
+
+        <span class="c1"># _, c, _, _ = maxpool_output.shape</span>
+        <span class="c1"># output = do</span>
+        <span class="c1"># output[:, :c, :, :] += maxpool_output</span>
+
+        <span class="n">final_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">final_output</span><span class="p">,</span> <span class="n">indices</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckNormal">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckNormal</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">dropoutRate</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottleNeckNormal</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">=</span> <span class="n">in_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span> <span class="o">=</span> <span class="n">out_dim</span>
+        <span class="c1"># Main branch</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block0</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block1</span> <span class="o">=</span> <span class="n">conv_block_3_3</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">dropoutRate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">in_dim</span> <span class="o">&gt;</span> <span class="n">out_dim</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BottleNeckNormal.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="c1"># Main branch</span>
+        <span class="c1"># Secondary branch</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block1</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+        <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="nb">input</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_out</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckDownSamplingDilatedConv">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">dilation</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Main branch</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block0</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                               <span class="n">padding</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BottleNeckDownSamplingDilatedConv.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="c1"># Secondary branch</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+
+        <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="nb">input</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckNormal_Asym">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal_Asym">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckNormal_Asym</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">dropoutRate</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottleNeckNormal_Asym</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">=</span> <span class="n">in_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span> <span class="o">=</span> <span class="n">out_dim</span>
+        <span class="c1"># Main branch</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block0</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block1</span> <span class="o">=</span> <span class="n">conv_block_Asym</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="n">dropoutRate</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">in_dim</span> <span class="o">&gt;</span> <span class="n">out_dim</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BottleNeckNormal_Asym.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal_Asym.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="c1"># Main branch</span>
+        <span class="c1"># Secondary branch</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block1</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+        <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_dim</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_dim</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="nb">input</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_out</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckDownSamplingDilatedConvLast">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckDownSamplingDilatedConvLast</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">dilation</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottleNeckDownSamplingDilatedConvLast</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Main branch</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block0</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                               <span class="n">padding</span><span class="o">=</span><span class="n">dilation</span><span class="p">,</span> <span class="n">dilation</span><span class="o">=</span><span class="n">dilation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BottleNeckDownSamplingDilatedConvLast.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+
+        <span class="c1"># Secondary branch</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+
+        <span class="n">b2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">b2</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_out</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="o">+</span> <span class="n">do</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BottleNeckUpSampling">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckUpSampling">[docs]</a>
+<span class="k">class</span> <span class="nc">BottleNeckUpSampling</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">projectionFactor</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">BottleNeckUpSampling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># Main branch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">block2</span> <span class="o">=</span> <span class="n">conv_block_1</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">in_dim</span> <span class="o">/</span> <span class="n">projectionFactor</span><span class="p">),</span> <span class="n">out_dim</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">do</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU3</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BottleNeckUpSampling.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckUpSampling.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="c1"># Secondary branch</span>
+        <span class="n">c0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">b0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn0</span><span class="p">(</span><span class="n">c0</span><span class="p">)</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU0</span><span class="p">(</span><span class="n">b0</span><span class="p">)</span>
+
+        <span class="n">c1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">p0</span><span class="p">)</span>
+        <span class="n">b1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bn1</span><span class="p">(</span><span class="n">c1</span><span class="p">)</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU1</span><span class="p">(</span><span class="n">b1</span><span class="p">)</span>
+
+        <span class="n">p2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block2</span><span class="p">(</span><span class="n">p1</span><span class="p">)</span>
+
+        <span class="n">do</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">do</span><span class="p">(</span><span class="n">p2</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">do</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="ENet">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet">[docs]</a>
+<span class="nd">@NETS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">ENet</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Enet from paper:</span>
+<span class="sd">    Adam Paszke, Abhishek Chaurasia, Sangpil Kim, and Eugenio Culurciello. </span>
+<span class="sd">    Enet: A deep neural network architecture for real-time semantic segmentation. </span>
+<span class="sd">    arXiv preprint arXiv:1606.02147, 2016.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_dim (int): the dimension of input.</span>
+<span class="sd">        num_classes (int): the number of classes for segmentation.</span>
+<span class="sd">        channels_in (int): the number of channels used in the first Conv layer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">channels_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">=</span> <span class="n">channels_in</span>
+
+        <span class="c1"># Initial</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxpool0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">return_indices</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># First group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_0</span> <span class="o">=</span> <span class="n">BottleNeckDownSampling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_1</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_2</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_3</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_4</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+
+        <span class="c1"># Second group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_0</span> <span class="o">=</span> <span class="n">BottleNeckDownSampling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_1</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_2</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_3</span> <span class="o">=</span> <span class="n">BottleNeckNormal_Asym</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                   <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_4</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_5</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_6</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_7</span> <span class="o">=</span> <span class="n">BottleNeckNormal_Asym</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                   <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_8</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+        <span class="c1"># Third group</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_1</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_2</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_3</span> <span class="o">=</span> <span class="n">BottleNeckNormal_Asym</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                   <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_4</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_5</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_6</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                               <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_7</span> <span class="o">=</span> <span class="n">BottleNeckNormal_Asym</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                   <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_8</span> <span class="o">=</span> <span class="n">BottleNeckDownSamplingDilatedConvLast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                                   <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+        <span class="c1"># ### Decoding path ####</span>
+        <span class="c1"># Unpooling 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unpool_0</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxUnpool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_0</span> <span class="o">=</span> <span class="n">BottleNeckUpSampling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                      <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_Up_1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_1</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span>
+                                                  <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_2</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="c1"># Unpooling 2</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unpool_1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxUnpool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_2_1</span> <span class="o">=</span> <span class="n">BottleNeckUpSampling</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_2_2</span> <span class="o">=</span> <span class="n">BottleNeckNormal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">projecting_factor</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_Up_2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">PReLU</span><span class="p">()</span>
+
+        <span class="c1"># Unpooling Last</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">deconv3</span> <span class="o">=</span> <span class="n">upSampleConv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_025</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span> <span class="o">*</span> <span class="mi">8</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_05</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">final</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_kernels</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_weights</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ENet.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+        <span class="n">conv_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>  <span class="c1"># This will go as res in deconv path</span>
+        <span class="n">maxpool_0</span><span class="p">,</span> <span class="n">indices_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxpool0</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+        <span class="n">outputInitial</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">conv_0</span><span class="p">,</span> <span class="n">maxpool_0</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># First group</span>
+        <span class="n">bn1_0</span><span class="p">,</span> <span class="n">indices_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_0</span><span class="p">(</span><span class="n">outputInitial</span><span class="p">)</span>
+        <span class="n">bn1_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_1</span><span class="p">(</span><span class="n">bn1_0</span><span class="p">)</span>
+        <span class="n">bn1_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_2</span><span class="p">(</span><span class="n">bn1_1</span><span class="p">)</span>
+        <span class="n">bn1_3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_3</span><span class="p">(</span><span class="n">bn1_2</span><span class="p">)</span>
+        <span class="n">bn1_4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck1_4</span><span class="p">(</span><span class="n">bn1_3</span><span class="p">)</span>
+
+        <span class="c1"># Second group</span>
+        <span class="n">bn2_0</span><span class="p">,</span> <span class="n">indices_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_0</span><span class="p">(</span><span class="n">bn1_4</span><span class="p">)</span>
+        <span class="n">bn2_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_1</span><span class="p">(</span><span class="n">bn2_0</span><span class="p">)</span>
+        <span class="n">bn2_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_2</span><span class="p">(</span><span class="n">bn2_1</span><span class="p">)</span>
+        <span class="n">bn2_3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_3</span><span class="p">(</span><span class="n">bn2_2</span><span class="p">)</span>
+        <span class="n">bn2_4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_4</span><span class="p">(</span><span class="n">bn2_3</span><span class="p">)</span>
+        <span class="n">bn2_5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_5</span><span class="p">(</span><span class="n">bn2_4</span><span class="p">)</span>
+        <span class="n">bn2_6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_6</span><span class="p">(</span><span class="n">bn2_5</span><span class="p">)</span>
+        <span class="n">bn2_7</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_7</span><span class="p">(</span><span class="n">bn2_6</span><span class="p">)</span>
+        <span class="n">bn2_8</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck2_8</span><span class="p">(</span><span class="n">bn2_7</span><span class="p">)</span>
+
+        <span class="c1"># Third group</span>
+        <span class="n">bn3_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_1</span><span class="p">(</span><span class="n">bn2_8</span><span class="p">)</span>
+        <span class="n">bn3_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_2</span><span class="p">(</span><span class="n">bn3_1</span><span class="p">)</span>
+        <span class="n">bn3_3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_3</span><span class="p">(</span><span class="n">bn3_2</span><span class="p">)</span>
+        <span class="n">bn3_4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_4</span><span class="p">(</span><span class="n">bn3_3</span><span class="p">)</span>
+        <span class="n">bn3_5</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_5</span><span class="p">(</span><span class="n">bn3_4</span><span class="p">)</span>
+        <span class="n">bn3_6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_6</span><span class="p">(</span><span class="n">bn3_5</span><span class="p">)</span>
+        <span class="n">bn3_7</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_7</span><span class="p">(</span><span class="n">bn3_6</span><span class="p">)</span>
+        <span class="n">bn3_8</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck3_8</span><span class="p">(</span><span class="n">bn3_7</span><span class="p">)</span>
+
+        <span class="c1"># #### Deconvolution Path ####</span>
+        <span class="c1">#  First block #</span>
+        <span class="n">unpool_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpool_0</span><span class="p">(</span><span class="n">bn3_8</span><span class="p">,</span> <span class="n">indices_2</span><span class="p">)</span>
+
+        <span class="c1"># bn_up_1_0 = self.bottleNeck_Up_1_0(unpool_0) # Not concatenate</span>
+        <span class="n">bn_up_1_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_0</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">unpool_0</span><span class="p">,</span> <span class="n">bn1_4</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># concatenate</span>
+
+        <span class="n">up_block_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_Up_1</span><span class="p">(</span><span class="n">unpool_0</span> <span class="o">+</span> <span class="n">bn_up_1_0</span><span class="p">)</span>
+
+        <span class="n">bn_up_1_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_1</span><span class="p">(</span><span class="n">up_block_1</span><span class="p">)</span>
+        <span class="n">bn_up_1_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_1_2</span><span class="p">(</span><span class="n">bn_up_1_1</span><span class="p">)</span>
+
+        <span class="c1">#  Second block #</span>
+        <span class="n">unpool_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpool_1</span><span class="p">(</span><span class="n">bn_up_1_2</span><span class="p">,</span> <span class="n">indices_1</span><span class="p">)</span>
+
+        <span class="c1"># bn_up_2_1 = self.bottleNeck_Up_2_1(unpool_1) # Not concatenate</span>
+        <span class="n">bn_up_2_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_2_1</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">unpool_1</span><span class="p">,</span> <span class="n">outputInitial</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>  <span class="c1"># concatenate</span>
+
+        <span class="n">bn_up_2_2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bottleNeck_Up_2_2</span><span class="p">(</span><span class="n">bn_up_2_1</span><span class="p">)</span>
+
+        <span class="n">up_block_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PReLU_Up_2</span><span class="p">(</span><span class="n">unpool_1</span> <span class="o">+</span> <span class="n">bn_up_2_2</span><span class="p">)</span>
+
+        <span class="n">unpool_12</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deconv3</span><span class="p">(</span><span class="n">up_block_1</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">final</span><span class="p">(</span><span class="n">unpool_12</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+<div class="viewcode-block" id="ENet.init_weights">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet.init_weights">[docs]</a>
+    <span class="k">def</span> <span class="nf">init_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># self.apply(random_weights_init)</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">:</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">==</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">:</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">)</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+</div>
+
+        
+<span class="c1"># def random_weights_init(m):</span>
+<span class="c1">#     if type(m) == nn.Conv2d or type(m) == nn.ConvTranspose2d:</span>
+<span class="c1">#         nn.init.xavier_normal_(m.weight.data)</span>
+<span class="c1">#     elif type(m) == nn.BatchNorm2d:</span>
+<span class="c1">#         m.weight.data.normal_(1.0, 0.02)</span>
+<span class="c1">#         m.bias.data.fill_(0)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.datasets.voc &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.datasets.voc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.datasets.voc</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">from</span> <span class="nn">xml.etree.ElementTree</span> <span class="kn">import</span> <span class="n">Element</span> <span class="k">as</span> <span class="n">ET_Element</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">defusedxml.ElementTree</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">ET_parse</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">xml.etree.ElementTree</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">ET_parse</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">download_and_extract_archive</span><span class="p">,</span> <span class="n">verify_str_arg</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BaseDataset</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;VOCBase&quot;</span><span class="p">,</span> <span class="s2">&quot;VOCSegmentation&quot;</span><span class="p">,</span> <span class="s2">&quot;VOCDetection&quot;</span><span class="p">)</span>
+
+
+<span class="n">DATASET_YEAR_DICT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;2012&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_11-May-2012.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;6cd6e144f989b92b3379bac3b3de84fd&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2012&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2011&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2011/VOCtrainval_25-May-2011.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_25-May-2011.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;6c3384ef61512963050cb5d687e5bf1e&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;TrainVal&quot;</span><span class="p">,</span> <span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2011&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2010&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2010/VOCtrainval_03-May-2010.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_03-May-2010.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;da459979d0c395079b5c75ee67908abb&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2010&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2009&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2009/VOCtrainval_11-May-2009.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_11-May-2009.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;a3e00b113cfcfebf17e343f59da3caa1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2009&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2008&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2008/VOCtrainval_14-Jul-2008.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_11-May-2012.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;2629fa636546599198acfcfbfcf1904a&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2008&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2007&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtrainval_06-Nov-2007.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtrainval_06-Nov-2007.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;c52e279531787c972589f7e41ab4ae64&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2007&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;2007-test&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://host.robots.ox.ac.uk/pascal/VOC/voc2007/VOCtest_06-Nov-2007.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="s2">&quot;VOCtest_06-Nov-2007.tar&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;md5&quot;</span><span class="p">:</span> <span class="s2">&quot;b6e924de25625d8de591ea690078ad9f&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;base_dir&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;VOCdevkit&quot;</span><span class="p">,</span> <span class="s2">&quot;VOC2007&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="VOCBase">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCBase">[docs]</a>
+<span class="k">class</span> <span class="nc">VOCBase</span><span class="p">(</span><span class="n">BaseDataset</span><span class="p">):</span>
+    <span class="n">_SPLITS_DIR</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">_TARGET_DIR</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">_TARGET_FILE_EXT</span><span class="p">:</span> <span class="nb">str</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">years</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;2007&quot;</span><span class="p">,</span> <span class="s2">&quot;2012&quot;</span><span class="p">],</span>
+        <span class="n">image_sets</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span>
+        <span class="n">download</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">keep_difficult</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">transforms_pt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">transforms_cv</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">to_tensor</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">VOCBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">transforms_pt</span><span class="p">,</span> <span class="n">transforms_cv</span><span class="p">,</span> <span class="n">to_tensor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">years</span> <span class="o">=</span> <span class="n">years</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">keep_difficult</span> <span class="o">=</span> <span class="n">keep_difficult</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_sets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">year</span><span class="p">,</span> <span class="n">image_set</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">years</span><span class="p">,</span> <span class="n">image_sets</span><span class="p">):</span>
+            <span class="n">valid_image_sets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;trainval&quot;</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">year</span> <span class="o">==</span> <span class="s2">&quot;2007&quot;</span><span class="p">:</span>
+                <span class="n">valid_image_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">year</span> <span class="o">==</span> <span class="s2">&quot;2012&quot;</span><span class="p">:</span>
+                <span class="n">valid_image_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+                <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;VOCdevkit/VOC2012/JPEGImages&#39;</span><span class="p">))</span>
+                <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images</span><span class="p">]</span>
+                <span class="n">rm_images</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;2008_000763&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_004172&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_004562&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_005145&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;2008_005262&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_005953&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_007355&#39;</span><span class="p">,</span> <span class="s1">&#39;2008_008051&#39;</span><span class="p">]</span>
+                <span class="n">images</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">images</span><span class="p">)</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">rm_images</span><span class="p">))</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="s1">&#39;VOCdevkit/VOC2012/ImageSets/Main/all.txt&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">image_set</span> <span class="o">=</span> <span class="n">verify_str_arg</span><span class="p">(</span><span class="n">image_set</span><span class="p">,</span> <span class="s2">&quot;image_set&quot;</span><span class="p">,</span> <span class="n">valid_image_sets</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">image_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_set</span><span class="p">)</span>
+
+            <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;2007-test&quot;</span> <span class="k">if</span> <span class="n">year</span> <span class="o">==</span> <span class="s2">&quot;2007&quot;</span> <span class="ow">and</span> <span class="n">image_set</span> <span class="o">==</span> <span class="s2">&quot;test&quot;</span> <span class="k">else</span> <span class="n">year</span>
+            <span class="n">dataset_year_dict</span> <span class="o">=</span> <span class="n">DATASET_YEAR_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+            <span class="n">url</span> <span class="o">=</span> <span class="n">dataset_year_dict</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">dataset_year_dict</span><span class="p">[</span><span class="s2">&quot;filename&quot;</span><span class="p">]</span>
+            <span class="n">md5</span> <span class="o">=</span> <span class="n">dataset_year_dict</span><span class="p">[</span><span class="s2">&quot;md5&quot;</span><span class="p">]</span>
+
+            <span class="n">base_dir</span> <span class="o">=</span> <span class="n">dataset_year_dict</span><span class="p">[</span><span class="s2">&quot;base_dir&quot;</span><span class="p">]</span>
+            <span class="n">voc_root</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">download</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">download_and_extract_archive</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">md5</span><span class="o">=</span><span class="n">md5</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">voc_root</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Dataset not found or corrupted. You can use download=True to download it&quot;</span><span class="p">)</span>
+
+            <span class="n">splits_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s2">&quot;ImageSets&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SPLITS_DIR</span><span class="p">)</span>
+            <span class="n">split_f</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splits_dir</span><span class="p">,</span> <span class="n">image_set</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">split_f</span><span class="p">))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">file_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+
+            <span class="n">image_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="s2">&quot;JPEGImages&quot;</span><span class="p">)</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">image_dir</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="s2">&quot;.jpg&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">images</span> <span class="o">+=</span> <span class="n">images</span>
+
+            <span class="n">annotation_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">voc_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TARGET_DIR</span><span class="p">)</span>
+            <span class="n">annotations</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">annotation_dir</span><span class="p">,</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TARGET_FILE_EXT</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">file_names</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span> <span class="o">+=</span> <span class="n">annotations</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">voc_classes</span> <span class="o">=</span> <span class="n">get_voc_classes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">category2label</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_classes</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">voc_classes</span><span class="p">))))</span>
+
+    <span class="c1"># def __len__(self) -&gt; int:</span>
+        <span class="c1"># return len(self.images)</span>
+<div class="viewcode-block" id="VOCBase.get_images">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCBase.get_images">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_images</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">images</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="VOCSegmentation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCSegmentation">[docs]</a>
+<span class="k">class</span> <span class="nc">VOCSegmentation</span><span class="p">(</span><span class="n">VOCBase</span><span class="p">):</span>
+    <span class="n">_SPLITS_DIR</span> <span class="o">=</span> <span class="s2">&quot;Segmentation&quot;</span>
+    <span class="n">_TARGET_DIR</span> <span class="o">=</span> <span class="s2">&quot;SegmentationClass&quot;</span>
+    <span class="n">_TARGET_FILE_EXT</span> <span class="o">=</span> <span class="s2">&quot;.png&quot;</span>
+
+<div class="viewcode-block" id="VOCSegmentation.getitem">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCSegmentation.getitem">[docs]</a>
+    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+        <span class="n">masks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="n">index</span><span class="p">]),</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;masks&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">masks</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;masks&quot;</span><span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="VOCDetection">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCDetection">[docs]</a>
+<span class="k">class</span> <span class="nc">VOCDetection</span><span class="p">(</span><span class="n">VOCBase</span><span class="p">):</span>
+    <span class="n">_SPLITS_DIR</span> <span class="o">=</span> <span class="s2">&quot;Main&quot;</span>
+    <span class="n">_TARGET_DIR</span> <span class="o">=</span> <span class="s2">&quot;Annotations&quot;</span>
+    <span class="n">_TARGET_FILE_EXT</span> <span class="o">=</span> <span class="s2">&quot;.xml&quot;</span>
+
+<div class="viewcode-block" id="VOCDetection.getitem">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCDetection.getitem">[docs]</a>
+    <span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">images</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2RGB</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">ET_parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">[</span><span class="n">index</span><span class="p">])</span><span class="o">.</span><span class="n">getroot</span><span class="p">()</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_voc_xml</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">bboxes</span><span class="p">,</span> <span class="n">difficults</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bbox_target</span><span class="p">(</span><span class="n">target</span><span class="p">[</span><span class="s1">&#39;annotation&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_difficult</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;bboxes&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">bboxes</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s2">&quot;bboxes&quot;</span><span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;difficults&quot;</span><span class="p">,</span> <span class="n">difficults</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_target_single_item</span><span class="p">(</span><span class="s2">&quot;image_id&quot;</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span></div>
+
+
+<div class="viewcode-block" id="VOCDetection.parse_voc_xml">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCDetection.parse_voc_xml">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">parse_voc_xml</span><span class="p">(</span><span class="n">node</span><span class="p">:</span> <span class="n">ET_Element</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">voc_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">children</span><span class="p">:</span>
+            <span class="n">def_dic</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dc</span> <span class="ow">in</span> <span class="nb">map</span><span class="p">(</span><span class="n">VOCDetection</span><span class="o">.</span><span class="n">parse_voc_xml</span><span class="p">,</span> <span class="n">children</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dc</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">def_dic</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s2">&quot;annotation&quot;</span><span class="p">:</span>
+                <span class="n">def_dic</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">def_dic</span><span class="p">[</span><span class="s2">&quot;object&quot;</span><span class="p">]]</span>
+            <span class="n">voc_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">node</span><span class="o">.</span><span class="n">tag</span><span class="p">:</span> <span class="p">{</span><span class="n">ind</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">v</span> <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">def_dic</span><span class="o">.</span><span class="n">items</span><span class="p">()}}</span>
+        <span class="k">if</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="n">text</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">children</span><span class="p">:</span>
+                <span class="n">voc_dict</span><span class="p">[</span><span class="n">node</span><span class="o">.</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">text</span>
+        <span class="k">return</span> <span class="n">voc_dict</span></div>
+
+
+<div class="viewcode-block" id="VOCDetection.get_bbox_target">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.datasets.html#horizonms.datasets.voc.VOCDetection.get_bbox_target">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_bbox_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">keep_difficult</span><span class="p">):</span>
+        <span class="n">bbox_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">labels_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">difficult_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">target</span><span class="p">[</span><span class="s1">&#39;object&#39;</span><span class="p">]:</span>
+            <span class="n">difficult</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;difficult&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="n">difficult_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">[</span><span class="s1">&#39;difficult&#39;</span><span class="p">]))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">keep_difficult</span> <span class="ow">and</span> <span class="n">difficult</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;bndbox&#39;</span><span class="p">]</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="p">[</span><span class="n">bbox</span><span class="p">[</span><span class="s1">&#39;xmin&#39;</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="s1">&#39;ymin&#39;</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="s1">&#39;xmax&#39;</span><span class="p">],</span> <span class="n">bbox</span><span class="p">[</span><span class="s1">&#39;ymax&#39;</span><span class="p">]]</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="nb">eval</span><span class="p">(</span><span class="n">b</span><span class="p">))</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">bbox</span><span class="p">]</span>
+            <span class="n">bbox</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">category2label</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+            <span class="n">bbox_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>
+        <span class="n">bbox_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">bbox_list</span><span class="p">)</span>
+        <span class="n">difficult_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">difficult_list</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bbox_list</span><span class="p">,</span> <span class="n">difficult_list</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">get_voc_classes</span><span class="p">():</span>
+    <span class="n">voc_classes</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">&#39;aeroplane&#39;</span><span class="p">,</span> <span class="s1">&#39;bicycle&#39;</span><span class="p">,</span> <span class="s1">&#39;bird&#39;</span><span class="p">,</span> <span class="s1">&#39;boat&#39;</span><span class="p">,</span> <span class="s1">&#39;bottle&#39;</span><span class="p">,</span> <span class="s1">&#39;bus&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;car&#39;</span><span class="p">,</span> <span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;chair&#39;</span><span class="p">,</span> <span class="s1">&#39;cow&#39;</span><span class="p">,</span> <span class="s1">&#39;diningtable&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;horse&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;motorbike&#39;</span><span class="p">,</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;pottedplant&#39;</span><span class="p">,</span> <span class="s1">&#39;sheep&#39;</span><span class="p">,</span> <span class="s1">&#39;sofa&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;tvmonitor&#39;</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">voc_classes</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

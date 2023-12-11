@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.detection.anchors_yolo &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.detection.anchors_yolo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.detection.anchors_yolo</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+
+
+<div class="viewcode-block" id="encode_box">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.encode_box">[docs]</a>
+<span class="k">def</span> <span class="nf">encode_box</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">bbox</span>
+    <span class="n">cx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">cy</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="n">box_w</span> <span class="o">=</span> <span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span>
+    <span class="n">box_h</span> <span class="o">=</span> <span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span>    
+
+    <span class="n">cx_s</span> <span class="o">=</span> <span class="n">cx</span> <span class="o">/</span> <span class="n">stride</span>
+    <span class="n">cy_s</span> <span class="o">=</span> <span class="n">cy</span> <span class="o">/</span> <span class="n">stride</span>
+    <span class="n">grid_x</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cx_s</span><span class="p">)</span>
+    <span class="n">grid_y</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cy_s</span><span class="p">)</span>
+    
+    <span class="n">tx</span> <span class="o">=</span> <span class="n">cx_s</span> <span class="o">-</span> <span class="n">grid_x</span>
+    <span class="n">ty</span> <span class="o">=</span> <span class="n">cy_s</span> <span class="o">-</span> <span class="n">grid_y</span>
+    <span class="n">tw</span> <span class="o">=</span> <span class="n">box_w</span><span class="o">/</span><span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="c1">#torch.sqrt(box_w/input_size[1])</span>
+    <span class="n">th</span> <span class="o">=</span> <span class="n">box_h</span><span class="o">/</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="c1">#torch.sqrt(box_h/input_size[0])</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">],</span> <span class="p">[</span><span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="n">th</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="decode_box">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.decode_box">[docs]</a>
+<span class="k">def</span> <span class="nf">decode_box</span><span class="p">(</span><span class="n">txtytwth</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+    <span class="n">xs</span> <span class="o">=</span> <span class="p">(</span><span class="n">txtytwth</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">stride</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="p">(</span><span class="n">txtytwth</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">stride</span>
+    <span class="n">w</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">txtytwth</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">txtytwth</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+    <span class="n">xmax</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="o">+</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">xs</span><span class="o">-</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">ymax</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="p">(</span><span class="n">ys</span><span class="o">+</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">ys</span><span class="o">-</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="create_grid">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.create_grid">[docs]</a>
+<span class="k">def</span> <span class="nf">create_grid</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+    <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span> <span class="o">=</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="n">stride</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="n">stride</span>
+    <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">hs</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+                                     <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ws</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)])</span>
+    <span class="n">grid_xy</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">grid_xy</span></div>
+
+
+
+<span class="c1"># def decode_box_batch(txtytwth, input_size, stride):</span>
+<span class="c1">#     grid_xy = create_grid(input_size, stride, txtytwth.device)</span>
+<span class="c1">#     xs = (txtytwth[:,0::4] + grid_xy[0])*2*stride</span>
+<span class="c1">#     ys = (txtytwth[:,1::4] + grid_xy[1])*2*stride</span>
+<span class="c1">#     w = input_size[1] * txtytwth[:,2::4]</span>
+<span class="c1">#     h = input_size[0] * txtytwth[:,3::4]</span>
+<span class="c1">#     xmax, xmin = (xs+w)/2, (xs-w)/2</span>
+<span class="c1">#     ymax, ymin = (ys+h)/2, (ys-h)/2</span>
+<span class="c1">#     return torch.stack([xmin, ymin, xmax, ymax], dim=-1)</span>
+
+
+<div class="viewcode-block" id="generate_target_yolov2">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_target_yolov2">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_target_yolov2</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">num_boxes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="n">bbox_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">targets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;bboxes&#39;</span><span class="p">:</span>
+            <span class="n">bbox_key</span> <span class="o">=</span> <span class="n">key</span>
+    <span class="k">assert</span> <span class="n">bbox_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Annotations should contain bboxes.&quot;</span>
+    <span class="n">bboxes_list</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">bbox_key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span> <span class="o">=</span> <span class="n">bboxes_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">bboxes_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bboxes_list</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span> <span class="o">=</span> <span class="n">h</span> <span class="o">//</span> <span class="n">stride</span><span class="p">,</span> <span class="n">w</span> <span class="o">//</span> <span class="n">stride</span>
+    <span class="n">gt_cls</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">gt_objectness</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_boxes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">gt_bboxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">num_boxes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">batch_index</span><span class="p">,</span> <span class="n">bboxes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bboxes_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">k</span><span class="p">,:]</span>
+            <span class="p">[</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">],</span> <span class="n">gt_bbox</span> <span class="o">=</span> <span class="n">encode_box</span><span class="p">(</span><span class="n">bbox</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">grid_x</span> <span class="o">&lt;</span> <span class="n">ws</span> <span class="ow">and</span> <span class="n">grid_y</span> <span class="o">&lt;</span> <span class="n">hs</span><span class="p">:</span>
+                <span class="n">gt_cls</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">gt_objectness</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="p">:,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">gt_cls</span><span class="p">,</span> <span class="n">gt_objectness</span><span class="p">,</span> <span class="n">gt_bboxes</span></div>
+
+
+
+<div class="viewcode-block" id="generate_stride">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_stride">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_stride</span><span class="p">(</span><span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+    <span class="n">stride</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">stride</span></div>
+
+
+
+<div class="viewcode-block" id="generate_feature_shape">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_feature_shape">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_feature_shape</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="n">stride</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="n">stride</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="generate_target_yolov1">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_target_yolov1">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_target_yolov1</span><span class="p">(</span><span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">num_boxes</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">):</span>
+    <span class="n">bbox_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">targets</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;bboxes&#39;</span><span class="p">:</span>
+            <span class="n">bbox_key</span> <span class="o">=</span> <span class="n">key</span>
+    <span class="k">assert</span> <span class="n">bbox_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Annotations should contain bboxes.&quot;</span>
+    <span class="n">bboxes_list</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">bbox_key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span> <span class="o">=</span> <span class="n">bboxes_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">bboxes_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bboxes_list</span><span class="p">)</span>
+    <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span> <span class="o">=</span> <span class="n">feature_shape</span>
+    <span class="n">stride</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">feature_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">gt_cls</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">gt_objectness</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">num_boxes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">gt_bboxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">num_boxes</span><span class="p">,</span> <span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">batch_index</span><span class="p">,</span> <span class="n">bboxes</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bboxes_list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">bbox</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">k</span><span class="p">,:]</span>
+            <span class="p">[</span><span class="n">grid_x</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">],</span> <span class="n">gt_bbox</span> <span class="o">=</span> <span class="n">encode_box</span><span class="p">(</span><span class="n">bbox</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">stride</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">grid_x</span> <span class="o">&lt;</span> <span class="n">ws</span> <span class="ow">and</span> <span class="n">grid_y</span> <span class="o">&lt;</span> <span class="n">hs</span><span class="p">:</span>
+                <span class="n">gt_cls</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">bbox</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">gt_objectness</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="p">:,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">gt_bboxes</span><span class="p">[</span><span class="n">batch_index</span><span class="p">,</span> <span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">,</span> <span class="n">grid_y</span><span class="p">,</span> <span class="n">grid_x</span><span class="p">]</span> <span class="o">=</span> <span class="n">gt_bbox</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">gt_cls</span><span class="p">,</span> <span class="n">gt_objectness</span><span class="p">,</span> <span class="n">gt_bboxes</span></div>
+
+
+
+<span class="c1"># def encoder(bboxes_list, feature_shape):</span>
+<span class="c1">#     batch_size = len(bboxes_list)</span>
+<span class="c1">#     hs, ws = feature_shape</span>
+<span class="c1">#     target = torch.zeros((batch_size, hs, ws, 30))</span>
+<span class="c1">#     for batch_index, bboxes in enumerate(bboxes_list):</span>
+<span class="c1">#         cell_size = [1./hs, 1./ws]</span>
+<span class="c1">#         wh = bboxes[:,2:4] - bboxes[:,:2]</span>
+<span class="c1">#         cxcy = (bboxes[:,2:4] + bboxes[:,:2])/2</span>
+<span class="c1">#         labels = bboxes[:, -1]</span>
+<span class="c1">#         for i in range(bboxes.shape[0]):</span>
+<span class="c1">#             cxcy_sample = cxcy[i]</span>
+<span class="c1">#             ij = (cxcy_sample/cell_size).ceil()-1 #</span>
+<span class="c1">#             y, x = int(ij[1]), int(ij[0])</span>
+<span class="c1">#             target[batch_index, y, x, 4] = 1</span>
+<span class="c1">#             target[batch_index, y, x, 9] = 1</span>
+<span class="c1">#             target[batch_index, y, x, int(labels[i])+9] = 1</span>
+<span class="c1">#             xy = ij*cell_size #匹配到的网格的左上角相对坐标</span>
+<span class="c1">#             delta_xy = (cxcy_sample -xy)/cell_size</span>
+<span class="c1">#             target[batch_index, y, x, 2:4] = wh[i]</span>
+<span class="c1">#             target[batch_index, y, x, :2] = delta_xy</span>
+<span class="c1">#             target[batch_index, y, x, 7:9] = wh[i]</span>
+<span class="c1">#             target[batch_index, y, x, 5:7] = delta_xy</span>
+<span class="c1">#         return target</span>
+
+
+<div class="viewcode-block" id="BoxCoderYoloV1">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1">[docs]</a>
+<span class="k">class</span> <span class="nc">BoxCoderYoloV1</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stride</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+    
+<div class="viewcode-block" id="BoxCoderYoloV1.decode">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode">[docs]</a>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txtytwth</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">grid_xy</span> <span class="o">=</span> <span class="n">create_grid</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">,</span> <span class="n">txtytwth</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="p">(</span><span class="n">txtytwth</span><span class="p">[:,</span><span class="mi">0</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">grid_xy</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="p">(</span><span class="n">txtytwth</span><span class="p">[:,</span><span class="mi">1</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">grid_xy</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">stride</span>
+        <span class="n">w</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">txtytwth</span><span class="p">[:,</span><span class="mi">2</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">txtytwth</span><span class="p">[:,</span><span class="mi">3</span><span class="p">::</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">xmax</span><span class="p">,</span> <span class="n">xmin</span> <span class="o">=</span> <span class="p">(</span><span class="n">xs</span><span class="o">+</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">xs</span><span class="o">-</span><span class="n">w</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">ymax</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="p">(</span><span class="n">ys</span><span class="o">+</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">ys</span><span class="o">-</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="BoxCoderYoloV1.encode_single">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.encode_single">[docs]</a>
+    <span class="k">def</span> <span class="nf">encode_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">encode_box</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BoxCoderYoloV1.decode_single">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode_single">[docs]</a>
+    <span class="k">def</span> <span class="nf">decode_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txtytwth</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">grid</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">decode_box</span><span class="p">(</span><span class="n">txtytwth</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stride</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

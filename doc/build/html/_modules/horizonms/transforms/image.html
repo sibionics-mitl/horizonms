@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.transforms.image &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.transforms.image</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.transforms.image</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">eig</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">torchvision.transforms</span> <span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_input_check_value_range_set</span><span class="p">,</span> <span class="n">_input_get_value_range_set</span><span class="p">,</span> \
+            <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">,</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span>
+<span class="kn">from</span> <span class="nn">..builder</span> <span class="kn">import</span> <span class="n">TRANSFORMS</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;ImageBase&quot;</span><span class="p">,</span> <span class="s2">&quot;Uint8ToFloat&quot;</span><span class="p">,</span> <span class="s2">&quot;Identity&quot;</span><span class="p">,</span> <span class="s2">&quot;Normalizer&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;Brightness&quot;</span><span class="p">,</span> <span class="s2">&quot;Contrast&quot;</span><span class="p">,</span> <span class="s2">&quot;Saturation&quot;</span><span class="p">,</span> <span class="s2">&quot;Hue&quot;</span><span class="p">,</span> <span class="s2">&quot;Sharpness&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;Posterize&quot;</span><span class="p">,</span> <span class="s2">&quot;Solarize&quot;</span><span class="p">,</span> <span class="s2">&quot;AutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;Equalize&quot;</span><span class="p">,</span> <span class="s2">&quot;Invert&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;GaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;GaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;Lighting&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RandomBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomHue&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSharpness&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RandomPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomInvert&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;RandomGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomLighting&quot;</span>
+           <span class="p">)</span>
+
+
+<div class="viewcode-block" id="ImageBase">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.ImageBase">[docs]</a>
+<span class="k">class</span> <span class="nc">ImageBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ImageBase.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.ImageBase.calculate">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ImageBase.forward">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.ImageBase.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">image</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Uint8ToFloat">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Uint8ToFloat">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Uint8ToFloat</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<div class="viewcode-block" id="Uint8ToFloat.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Uint8ToFloat.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Identity">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Identity">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Identity</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Identity.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Identity.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Normalizer">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Normalizer">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Normalizer</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;zscore&#39;</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">image_base</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;zscore&#39;</span><span class="p">,</span> <span class="s1">&#39;zero-one&#39;</span><span class="p">,</span> <span class="s1">&#39;negative-positive-one&#39;</span><span class="p">,</span> <span class="s1">&#39;customize&#39;</span><span class="p">],</span> \
+            <span class="sa">f</span><span class="s2">&quot;mode shoule be in [&#39;zscore&#39;, &#39;zero-one&#39;, &#39;negative-positive-one&#39;, &#39;customize&#39;], but got </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;customize&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">shift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">shift</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">scale</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span> <span class="o">=</span> <span class="n">image_base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+
+<div class="viewcode-block" id="Normalizer.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Normalizer.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;zscore&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;zero-one&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;negative-positive-one&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xmin</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xmax</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;customize&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(mode=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;image_base=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;epsilon=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="Brightness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Brightness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Brightness</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust brightness of an image</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        brightness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the brightness.</span>
+<span class="sd">                        Can be any non-negative number. 0 gives a black image, 1 gives</span>
+<span class="sd">                        the original image while 2 increases the brightness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of brightness .</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of brightness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brightness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span> <span class="o">=</span> <span class="n">brightness_factor</span>
+
+<div class="viewcode-block" id="Brightness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Brightness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">brightness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_brightness</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">brightness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(brightness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomBrightness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomBrightness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomBrightness</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust brightness of an image</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting brightness.</span>
+<span class="sd">        brightness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the brightness.</span>
+<span class="sd">                        Can be any non-negative number. 0 gives a black image, 1 gives</span>
+<span class="sd">                        the original image while 2 increases the brightness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of brightness .</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of brightness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">brightness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness_prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span> <span class="o">=</span> <span class="n">brightness_factor</span>
+
+<div class="viewcode-block" id="RandomBrightness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomBrightness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">brightness_prob</span><span class="p">:</span>
+            <span class="n">brightness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_brightness</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">brightness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;brightness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+
+<div class="viewcode-block" id="Contrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Contrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Contrast</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust contrast of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        contrast_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the contrast. Can be any</span>
+<span class="sd">                    non-negative number. 0 gives a solid gray image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the contrast by a factor of 2.</span>
+<span class="sd">                tuple[float, float]:  Range of the ratio of contrast.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of contrast to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span> <span class="o">=</span> <span class="n">contrast_factor</span>
+
+<div class="viewcode-block" id="Contrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Contrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">contrast_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_contrast</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">contrast_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(contrast_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+
+<div class="viewcode-block" id="RandomContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomContrast</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust contrast of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting contrast.</span>
+<span class="sd">        contrast_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the contrast. Can be any</span>
+<span class="sd">                    non-negative number. 0 gives a solid gray image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the contrast by a factor of 2.</span>
+<span class="sd">                tuple[float, float]:  Range of the ratio of contrast.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of contrast to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span> <span class="o">=</span> <span class="n">contrast_factor</span>
+
+<div class="viewcode-block" id="RandomContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">contrast_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_contrast</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">contrast_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;contrast_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="Saturation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Saturation">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Saturation</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>  <span class="c1"># Color</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust color saturation of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        saturation_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the saturation. 0 will</span>
+<span class="sd">                    give a black and white image, 1 will give the original image while</span>
+<span class="sd">                    2 will enhance the saturation by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of saturation.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of saturation to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">saturation_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span> <span class="o">=</span> <span class="n">saturation_factor</span>
+
+<div class="viewcode-block" id="Saturation.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Saturation.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">saturation_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_saturation</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">saturation_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(saturation_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="RandomSaturation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSaturation">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomSaturation</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>  <span class="c1"># Color</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust color saturation of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):Probability of image adjusting sharpness.</span>
+<span class="sd">        saturation_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the saturation. 0 will</span>
+<span class="sd">                    give a black and white image, 1 will give the original image while</span>
+<span class="sd">                    2 will enhance the saturation by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of saturation.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of saturation to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">saturation_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span> <span class="o">=</span> <span class="n">saturation_factor</span>
+
+<div class="viewcode-block" id="RandomSaturation.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSaturation.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">saturation_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_saturation</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">saturation_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;saturation_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Hue">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Hue">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Hue</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust hue of an image.</span>
+<span class="sd">    The image hue is adjusted by converting the image to HSV and</span>
+<span class="sd">    cyclically shifting the intensities in the hue channel (H).</span>
+<span class="sd">    The image is then converted back to original image mode.</span>
+
+<span class="sd">    `hue_factor` is the amount of shift in H channel and must be in the</span>
+<span class="sd">    interval `[-0.5, 0.5]`.</span>
+
+<span class="sd">    See `Hue`_ for more details.</span>
+
+<span class="sd">    .. _Hue: https://en.wikipedia.org/wiki/Hue</span>
+<span class="sd">    Args:</span>
+<span class="sd">        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5</span>
+<span class="sd">                float:  How much to shift the hue channel. Should be in</span>
+<span class="sd">                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in</span>
+<span class="sd">                    HSV space in positive and negative direction respectively.</span>
+<span class="sd">                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image</span>
+<span class="sd">                    with complementary colors while 0 gives the original image.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of hue.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of hue to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hue_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span> <span class="o">=</span> <span class="n">hue_factor</span>
+
+<div class="viewcode-block" id="Hue.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Hue.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">hue_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_hue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">hue_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(hue_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomHue">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomHue">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomHue</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust hue of an image.</span>
+<span class="sd">    The image hue is adjusted by converting the image to HSV and</span>
+<span class="sd">    cyclically shifting the intensities in the hue channel (H).</span>
+<span class="sd">    The image is then converted back to original image mode.</span>
+
+<span class="sd">    `hue_factor` is the amount of shift in H channel and must be in the</span>
+<span class="sd">    interval `[-0.5, 0.5]`.</span>
+
+<span class="sd">    See `Hue`_ for more details.</span>
+
+<span class="sd">    .. _Hue: https://en.wikipedia.org/wiki/Hue</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting hue.</span>
+<span class="sd">        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5</span>
+<span class="sd">                float:  How much to shift the hue channel. Should be in</span>
+<span class="sd">                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in</span>
+<span class="sd">                    HSV space in positive and negative direction respectively.</span>
+<span class="sd">                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image</span>
+<span class="sd">                    with complementary colors while 0 gives the original image.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of hue.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of hue to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">hue_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span> <span class="o">=</span> <span class="n">hue_factor</span>
+
+<div class="viewcode-block" id="RandomHue.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomHue.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">hue_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_hue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">hue_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;hue_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Sharpness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Sharpness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Sharpness</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust the sharpness of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sharpness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the sharpness. Can be</span>
+<span class="sd">                    any non-negative number. 0 gives a blurred image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the sharpness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of sharpness.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of sharpness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sharpness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span> <span class="o">=</span> <span class="n">sharpness_factor</span>
+
+<div class="viewcode-block" id="Sharpness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Sharpness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">sharpness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_sharpness</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sharpness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(sharpness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomSharpness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSharpness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomSharpness</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust the sharpness of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting sharpness.</span>
+<span class="sd">        sharpness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the sharpness. Can be</span>
+<span class="sd">                    any non-negative number. 0 gives a blurred image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the sharpness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of sharpness.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of sharpness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">sharpness_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span> <span class="o">=</span> <span class="n">sharpness_factor</span>
+
+<div class="viewcode-block" id="RandomSharpness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSharpness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">sharpness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adjust_sharpness</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">sharpness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;sharpness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Posterize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Posterize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Posterize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Posterize an image by reducing the number of bits for each color channel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8</span>
+<span class="sd">                int: The number of bits to keep for each channel (0-8).</span>
+<span class="sd">                tuple[int, int]: Range of the number of bits.</span>
+<span class="sd">                list[int, ... , int] : list of the number to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posterize_bins</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span> <span class="o">=</span> <span class="n">posterize_bins</span>
+
+<div class="viewcode-block" id="Posterize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Posterize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">posterize_bins_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">posterize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">posterize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(posterize_bins=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomPosterize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomPosterize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomPosterize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Posterize an image by reducing the number of bits for each color channel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting posterize.</span>
+<span class="sd">        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8</span>
+<span class="sd">                int: The number of bits to keep for each channel (0-8).</span>
+<span class="sd">                tuple[int, int]: Range of the number of bits.</span>
+<span class="sd">                list[int, ... , int] : list of the number to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">posterize_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span> <span class="o">=</span> <span class="n">posterize_bins</span>
+
+<div class="viewcode-block" id="RandomPosterize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomPosterize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">posterize_bins_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">posterize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">posterize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;posterize_bins=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Solarize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Solarize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Solarize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solarize an RGB/grayscale image by inverting all pixel values above a threshold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1</span>
+<span class="sd">                float: All pixels equal or above this value are inverted.</span>
+<span class="sd">                tuple[float, float]: Range of values to be randomly chosen.</span>
+<span class="sd">                list[float, ... , float] : list of values to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solarize_threshold</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span> <span class="o">=</span> <span class="n">solarize_threshold</span>
+
+<div class="viewcode-block" id="Solarize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Solarize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+            <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">solarize_threshold_sel</span> <span class="o">*</span> <span class="mi">255</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">solarize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">solarize_threshold_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(solarize_threshold=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomSolarize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSolarize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomSolarize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solarize an RGB/grayscale image by inverting all pixel values above a threshold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting solarize.</span>
+<span class="sd">        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1</span>
+<span class="sd">                float: All pixels equal or above this value are inverted.</span>
+<span class="sd">                tuple[float, float]: Range of values to be randomly chosen.</span>
+<span class="sd">                list[float, ... , float] : list of values to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">solarize_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span> <span class="o">=</span> <span class="n">solarize_threshold</span>
+
+<div class="viewcode-block" id="RandomSolarize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomSolarize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+                <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">solarize_threshold_sel</span> <span class="o">*</span> <span class="mi">255</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">solarize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">solarize_threshold_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;solarize_threshold=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="AutoContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.AutoContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AutoContrast</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximize contrast of an image by remapping its</span>
+<span class="sd">    pixels per channel so that the lowest becomes black and the lightest</span>
+<span class="sd">    becomes white.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="AutoContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.AutoContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">autocontrast</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomAutoContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomAutoContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomAutoContrast</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximize contrast of an image by remapping its</span>
+<span class="sd">    pixels per channel so that the lowest becomes black and the lightest</span>
+<span class="sd">    becomes white.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        contrast_prob  (float):  Probability of image adjusting contrast.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="RandomAutoContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomAutoContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">autocontrast</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Equalize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Equalize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Equalize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equalize the histogram of an image by applying</span>
+<span class="sd">    a non-linear mapping to the input in order to create a uniform</span>
+<span class="sd">    distribution of grayscale values in the output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Equalize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Equalize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># F.equalize的内部实现是在0-255数据范围内,如果是0-1范围,效果不正确</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="RandomEqualize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomEqualize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomEqualize</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equalize the histogram of an image by applying</span>
+<span class="sd">    a non-linear mapping to the input in order to create a uniform</span>
+<span class="sd">    distribution of grayscale values in the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob  (float):  Probability of image adjusting equalize.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="RandomEqualize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomEqualize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>  <span class="c1"># F.equalize的内部实现是在0-255数据范围内,如果是0-1范围,效果不正确</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">equalize</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+<div class="viewcode-block" id="Invert">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Invert">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Invert</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Invert the colors of an RGB/grayscale image.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Invert.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Invert.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="RandomInvert">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomInvert">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomInvert</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Invert the colors of an RGB/grayscale image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting invert.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="RandomInvert.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomInvert.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="GaussianBlur">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.GaussianBlur">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">GaussianBlur</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian blurring on the image by given kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sigma (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        kernel_size (int  | tuple[int, int] |  list[int, int] ):</span>
+<span class="sd">                int: Gaussian kernel size.</span>
+<span class="sd">                tuple[int, int]: Range of the Gaussian kernel size.</span>
+<span class="sd">                list[int, int]: list of the  Gaussian kernel size to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+<div class="viewcode-block" id="GaussianBlur.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.GaussianBlur.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">sigma_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">kernel_size_sel</span> <span class="o">=</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">gaussian_blur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size_sel</span><span class="p">,</span> <span class="n">kernel_size_sel</span><span class="p">),</span> <span class="p">[</span><span class="n">sigma_sel</span><span class="p">,</span> <span class="n">sigma_sel</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(sigma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;kernel_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="RandomGaussianBlur">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomGaussianBlur">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomGaussianBlur</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian blurring on the image by given kernel.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        blur_prob (float):  Probability of image adjusting Gaussian blurring.</span>
+<span class="sd">        sigma (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        kernel_size (int  | tuple[int, int] |  list[int, int] ):</span>
+<span class="sd">                int: Gaussian kernel size.</span>
+<span class="sd">                tuple[int, int]: Range of the Gaussian kernel size.</span>
+<span class="sd">                list[int, int]: list of the  Gaussian kernel size to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+<div class="viewcode-block" id="RandomGaussianBlur.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomGaussianBlur.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">sigma_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="n">kernel_size_sel</span> <span class="o">=</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">gaussian_blur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size_sel</span><span class="p">,</span> <span class="n">kernel_size_sel</span><span class="p">),</span> <span class="p">[</span><span class="n">sigma_sel</span><span class="p">,</span> <span class="n">sigma_sel</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;sigma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;kernel_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="p">):</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">()</span> <span class="k">else</span> <span class="mf">255.0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">std</span> <span class="o">*</span> <span class="mf">255.0</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">*</span> <span class="mf">255.0</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span> <span class="o">+</span> <span class="n">mean</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">+</span> <span class="n">noise</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span><span class="o">.</span><span class="n">type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="c1"># if len(image.shape) == 2:</span>
+    <span class="c1">#     image = image[..., None]</span>
+    <span class="k">return</span> <span class="n">image</span>
+
+<div class="viewcode-block" id="GaussianNoise">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.GaussianNoise">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">GaussianNoise</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian noise on the image by given std.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        std (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        mean (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel mean.</span>
+<span class="sd">                tuple[float, float]: Range of the Gaussian kernel mean.</span>
+<span class="sd">                list[float, float]: list of the Gaussian kernel mean to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+
+<div class="viewcode-block" id="GaussianNoise.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.GaussianNoise.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">std_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">mean_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std_sel</span><span class="p">,</span> <span class="n">mean_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="RandomGaussianNoise">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomGaussianNoise">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomGaussianNoise</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian noise on the image by given std.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        noise_prob ( float):  Probability of image adjusting Gaussian noise.</span>
+<span class="sd">        std (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        mean (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel mean.</span>
+<span class="sd">                tuple[float, float]: Range of the Gaussian kernel mean.</span>
+<span class="sd">                list[float, float]: list of the Gaussian kernel mean to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+
+<div class="viewcode-block" id="RandomGaussianNoise.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomGaussianNoise.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">std_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+            <span class="n">mean_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std_sel</span><span class="p">,</span> <span class="n">mean_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">alphastd</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span>
+    <span class="c1"># alpha = torch.tensor(np.array([0.4638, 0.2112, 0.1410]))</span>
+    <span class="c1"># alpha = image.new().resize_(3).normal_(0, alphastd)  # 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]),</span>
+                         <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1"># 为了和cv版生成随机数一致</span>
+
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">eigvec</span><span class="o">.</span><span class="n">type_as</span><span class="p">(</span><span class="n">image</span><span class="p">)</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span> \
+        <span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">alpha</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> \
+        <span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">eigval</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span> \
+        <span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">rgb</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">image</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<div class="viewcode-block" id="Lighting">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Lighting">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Lighting</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lighting noise(AlexNet - style PCA - based noise)</span>
+<span class="sd">    codes from: https://github.com/automl/trivialaugment/blob/3bfd06552336244b23b357b2c973859500328fbb/TrivialAugment/augmentations.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">alphastd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span> <span class="o">=</span> <span class="n">alphastd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">eigval</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">eigvec</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Lighting.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.Lighting.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">alphastd_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd_sel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd_sel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(alphastd=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;eigval=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;eigvec=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="RandomLighting">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomLighting">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RandomLighting</span><span class="p">(</span><span class="n">ImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lighting noise(AlexNet - style PCA - based noise)</span>
+<span class="sd">    codes from: https://github.com/automl/trivialaugment/blob/3bfd06552336244b23b357b2c973859500328fbb/TrivialAugment/augmentations.py</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting Lighting noise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="RandomLighting.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image.RandomLighting.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">alphastd</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>  <span class="c1">## 为了和cv版生成随机数一致</span>
+            <span class="n">eigval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">eigvec</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">device</span><span class="o">=</span><span class="n">image</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">is_floating_point</span><span class="p">():</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

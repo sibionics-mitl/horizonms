@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.necks &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models.nets" href="horizonms.models.nets.html" />
+    <link rel="prev" title="horizonms.models.heads" href="horizonms.models.heads.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="horizonms.models.html">horizonms.models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">horizonms.models.necks</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.necks.classification_necks">horizonms.models.necks.classification_necks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.necks.feature_pyramid_network">horizonms.models.necks.feature_pyramid_network</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.batch_image">horizonms.models.batch_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.model_base">horizonms.models.model_base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+          <li class="breadcrumb-item"><a href="horizonms.models.html">horizonms.models</a></li>
+      <li class="breadcrumb-item active">horizonms.models.necks</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.necks.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models-necks">
+<h1>horizonms.models.necks<a class="headerlink" href="#horizonms-models-necks" title="Link to this heading"></a></h1>
+<section id="module-horizonms.models.necks.classification_necks">
+<span id="horizonms-models-necks-classification-necks"></span><h2>horizonms.models.necks.classification_necks<a class="headerlink" href="#module-horizonms.models.necks.classification_necks" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.necks.classification_necks.ClassificationPoolingNecks">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.necks.classification_necks.</span></span><span class="sig-name descname"><span class="pre">ClassificationPoolingNecks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'avg'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/necks/classification_necks.html#ClassificationPoolingNecks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.necks.classification_necks.ClassificationPoolingNecks" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Neck for classification task which consists of pooling and flatten.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pool</strong> (<em>str</em>) – the pooling type. It is ‘avg’ for average pooling or ‘max’ for max pooling.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.necks.classification_necks.ClassificationPoolingNecks.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/necks/classification_necks.html#ClassificationPoolingNecks.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.necks.classification_necks.ClassificationPoolingNecks.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.necks.feature_pyramid_network">
+<span id="horizonms-models-necks-feature-pyramid-network"></span><h2>horizonms.models.necks.feature_pyramid_network<a class="headerlink" href="#module-horizonms.models.necks.feature_pyramid_network" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.necks.feature_pyramid_network.</span></span><span class="sig-name descname"><span class="pre">FeaturePyramidNetwork</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6,</span> <span class="pre">7]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/necks/feature_pyramid_network.html#FeaturePyramidNetwork"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Feature pyramid network (FPN).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels_list</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – the number of channels for each feature map.</p></li>
+<li><p><strong>out_channels</strong> – the number of channels for output.</p></li>
+<li><p><strong>pyramid_levels</strong> – the levels of FPN.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/necks/feature_pyramid_network.html#FeaturePyramidNetwork.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork.forward" title="Link to this definition"></a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.models.heads.html" class="btn btn-neutral float-left" title="horizonms.models.heads" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.nets.html" class="btn btn-neutral float-right" title="horizonms.models.nets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

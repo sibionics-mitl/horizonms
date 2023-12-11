@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.detection.anchors_retinanet &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.detection.anchors_retinanet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.detection.anchors_retinanet</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">boxes</span>
+<span class="kn">from</span> <span class="nn">torch.jit.annotations</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;AnchorGenerator&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_transform&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_transform_batch&quot;</span><span class="p">,</span> <span class="s2">&quot;bbox_transform_inv_batch&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;BBoxCoder&quot;</span><span class="p">,</span> <span class="s2">&quot;clip_boxes&quot;</span><span class="p">,</span> <span class="s2">&quot;anchor_targets_bbox&quot;</span><span class="p">,</span> <span class="s2">&quot;compute_gt_annotations&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AnchorGenerator">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator">[docs]</a>
+<span class="k">class</span> <span class="nc">AnchorGenerator</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="vm">__annotations__</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;cell_anchors&quot;</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span>
+        <span class="s2">&quot;_cache&quot;</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span>
+    <span class="p">}</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Module that generates anchors for a set of feature maps and</span>
+<span class="sd">    image sizes.</span>
+
+<span class="sd">    The module support computing anchors at multiple sizes and aspect ratios</span>
+<span class="sd">    per feature map. This module assumes aspect ratio = height / width for</span>
+<span class="sd">    each anchor.</span>
+
+<span class="sd">    sizes and aspect_ratios should have the same number of elements, and it should</span>
+<span class="sd">    correspond to the number of feature maps.</span>
+
+<span class="sd">    sizes[i] and aspect_ratios[i] can have an arbitrary number of elements,</span>
+<span class="sd">    and AnchorGenerator will output a set of sizes[i] * aspect_ratios[i] anchors</span>
+<span class="sd">    per spatial location for feature map i.</span>
+
+<span class="sd">    Arguments:</span>
+<span class="sd">        sizes (Tuple[Tuple[int]]):</span>
+<span class="sd">        aspect_ratios (Tuple[Tuple[float]]):</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">anchor_sizes</span><span class="o">=</span><span class="p">((</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">),),</span>
+        <span class="n">anchor_aspect_ratios</span><span class="o">=</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),),</span>
+        <span class="n">anchor_scales</span> <span class="o">=</span> <span class="p">((</span><span class="mi">2</span><span class="o">**</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span><span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)),)</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AnchorGenerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="c1"># TODO change this</span>
+            <span class="n">anchor_sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">((</span><span class="n">s</span><span class="p">,)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">anchor_sizes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">anchor_aspect_ratios</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="n">anchor_aspect_ratios</span> <span class="o">=</span> <span class="p">(</span><span class="n">anchor_aspect_ratios</span><span class="p">,)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchor_aspect_ratios</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">anchor_sizes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratios</span> <span class="o">=</span> <span class="n">anchor_aspect_ratios</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scales</span> <span class="o">=</span> <span class="n">anchor_scales</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell_anchors</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># TODO: https://github.com/pytorch/pytorch/issues/26792</span>
+    <span class="c1"># For every (aspect_ratios, scales) combination, output a zero-centered anchor with those values.</span>
+    <span class="c1"># (scales, aspect_ratios) are usually an element of zip(self.scales, self.aspect_ratios)</span>
+    <span class="c1"># This method assumes aspect ratio = height / width for an anchor.</span>
+<div class="viewcode-block" id="AnchorGenerator.generate_anchors">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.generate_anchors">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_anchors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_size</span><span class="p">,</span> <span class="n">aspect_ratios</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">):</span>
+        <span class="c1"># type: (List[int], List[float], int, Device) -&gt; Tensor  # noqa: F821</span>
+        <span class="n">base_size</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">base_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">scales</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">aspect_ratios</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="n">aspect_ratios</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">h_ratios</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">aspect_ratios</span><span class="p">)</span>
+        <span class="n">w_ratios</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">h_ratios</span>
+        
+        <span class="n">ws</span> <span class="o">=</span> <span class="n">base_size</span><span class="o">*</span><span class="p">(</span><span class="n">w_ratios</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">scales</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">hs</span> <span class="o">=</span> <span class="n">base_size</span><span class="o">*</span><span class="p">(</span><span class="n">h_ratios</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">scales</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">base_anchors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="o">-</span><span class="n">ws</span><span class="p">,</span> <span class="o">-</span><span class="n">hs</span><span class="p">,</span> <span class="n">ws</span><span class="p">,</span> <span class="n">hs</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="k">return</span> <span class="n">base_anchors</span></div>
+
+
+<div class="viewcode-block" id="AnchorGenerator.set_cell_anchors">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.set_cell_anchors">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_cell_anchors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="c1"># type: (int, Device) -&gt; None  # noqa: F821</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_anchors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">cell_anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_anchors</span>
+            <span class="k">assert</span> <span class="n">cell_anchors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="c1"># suppose that all anchors have the same device</span>
+            <span class="c1"># which is a valid assumption in the current state of the codebase</span>
+            <span class="k">if</span> <span class="n">cell_anchors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">device</span><span class="p">:</span>
+                <span class="k">return</span>
+
+        <span class="n">cell_anchors</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_anchors</span><span class="p">(</span>
+                <span class="n">sizes</span><span class="p">,</span>
+                <span class="n">aspect_ratios</span><span class="p">,</span>
+                <span class="n">scales</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="p">,</span>
+                <span class="n">device</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">aspect_ratios</span><span class="p">,</span> <span class="n">scales</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratios</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell_anchors</span> <span class="o">=</span> <span class="n">cell_anchors</span></div>
+
+
+<div class="viewcode-block" id="AnchorGenerator.num_anchors_per_location">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.num_anchors_per_location">[docs]</a>
+    <span class="k">def</span> <span class="nf">num_anchors_per_location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aspect_ratios</span><span class="p">)]</span></div>
+
+
+    <span class="c1"># For every combination of (a, (g, s), i) in (self.cell_anchors, zip(grid_sizes, strides), 0:2),</span>
+    <span class="c1"># output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.</span>
+<div class="viewcode-block" id="AnchorGenerator.grid_anchors">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.grid_anchors">[docs]</a>
+    <span class="k">def</span> <span class="nf">grid_anchors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_sizes</span><span class="p">,</span> <span class="n">strides</span><span class="p">):</span>
+        <span class="c1"># type: (List[List[int]], List[List[Tensor]]) -&gt; List[Tensor]</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cell_anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell_anchors</span>
+        <span class="k">assert</span> <span class="n">cell_anchors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">grid_sizes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell_anchors</span><span class="p">)</span>
+        
+
+        <span class="k">for</span> <span class="n">size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">base_anchors</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">grid_sizes</span><span class="p">,</span> <span class="n">strides</span><span class="p">,</span> <span class="n">cell_anchors</span>
+        <span class="p">):</span>
+            <span class="n">grid_height</span><span class="p">,</span> <span class="n">grid_width</span> <span class="o">=</span> <span class="n">size</span>
+            <span class="n">stride_height</span><span class="p">,</span> <span class="n">stride_width</span> <span class="o">=</span> <span class="n">stride</span>
+            <span class="n">device</span> <span class="o">=</span> <span class="n">base_anchors</span><span class="o">.</span><span class="n">device</span>
+
+            <span class="c1"># For output anchor, compute [x_center, y_center, x_center, y_center]</span>
+            <span class="n">shifts_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">grid_width</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
+            <span class="p">)</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride_width</span>
+            <span class="n">shifts_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">grid_height</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span>
+            <span class="p">)</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span> <span class="o">*</span> <span class="n">stride_height</span>
+            
+            <span class="n">shift_y</span><span class="p">,</span> <span class="n">shift_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">shifts_y</span><span class="p">,</span> <span class="n">shifts_x</span><span class="p">)</span>
+            <span class="n">shift_x</span> <span class="o">=</span> <span class="n">shift_x</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">shift_y</span> <span class="o">=</span> <span class="n">shift_y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">shifts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">shift_x</span><span class="p">,</span> <span class="n">shift_y</span><span class="p">,</span> <span class="n">shift_x</span><span class="p">,</span> <span class="n">shift_y</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="c1"># For every (base anchor, output anchor) pair,</span>
+            <span class="c1"># offset each zero-centered base anchor by the center of the output anchor.</span>
+            <span class="n">anchors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">shifts</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">base_anchors</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">anchors</span></div>
+
+
+<div class="viewcode-block" id="AnchorGenerator.cached_grid_anchors">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.cached_grid_anchors">[docs]</a>
+    <span class="k">def</span> <span class="nf">cached_grid_anchors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid_sizes</span><span class="p">,</span> <span class="n">strides</span><span class="p">):</span>
+        <span class="c1"># type: (List[List[int]], List[List[Tensor]]) -&gt; List[Tensor]</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">grid_sizes</span><span class="p">)</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">strides</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grid_anchors</span><span class="p">(</span><span class="n">grid_sizes</span><span class="p">,</span> <span class="n">strides</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">anchors</span>
+        <span class="k">return</span> <span class="n">anchors</span></div>
+
+
+<div class="viewcode-block" id="AnchorGenerator.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_maps</span><span class="p">,</span> <span class="n">batch_image_size</span><span class="p">,</span> <span class="n">org_image_sizes</span><span class="p">):</span>
+        <span class="n">grid_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">([</span><span class="n">feature_map</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span> <span class="k">for</span> <span class="n">feature_map</span> <span class="ow">in</span> <span class="n">feature_maps</span><span class="p">])</span>
+        <span class="n">image_size</span> <span class="o">=</span> <span class="n">batch_image_size</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">dtype</span><span class="p">,</span> <span class="n">device</span> <span class="o">=</span> <span class="n">feature_maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">feature_maps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">strides</span> <span class="o">=</span> <span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">//</span> <span class="n">g</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">grid_sizes</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_cell_anchors</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span>
+        <span class="n">anchors_over_all_feature_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_grid_anchors</span><span class="p">(</span><span class="n">grid_sizes</span><span class="p">,</span> <span class="n">strides</span><span class="p">)</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">image_height</span><span class="p">,</span> <span class="n">image_width</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">org_image_sizes</span><span class="p">):</span>
+            <span class="n">anchors_in_image</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">anchors_per_feature_map</span> <span class="ow">in</span> <span class="n">anchors_over_all_feature_maps</span><span class="p">:</span>
+                <span class="n">anchors_in_image</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anchors_per_feature_map</span><span class="p">)</span>
+            <span class="n">anchors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">anchors_in_image</span><span class="p">)</span>
+        <span class="n">anchors</span> <span class="o">=</span> <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">anchors_per_image</span><span class="p">)</span> <span class="k">for</span> <span class="n">anchors_per_image</span> <span class="ow">in</span> <span class="n">anchors</span><span class="p">]</span>
+        <span class="c1"># Clear the cache in case that memory leaks.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">anchors</span></div>
+</div>
+
+    
+
+<div class="viewcode-block" id="bbox_transform">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform">[docs]</a>
+<span class="k">def</span> <span class="nf">bbox_transform</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute bounding-box regression targets for an image.&quot;&quot;&quot;</span>
+
+    <span class="c1"># The Mean and std are calculated from COCO dataset.</span>
+    <span class="c1"># Bounding box normalization was firstly introduced in the Fast R-CNN paper.</span>
+    <span class="c1"># See https://github.com/fizyr/keras-retinanet/issues/1273#issuecomment-585828825  for more details</span>
+    <span class="k">if</span> <span class="n">mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">std</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+
+    <span class="n">anchor_widths</span>  <span class="o">=</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">anchor_heights</span> <span class="o">=</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># According to the information provided by a keras-retinanet author, they got marginally better results using</span>
+    <span class="c1"># the following way of bounding box parametrization.</span>
+    <span class="c1"># See https://github.com/fizyr/keras-retinanet/issues/1273#issuecomment-585828825 for more details</span>
+    <span class="n">targets_dx1</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_widths</span>
+    <span class="n">targets_dy1</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_heights</span>
+    <span class="n">targets_dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_widths</span>
+    <span class="n">targets_dy2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_heights</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">targets_dx1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">targets_dy1</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> 
+                        <span class="n">targets_dx2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">targets_dy2</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">(</span><span class="n">targets</span> <span class="o">-</span> <span class="n">mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>
+
+    <span class="k">return</span> <span class="n">targets</span></div>
+
+
+
+<div class="viewcode-block" id="bbox_transform_batch">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform_batch">[docs]</a>
+<span class="k">def</span> <span class="nf">bbox_transform_batch</span><span class="p">(</span><span class="n">anchors_batch</span><span class="p">,</span> <span class="n">gt_boxes_batch</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute bounding-box regression targets for an image.&quot;&quot;&quot;</span>
+
+    <span class="c1"># The Mean and std are calculated from COCO dataset.</span>
+    <span class="c1"># Bounding box normalization was firstly introduced in the Fast R-CNN paper.</span>
+    <span class="c1"># See https://github.com/fizyr/keras-retinanet/issues/1273#issuecomment-585828825  for more details</span>
+    <span class="k">if</span> <span class="n">mean</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">std</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+
+    <span class="n">anchor_widths</span>  <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">anchor_heights</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># According to the information provided by a keras-retinanet author, they got marginally better results using</span>
+    <span class="c1"># the following way of bounding box parametrization.</span>
+    <span class="c1"># See https://github.com/fizyr/keras-retinanet/issues/1273#issuecomment-585828825 for more details</span>
+    <span class="n">targets_dx1</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_widths</span>
+    <span class="n">targets_dy1</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_heights</span>
+    <span class="n">targets_dx2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_widths</span>
+    <span class="n">targets_dy2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gt_boxes_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="n">anchor_heights</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">targets_dx1</span><span class="p">,</span> <span class="n">targets_dy1</span><span class="p">,</span> 
+                           <span class="n">targets_dx2</span><span class="p">,</span> <span class="n">targets_dy2</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">targets</span> <span class="o">=</span> <span class="p">(</span><span class="n">targets</span> <span class="o">-</span> <span class="n">mean</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:])</span> <span class="o">/</span> <span class="n">std</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span><span class="kc">None</span><span class="p">,:]</span>
+
+    <span class="k">return</span> <span class="n">targets</span></div>
+
+
+
+<div class="viewcode-block" id="bbox_transform_inv_batch">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform_inv_batch">[docs]</a>
+<span class="k">def</span> <span class="nf">bbox_transform_inv_batch</span><span class="p">(</span><span class="n">anchors_batch</span><span class="p">,</span> <span class="n">deltas_batch</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Applies deltas (usually regression results) to boxes (usually anchors).</span>
+
+<span class="sd">    Before applying the deltas to the boxes, the normalization that was previously applied (in the generator) has to be removed.</span>
+<span class="sd">    The mean and std are the mean and std as applied in the generator. They are unnormalized in this function and then applied to the boxes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        boxes : np.array of shape (B, N, 4), where B is the batch size, N the number of boxes and 4 values for (x1, y1, x2, y2).</span>
+<span class="sd">        deltas: np.array of same shape as boxes. These deltas (d_x1, d_y1, d_x2, d_y2) are a factor of the width/height.</span>
+<span class="sd">        mean  : The mean value used when computing deltas (defaults to [0, 0, 0, 0]).</span>
+<span class="sd">        std   : The standard deviation used when computing deltas (defaults to [0.2, 0.2, 0.2, 0.2]).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A np.array of the same shape as boxes, but with deltas applied to each box.</span>
+<span class="sd">        The mean and std are used during training to normalize the regression values (networks love normalization).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">width</span>  <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">x1</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">deltas_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">mean</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">width</span>
+    <span class="n">y1</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">deltas_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">mean</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">height</span>
+    <span class="n">x2</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">deltas_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">mean</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">*</span> <span class="n">width</span>
+    <span class="n">y2</span> <span class="o">=</span> <span class="n">anchors_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">deltas_batch</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">mean</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">*</span> <span class="n">height</span>
+
+    <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x1</span><span class="p">,</span> <span class="n">y1</span><span class="p">,</span> <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pred_boxes</span></div>
+
+
+
+<div class="viewcode-block" id="BBoxCoder">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder">[docs]</a>
+<span class="k">class</span> <span class="nc">BBoxCoder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class encodes and decodes a set of bounding boxes into</span>
+<span class="sd">    the representation used for training the regressors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.2</span><span class="p">,</span><span class="mf">0.2</span><span class="p">],</span> <span class="n">bbox_xform_clip</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1000.</span> <span class="o">/</span> <span class="mi">16</span><span class="p">)):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Arguments:</span>
+<span class="sd">            weights (4-element tuple)</span>
+<span class="sd">            bbox_xform_clip (float)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span>  <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bbox_xform_clip</span> <span class="o">=</span> <span class="n">bbox_xform_clip</span>
+
+<div class="viewcode-block" id="BBoxCoder.encode">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode">[docs]</a>
+    <span class="k">def</span> <span class="nf">encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors_group</span><span class="p">,</span> <span class="n">gt_boxes_group</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">anchors_group</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">anchors_group</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">std</span>  <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">targets_group</span> <span class="o">=</span> <span class="n">bbox_transform_batch</span><span class="p">(</span><span class="n">anchors_group</span><span class="p">,</span> <span class="n">gt_boxes_group</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">targets_group</span></div>
+
+
+<div class="viewcode-block" id="BBoxCoder.encode_single">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode_single">[docs]</a>
+    <span class="k">def</span> <span class="nf">encode_single</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Encode a set of proposals with respect to some</span>
+<span class="sd">        reference boxes</span>
+
+<span class="sd">        Arguments:</span>
+<span class="sd">            reference_boxes (Tensor): reference boxes</span>
+<span class="sd">            proposals (Tensor): boxes to be encoded</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">anchors</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">std</span>  <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">bbox_transform</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">targets</span></div>
+
+
+<div class="viewcode-block" id="BBoxCoder.decode">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.decode">[docs]</a>
+    <span class="k">def</span> <span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">anchors_group</span><span class="p">,</span> <span class="n">deltas_group</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">deltas_group</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">deltas_group</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">std</span>  <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">bbox_transform_inv_batch</span><span class="p">(</span><span class="n">anchors_group</span><span class="p">,</span> <span class="n">deltas_group</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pred_boxes</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="clip_boxes">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.clip_boxes">[docs]</a>
+<span class="k">def</span> <span class="nf">clip_boxes</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">image_sizes</span><span class="p">):</span>
+    <span class="n">boxes_clip</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span>
+        <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">image_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">b</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">b</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">b</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">b</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">b</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">width</span><span class="p">)</span>
+        <span class="n">b</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">b</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">],</span> <span class="nb">max</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
+        <span class="n">boxes_clip</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> 
+    <span class="n">boxes_clip</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">boxes_clip</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">boxes_clip</span></div>
+
+
+
+<div class="viewcode-block" id="anchor_targets_bbox">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.anchor_targets_bbox">[docs]</a>
+<span class="k">def</span> <span class="nf">anchor_targets_bbox</span><span class="p">(</span>
+    <span class="n">anchors_group</span><span class="p">,</span>
+    <span class="n">annotations_group</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">,</span>
+    <span class="n">image_size_group</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">negative_overlap</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">positive_overlap</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Generate anchor targets for bbox detection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        anchors_group: List of anchors with each anchor shape (N, 4) for (x1, y1, x2, y2).</span>
+<span class="sd">        annotations_group: List of annotation dictionaries with each annotation containing &#39;labels&#39; and &#39;boxes&#39; of an image.</span>
+<span class="sd">        num_classes: Number of classes to predict.</span>
+<span class="sd">        mask_shape: If the image is padded with zeros, mask_shape can be used to mark the relevant part of the image.</span>
+<span class="sd">        negative_overlap: IoU overlap for negative anchors (all anchors with overlap &lt; negative_overlap are negative).</span>
+<span class="sd">        positive_overlap: IoU overlap or positive anchors (all anchors with overlap &gt; positive_overlap are positive).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        labels_batch: batch that contains labels &amp; anchor states (np.array of shape (batch_size, N, num_classes + 1),</span>
+<span class="sd">                      where N is the number of anchors for an image and the last column defines the anchor state (-1 for ignore, 0 for bg, 1 for fg).</span>
+<span class="sd">        regression_batch: batch that contains bounding-box regression targets for an image &amp; anchor states (np.array of shape (batch_size, N, 4 + 1),</span>
+<span class="sd">                      where N is the number of anchors for an image, the first 4 columns define regression targets for (x1, y1, x2, y2) and the</span>
+<span class="sd">                      last column defines anchor states (-1 for ignore, 0 for bg, 1 for fg).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bbox_key</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">annotations_group</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;bboxes&#39;</span><span class="p">:</span>
+            <span class="n">bbox_key</span> <span class="o">=</span> <span class="n">key</span>
+    <span class="k">assert</span> <span class="n">bbox_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;Annotations should contain bboxes.&quot;</span>
+
+    <span class="n">bboxes_group</span> <span class="o">=</span> <span class="n">annotations_group</span><span class="p">[</span><span class="n">bbox_key</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+    <span class="n">batch_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bboxes_group</span><span class="p">)</span>
+    <span class="n">device</span> <span class="o">=</span> <span class="n">anchors_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+    <span class="n">regression_batch</span>  <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">anchors_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">labels_batch</span>      <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">anchors_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">num_classes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+    <span class="n">anchor_state</span>      <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">anchors_group</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="c1"># compute labels and regression targets</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">bboxes_labels</span><span class="p">,</span> <span class="n">image_size</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">anchors_group</span><span class="p">,</span> <span class="n">bboxes_group</span><span class="p">,</span> <span class="n">image_size_group</span><span class="p">)):</span>
+        <span class="n">bboxes</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">bboxes_labels</span><span class="p">[:,:</span><span class="mi">4</span><span class="p">],</span> <span class="n">bboxes_labels</span><span class="p">[:,</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">bboxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="c1"># obtain indices of gt annotations with the greatest overlap</span>
+            <span class="n">positive_indices</span><span class="p">,</span> <span class="n">ignore_indices</span><span class="p">,</span> <span class="n">argmax_overlaps_inds</span> <span class="o">=</span> <span class="n">compute_gt_annotations</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">bboxes</span><span class="p">,</span> <span class="n">negative_overlap</span><span class="p">,</span> <span class="n">positive_overlap</span><span class="p">)</span>
+
+            <span class="n">anchor_state</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">ignore_indices</span><span class="p">]</span>   <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">anchor_state</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">positive_indices</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="c1"># compute target class labels</span>
+            <span class="n">labels_batch</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">positive_indices</span><span class="p">,</span> <span class="n">labels</span><span class="p">[</span><span class="n">argmax_overlaps_inds</span><span class="p">[</span><span class="n">positive_indices</span><span class="p">]]]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="c1"># regression_batch[index, :, :-1] = bbox_transform(anchors, bboxes[argmax_overlaps_inds, :])</span>
+            <span class="n">regression_batch</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">bboxes</span><span class="p">[</span><span class="n">argmax_overlaps_inds</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="c1"># ignore annotations outside of image</span>
+        <span class="k">if</span> <span class="n">image_size</span><span class="p">:</span>
+            <span class="n">image_size</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">image_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">anchors_centers</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([(</span><span class="n">anchors</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">anchors</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">anchors</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">anchors</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_or</span><span class="p">(</span><span class="n">anchors_centers</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">image_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">anchors_centers</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">&gt;=</span><span class="n">image_size</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="c1"># labels_batch[index, indices, -1]     = -1</span>
+            <span class="c1"># regression_batch[index, indices, -1] = -1</span>
+            <span class="n">anchor_state</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">indices</span><span class="p">]</span>   <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">regression_batch</span><span class="p">,</span> <span class="n">labels_batch</span><span class="p">,</span> <span class="n">anchor_state</span></div>
+
+
+
+<div class="viewcode-block" id="compute_gt_annotations">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.compute_gt_annotations">[docs]</a>
+<span class="k">def</span> <span class="nf">compute_gt_annotations</span><span class="p">(</span>
+    <span class="n">anchors</span><span class="p">,</span>
+    <span class="n">annotations</span><span class="p">,</span>
+    <span class="n">negative_overlap</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+    <span class="n">positive_overlap</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Obtain indices of gt annotations with the greatest overlap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        anchors: np.array of annotations of shape (N, 4) for (x1, y1, x2, y2).</span>
+<span class="sd">        annotations: np.array of shape (N, 5) for (x1, y1, x2, y2, label).</span>
+<span class="sd">        negative_overlap: IoU overlap for negative anchors (all anchors with overlap &lt; negative_overlap are negative).</span>
+<span class="sd">        positive_overlap: IoU overlap or positive anchors (all anchors with overlap &gt; positive_overlap are positive).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        positive_indices: indices of positive anchors</span>
+<span class="sd">        ignore_indices: indices of ignored anchors</span>
+<span class="sd">        argmax_overlaps_inds: ordered overlaps indices</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">overlaps</span> <span class="o">=</span> <span class="n">boxes</span><span class="o">.</span><span class="n">box_iou</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">annotations</span><span class="p">)</span>
+    <span class="n">max_overlaps</span><span class="p">,</span> <span class="n">argmax_overlaps_inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">overlaps</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># assign &quot;dont care&quot; labels</span>
+    <span class="n">positive_indices</span> <span class="o">=</span> <span class="n">max_overlaps</span> <span class="o">&gt;=</span> <span class="n">positive_overlap</span>
+    <span class="n">ignore_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">max_overlaps</span> <span class="o">&gt;</span> <span class="n">negative_overlap</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">positive_indices</span>
+
+    <span class="k">return</span> <span class="n">positive_indices</span><span class="p">,</span> <span class="n">ignore_indices</span><span class="p">,</span> <span class="n">argmax_overlaps_inds</span></div>
+
+
+
+
+<span class="c1"># if __name__==&#39;__main__&#39;:</span>
+    <span class="c1"># import numpy as np</span>
+    <span class="c1"># from ref_anchors import generate_anchors, anchors_for_shape, shift</span>
+    <span class="c1"># sizes=((64,),(32,),(16,),(8,),(4,))</span>
+    <span class="c1"># aspect_ratios=((0.5, 1.0, 2.0),)</span>
+    <span class="c1"># scales=((2**0,2**(1/3),2**(2/3)),)</span>
+    <span class="c1"># generator = AnchorGenerator(sizes=sizes,</span>
+    <span class="c1">#     aspect_ratios=aspect_ratios*len(sizes),</span>
+    <span class="c1">#     scales=scales*len(sizes)</span>
+    <span class="c1">#     )</span>
+    
+    <span class="c1"># anchors = generator.generate_anchors(base_size=((16),),</span>
+    <span class="c1">#                                      scales=((2**0,2**(1/3),2**(2/3)),),</span>
+    <span class="c1">#                                      aspect_ratios=((0.5, 1.0, 2.0)),)</span>
+    
+    <span class="c1"># ref = generate_anchors(base_size=16, ratios=(0.5, 1.0, 2.0), scales=(2**0,2**(1/3),2**(2/3)))</span>
+    <span class="c1"># np.testing.assert_almost_equal(anchors.numpy(),ref.numpy())</span>
+    <span class="c1"># ratios=(0.5, 1.0, 2.0)</span>
+    <span class="c1"># ref_scales=(2**0,2**(1/3),2**(2/3))</span>
+    <span class="c1"># sizes = (64,32,16,8,4)</span>
+    <span class="c1"># ref_anchors = []</span>
+    <span class="c1"># for s in sizes:</span>
+    <span class="c1">#     ref = generate_anchors(base_size=s, ratios=ratios, scales=ref_scales)</span>
+    <span class="c1">#     ref_anchors.append(ref)</span>
+        
+    <span class="c1"># generator.set_cell_anchors(torch.float32,&#39;cpu&#39;)</span>
+    <span class="c1"># for a1,a2 in zip(ref_anchors,generator.cell_anchors):</span>
+    <span class="c1">#     print(a1.shape,a2.shape)</span>
+    <span class="c1">#     np.testing.assert_almost_equal(a1.numpy(),a2.numpy())</span>
+
+
+    <span class="c1"># sizes=((32,))</span>
+    <span class="c1"># generator = AnchorGenerator(sizes=sizes,</span>
+    <span class="c1">#     aspect_ratios=aspect_ratios*len(sizes),</span>
+    <span class="c1">#     scales=scales*len(sizes)</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># grid_sizes  = ((8,12),)</span>
+    <span class="c1"># strides = ((64,64),)</span>
+    <span class="c1"># anchors = generate_anchors(base_size=32, ratios=ratios, scales=ref_scales)</span>
+    <span class="c1"># shifted_anchors = shift(grid_sizes[0], strides[0][0], anchors)    </span>
+    <span class="c1"># generator.set_cell_anchors(torch.float32,&#39;cpu&#39;)</span>
+    <span class="c1"># np.testing.assert_almost_equal(anchors.numpy(),generator.cell_anchors[0].numpy())</span>
+    <span class="c1"># anchors_all = generator.cached_grid_anchors(grid_sizes, strides)</span>
+    <span class="c1"># np.testing.assert_almost_equal(shifted_anchors.numpy(),anchors_all[0].numpy())</span>
+    
+    
+    <span class="c1"># sizes=((32,),(64,),(128,),(256,),(512,))</span>
+    <span class="c1"># generator = AnchorGenerator(sizes=sizes,</span>
+    <span class="c1">#     aspect_ratios=aspect_ratios*len(sizes),</span>
+    <span class="c1">#     scales=scales*len(sizes)</span>
+    <span class="c1">#     )</span>
+    <span class="c1"># image_shape = (512,512)</span>
+    <span class="c1"># grid_sizes  = ((64,64),(32,32),(16,16),(8,8),(4,4))</span>
+    <span class="c1"># strides = ((8,8), (16,16), (32,32), (64,64), (128,128))</span>
+    <span class="c1"># ref_all = anchors_for_shape(image_shape)</span>
+    <span class="c1"># generator.set_cell_anchors(torch.float32,&#39;cpu&#39;)</span>
+    <span class="c1"># anchors_all = generator.cached_grid_anchors(grid_sizes, strides)</span>
+    <span class="c1"># for a1,a2 in zip(ref_all,anchors_all):</span>
+    <span class="c1">#     print(a1.shape,a2.shape)</span>
+    <span class="c1">#     d = torch.abs(a1 - a2)</span>
+    <span class="c1">#     print(d.max(),d.min())</span>
+    <span class="c1">#     np.testing.assert_almost_equal(a1.numpy(),a2.numpy(),decimal=4)</span>
+    
+    <span class="c1"># shift_x = torch.arange(0, 5) </span>
+    <span class="c1"># shift_y = torch.arange(0, 2) </span>
+    <span class="c1"># shift_x1, shift_y1 = torch.meshgrid([shift_x, shift_y])</span>
+    <span class="c1"># shift_y2, shift_x2 = torch.meshgrid([shift_y, shift_x])</span>
+    <span class="c1"># shift_y3, shift_x3 = torch.meshgrid(shift_y, shift_x)</span>
+    <span class="c1"># v1 = torch.stack((shift_x1.reshape(-1), shift_y1.reshape(-1)), dim=1)</span>
+    <span class="c1"># v2 = torch.stack((shift_x2.reshape(-1), shift_y2.reshape(-1)), dim=1)</span>
+    <span class="c1"># v3 = torch.stack((shift_x3.reshape(-1), shift_y3.reshape(-1)), dim=1)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

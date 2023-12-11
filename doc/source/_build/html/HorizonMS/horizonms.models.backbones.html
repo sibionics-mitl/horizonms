@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.backbones &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models.classification" href="horizonms.models.classification.html" />
+    <link rel="prev" title="horizonms.models" href="horizonms.models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="horizonms.models.html">horizonms.models</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">horizonms.models.backbones</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.backbone">horizonms.models.backbones.backbone</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.backbone_detection">horizonms.models.backbones.backbone_detection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.backbone_fpn">horizonms.models.backbones.backbone_fpn</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.backbone_unet">horizonms.models.backbones.backbone_unet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.backbone_vgg_cfg">horizonms.models.backbones.backbone_vgg_cfg</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.backbones.base">horizonms.models.backbones.base</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.batch_image">horizonms.models.batch_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.model_base">horizonms.models.model_base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+          <li class="breadcrumb-item"><a href="horizonms.models.html">horizonms.models</a></li>
+      <li class="breadcrumb-item active">horizonms.models.backbones</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.backbones.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models-backbones">
+<h1>horizonms.models.backbones<a class="headerlink" href="#horizonms-models-backbones" title="Link to this heading"></a></h1>
+<section id="module-horizonms.models.backbones.backbone">
+<span id="horizonms-models-backbones-backbone"></span><h2>horizonms.models.backbones.backbone<a class="headerlink" href="#module-horizonms.models.backbones.backbone" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone.vgg_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone.</span></span><span class="sig-name descname"><span class="pre">vgg_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone.html#vgg_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone.vgg_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a backbone from VGG network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>return_stages</strong> (<em>int</em>) – the number of stages to be extracted.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_stages</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from final stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone.resnet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone.</span></span><span class="sig-name descname"><span class="pre">resnet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone.html#resnet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone.resnet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a backbone from ResNet network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>return_stages</strong> (<em>int</em>) – the number of stages to be extracted.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_stages</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from final stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone.efficientnet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone.</span></span><span class="sig-name descname"><span class="pre">efficientnet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone.html#efficientnet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone.efficientnet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a backbone from EfficientNet network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>return_stages</strong> (<em>int</em>) – the number of stages to be extracted.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_stages</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from final stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.backbones.backbone_detection">
+<span id="horizonms-models-backbones-backbone-detection"></span><h2>horizonms.models.backbones.backbone_detection<a class="headerlink" href="#module-horizonms.models.backbones.backbone_detection" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_detection.vgg_fpn_det_v1">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_detection.</span></span><span class="sig-name descname"><span class="pre">vgg_fpn_det_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backbone_cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backbone_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BackboneWithFPN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpn_out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_detection.html#vgg_fpn_det_v1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_detection.vgg_fpn_det_v1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_detection.vgg_fpn_det_v2">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_detection.</span></span><span class="sig-name descname"><span class="pre">vgg_fpn_det_v2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backbone_cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">backbone_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'BackboneWithFPN'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpn_out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_detection.html#vgg_fpn_det_v2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_detection.vgg_fpn_det_v2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.models.backbones.backbone_fpn">
+<span id="horizonms-models-backbones-backbone-fpn"></span><h2>horizonms.models.backbones.backbone_fpn<a class="headerlink" href="#module-horizonms.models.backbones.backbone_fpn" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_fpn.vgg_fpn_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_fpn.</span></span><span class="sig-name descname"><span class="pre">vgg_fpn_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6,</span> <span class="pre">7]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpn_out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_fpn.html#vgg_fpn_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_fpn.vgg_fpn_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a backbone from VGG network and adds FPN to the backbone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>pyramid_levels</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – the levels of FPN.</p></li>
+<li><p><strong>trainable_stages</strong> (<em>int</em>) – number of trainable (not frozen) stages starting from final stage.
+Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.</p></li>
+<li><p><strong>fpn_out_channels</strong> (<em>int</em>) – the number of channels for the FPN output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_fpn.resnet_fpn_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_fpn.</span></span><span class="sig-name descname"><span class="pre">resnet_fpn_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5,</span> <span class="pre">6,</span> <span class="pre">7]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fpn_out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_fpn.html#resnet_fpn_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_fpn.resnet_fpn_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a backbone from VGG network and adds FPN to the backbone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>pyramid_levels</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – the levels of FPN.</p></li>
+<li><p><strong>trainable_stages</strong> (<em>int</em>) – number of trainable (not frozen) stages starting from final stage.
+Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.</p></li>
+<li><p><strong>fpn_out_channels</strong> (<em>int</em>) – the number of channels for the FPN output.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.backbones.backbone_unet">
+<span id="horizonms-models-backbones-backbone-unet"></span><h2>horizonms.models.backbones.backbone_unet<a class="headerlink" href="#module-horizonms.models.backbones.backbone_unet" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_unet.vgg_unet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_unet.</span></span><span class="sig-name descname"><span class="pre">vgg_unet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_unet.html#vgg_unet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_unet.vgg_unet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a VGG backbone for UNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_layers</strong> (<em>int</em>) – the number of trainable (not frozen) layers starting from the last layer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_unet.resnet_unet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_unet.</span></span><span class="sig-name descname"><span class="pre">resnet_unet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir='.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_layer=&lt;class</span> <span class="pre">'torchvision.ops.misc.FrozenBatchNorm2d'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_layers=3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_unet.html#resnet_unet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_unet.resnet_unet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a ResNet backbone for UNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_layers</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from the last stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_unet.densenet_unet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_unet.</span></span><span class="sig-name descname"><span class="pre">densenet_unet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_unet.html#densenet_unet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_unet.densenet_unet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a DenseNet backbone for UNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_layers</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from the last stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_unet.mobilenetv2_unet_backbone">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_unet.</span></span><span class="sig-name descname"><span class="pre">mobilenetv2_unet_backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trainable_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_unet.html#mobilenetv2_unet_backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_unet.mobilenetv2_unet_backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">It extracts a MobileNetv2 backbone for UNet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone_name</strong> (<em>str</em>) – the name of backbone.</p></li>
+<li><p><strong>input_dim</strong> (<em>int</em>) – the dimension of input.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – whether to use pretrained weights when extracting.</p></li>
+<li><p><strong>model_dir</strong> (<em>str</em>) – the directory to save the pretrained weights.</p></li>
+<li><p><strong>trainable_layers</strong> (<em>int</em>) – the number of trainable (not frozen) stages starting from the last stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.backbones.backbone_vgg_cfg">
+<span id="horizonms-models-backbones-backbone-vgg-cfg"></span><h2>horizonms.models.backbones.backbone_vgg_cfg<a class="headerlink" href="#module-horizonms.models.backbones.backbone_vgg_cfg" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.VGGCfg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_vgg_cfg.</span></span><span class="sig-name descname"><span class="pre">VGGCfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[64,</span> <span class="pre">64,</span> <span class="pre">'M',</span> <span class="pre">128,</span> <span class="pre">128,</span> <span class="pre">'M',</span> <span class="pre">256,</span> <span class="pre">256,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">1024]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#VGGCfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.VGGCfg" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.VGGCfg.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#VGGCfg.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.VGGCfg.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_vgg_cfg.</span></span><span class="sig-name descname"><span class="pre">BackboneVGGCfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#BackboneVGGCfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#BackboneVGGCfg.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v1">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_vgg_cfg.</span></span><span class="sig-name descname"><span class="pre">vgg_cfg_backbone_v1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[64,</span> <span class="pre">64,</span> <span class="pre">'M',</span> <span class="pre">128,</span> <span class="pre">128,</span> <span class="pre">'M',</span> <span class="pre">256,</span> <span class="pre">256,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">1024]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#vgg_cfg_backbone_v1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v2">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.backbone_vgg_cfg.</span></span><span class="sig-name descname"><span class="pre">vgg_cfg_backbone_v2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[64,</span> <span class="pre">64,</span> <span class="pre">'M',</span> <span class="pre">128,</span> <span class="pre">128,</span> <span class="pre">'M',</span> <span class="pre">256,</span> <span class="pre">256,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">512,</span> <span class="pre">512,</span> <span class="pre">'M',</span> <span class="pre">1024]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_stages</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/backbone_vgg_cfg.html#vgg_cfg_backbone_v2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.models.backbones.base">
+<span id="horizonms-models-backbones-base"></span><h2>horizonms.models.backbones.base<a class="headerlink" href="#module-horizonms.models.backbones.base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.IntermediateLayerGetter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.base.</span></span><span class="sig-name descname"><span class="pre">IntermediateLayerGetter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_layers</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#IntermediateLayerGetter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.IntermediateLayerGetter" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDict</span></code></p>
+<p class="linemarker linemarker-1">Module wrapper that returns intermediate layers from a model.</p>
+<p class="linemarker linemarker-3">It has a strong assumption that the modules have been registered
+into the model in the same order as they are used.
+This means that one should <strong>not</strong> reuse the same nn.Module
+twice in the forward if you want this to work.</p>
+<p class="linemarker linemarker-8">Additionally, it is only able to query submodules that are directly
+assigned to the model. So if <cite>model</cite> is passed, <cite>model.feature1</cite> can
+be returned, but not <cite>model.feature1.layer2</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model on which we will extract the features.</p></li>
+<li><p><strong>return_layers</strong> (<em>List</em>) – the returned layers.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.IntermediateLayerGetter.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#IntermediateLayerGetter.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.IntermediateLayerGetter.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.Backbone">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.base.</span></span><span class="sig-name descname"><span class="pre">Backbone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#Backbone"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.Backbone" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">It extracts a submodel that returns the feature maps specified in return_layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>nn.Module</em>) – </p></li>
+<li><p><strong>return_layers</strong> (<em>List</em>) – the returned layers.</p></li>
+<li><p><strong>in_channels_list</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – number of channels for each feature map that is returned.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.Backbone.out_channels">
+<span class="sig-name descname"><span class="pre">out_channels</span></span><a class="headerlink" href="#horizonms.models.backbones.base.Backbone.out_channels" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-12">the number of channels in the returned layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p class="linemarker linemarker-14">int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.Backbone.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#Backbone.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.Backbone.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.BackboneWithFPN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.backbones.base.</span></span><span class="sig-name descname"><span class="pre">BackboneWithFPN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_layers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">in_channels_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pyramid_levels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#BackboneWithFPN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.BackboneWithFPN" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">It extracts a submodel that returns the feature maps specified in return_layers
+and adds a FPN on top of the submodel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>nn.Module</em>) – </p></li>
+<li><p><strong>return_layers</strong> (<em>List</em>) – the returned layers.</p></li>
+<li><p><strong>in_channels_list</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – the number of channels for each feature map that is returned.</p></li>
+<li><p><strong>out_channels</strong> (<em>int</em>) – the number of channels in the returned layers.</p></li>
+<li><p><strong>pyramid_levels</strong> (<em>int</em>) – the number of the levels of feature pyramids.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.backbones.base.BackboneWithFPN.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/backbones/base.html#BackboneWithFPN.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.backbones.base.BackboneWithFPN.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.models.html" class="btn btn-neutral float-left" title="horizonms.models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.classification.html" class="btn btn-neutral float-right" title="horizonms.models.classification" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

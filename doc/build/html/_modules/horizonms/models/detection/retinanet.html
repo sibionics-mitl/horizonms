@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.detection.retinanet &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.detection.retinanet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.detection.retinanet</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">from</span> <span class="nn">.anchors_retinanet</span> <span class="kn">import</span> <span class="n">AnchorGenerator</span><span class="p">,</span> <span class="n">anchor_targets_bbox</span>
+<span class="kn">from</span> <span class="nn">torchvision.ops</span> <span class="kn">import</span> <span class="n">boxes</span> <span class="k">as</span> <span class="n">box_ops</span>
+<span class="kn">from</span> <span class="nn">...builder</span> <span class="kn">import</span> <span class="n">NETS</span><span class="p">,</span> <span class="n">HEADS</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">build_backbone</span><span class="p">,</span> <span class="n">build_neck</span><span class="p">,</span> <span class="n">build_head</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Retinanet&quot;</span><span class="p">,</span> <span class="s2">&quot;RetinanetHead&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Retinanet">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet">[docs]</a>
+<span class="nd">@NETS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Retinanet</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Retinanet from </span>
+<span class="sd">    T. Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, &quot;Focal loss for dense object detection&quot;, </span>
+<span class="sd">    In Proceedings of the IEEE international conference on computer vision, pp. 2980-2988, 2017.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        backbone (Dict): the configuration of the backbone.</span>
+<span class="sd">        neck (Dict): the configuration of the neck.</span>
+<span class="sd">        head (Dict): the configuration of the head.</span>
+<span class="sd">        num_classes (int): the number of classes.</span>
+<span class="sd">        anchor_params (Dict): the parameters of anchors.</span>
+<span class="sd">        nms_params (Dict): the parameters of NMS.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backbone</span><span class="p">,</span> <span class="n">neck</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="c1"># anchor parameters</span>
+                 <span class="n">anchor_params</span><span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">anchor_sizes</span><span class="o">=</span><span class="p">((</span><span class="mi">32</span><span class="p">,),</span> <span class="p">(</span><span class="mi">64</span><span class="p">,),</span> <span class="p">(</span><span class="mi">128</span><span class="p">,),</span> <span class="p">(</span><span class="mi">256</span><span class="p">,),</span> <span class="p">(</span><span class="mi">512</span><span class="p">,)),</span>
+                        <span class="n">anchor_aspect_ratios</span><span class="o">=</span><span class="p">((</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),)</span> <span class="o">*</span> <span class="mi">5</span><span class="p">,</span> 
+                        <span class="n">anchor_scales</span><span class="o">=</span><span class="p">((</span><span class="mi">2</span><span class="o">**</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">3</span><span class="p">),</span> <span class="mi">2</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)),)</span> <span class="o">*</span> <span class="mi">5</span><span class="p">),</span>
+                 <span class="n">nms_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">nms_score_threshold</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">nms_iou_threshold</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                                 <span class="n">detections_per_class</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+                 <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Retinanet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">nms_params</span> <span class="o">=</span> <span class="n">nms_params</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span> <span class="o">=</span> <span class="n">build_backbone</span><span class="p">(</span><span class="n">backbone</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span> <span class="o">=</span> <span class="n">backbone</span>
+        <span class="n">out_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">out_channels</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="p">,</span> <span class="s2">&quot;out_channels&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;backbone should contain an attribute out_channels &quot;</span>
+                <span class="s2">&quot;specifying the number of output channels (assumed to be the &quot;</span>
+                <span class="s2">&quot;same for all the levels)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neck</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">in_channels_list</span> <span class="o">=</span> <span class="n">neck</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;in_channels_list&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">in_channels_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">in_channels_list</span> <span class="o">!=</span> <span class="n">out_channels</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;in_channels_list was wrongly given as </span><span class="si">{</span><span class="n">in_channels_list</span><span class="si">}</span><span class="s2"> in neck, &quot;</span>
+                          <span class="sa">f</span><span class="s2">&quot;it was reset as </span><span class="si">{</span><span class="n">out_channels</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">neck</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;in_channels_list&quot;</span><span class="p">:</span> <span class="n">out_channels</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="o">=</span> <span class="n">build_neck</span><span class="p">(</span><span class="n">neck</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="o">=</span> <span class="n">neck</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out_channels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="o">.</span><span class="n">out_channels</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">anchor_generator</span> <span class="o">=</span> <span class="n">AnchorGenerator</span><span class="p">(</span><span class="o">**</span><span class="n">anchor_params</span><span class="p">)</span>
+        <span class="n">num_anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_generator</span><span class="o">.</span><span class="n">num_anchors_per_location</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_generator</span><span class="o">.</span><span class="n">num_anchors_per_location</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">in_channels</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;in_channels&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">in_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">in_channels</span> <span class="o">!=</span> <span class="n">out_channels</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;in_channels was wrongly given as </span><span class="si">{</span><span class="n">in_channels</span><span class="si">}</span><span class="s2"> in head, &quot;</span>
+                          <span class="sa">f</span><span class="s2">&quot;it was reset as </span><span class="si">{</span><span class="n">out_channels</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">head</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">in_channels</span><span class="o">=</span><span class="n">out_channels</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">=</span><span class="n">num_anchors</span><span class="p">,</span>
+                <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">num_fpn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">anchor_params</span><span class="p">[</span><span class="s1">&#39;anchor_sizes&#39;</span><span class="p">])))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">build_head</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">head</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">RetinanetHead</span><span class="p">(</span>
+                <span class="n">out_channels</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="n">num_conv</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">feature_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span>
+                <span class="n">num_fpn</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">anchor_params</span><span class="p">[</span><span class="s1">&#39;anchor_sizes&#39;</span><span class="p">]),</span> <span class="n">prior</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">head</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span> <span class="s2">&quot;num_classes&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;head should contain an attribute num_classes &quot;</span>
+                <span class="s2">&quot;specifying the number of classes&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">num_classes</span>
+
+        <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in backbone: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in neck: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in head: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>    
+
+<div class="viewcode-block" id="Retinanet.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">image_sizes_list</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="n">pred_cls</span><span class="p">,</span> <span class="n">pred_bbox_deltas</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">image_sizes_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">pred_cls</span><span class="p">,</span> <span class="n">pred_bbox_deltas</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anchors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">anchor_generator</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">images</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:],</span> <span class="n">image_sizes_list</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">pred_cls</span><span class="p">,</span> <span class="n">pred_bbox_deltas</span><span class="p">],</span> <span class="n">anchors</span></div>
+
+
+<div class="viewcode-block" id="Retinanet.get_gts">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.get_gts">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_gts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="n">original_image_sizes</span><span class="p">,</span> <span class="n">box_coder</span><span class="p">,</span> <span class="n">bbox_thresholds</span><span class="p">):</span>
+        <span class="c1">## calculate losses</span>
+        <span class="n">regression_targets</span><span class="p">,</span> <span class="n">labels_targets</span><span class="p">,</span> <span class="n">anchor_state</span> <span class="o">=</span> \
+                                    <span class="n">anchor_targets_bbox</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">original_image_sizes</span><span class="p">,</span> 
+                                    <span class="n">negative_overlap</span><span class="o">=</span><span class="n">bbox_thresholds</span><span class="p">[</span><span class="s1">&#39;bbox_low_iou_thresh&#39;</span><span class="p">],</span>
+                                    <span class="n">positive_overlap</span><span class="o">=</span><span class="n">bbox_thresholds</span><span class="p">[</span><span class="s1">&#39;bbox_high_iou_thresh&#39;</span><span class="p">])</span>
+        <span class="n">regression_targets</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">regression_targets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">labels_targets</span><span class="p">,</span> <span class="n">regression_targets</span><span class="p">,</span> <span class="n">anchor_state</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Retinanet.pred_postprocessing_for_loss_calculation">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.pred_postprocessing_for_loss_calculation">[docs]</a>
+    <span class="k">def</span> <span class="nf">pred_postprocessing_for_loss_calculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">box_preds</span><span class="p">):</span>
+        <span class="n">box_cls</span><span class="p">,</span> <span class="n">box_regression</span> <span class="o">=</span> <span class="n">box_preds</span>
+        <span class="n">box_cls_flattened</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">box_regression_flattened</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># for each feature level, permute the outputs to make them be in the</span>
+        <span class="c1"># same format as the labels. Note that the labels are computed for</span>
+        <span class="c1"># all feature levels concatenated, so we keep the same representation</span>
+        <span class="c1"># for the objectness and the box_regression</span>
+        <span class="k">for</span> <span class="n">box_cls_per_level</span><span class="p">,</span> <span class="n">box_regression_per_level</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">box_cls</span><span class="p">,</span> <span class="n">box_regression</span>
+        <span class="p">):</span>
+            <span class="n">N</span><span class="p">,</span> <span class="n">AxC</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="n">box_cls_per_level</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">Ax4</span> <span class="o">=</span> <span class="n">box_regression_per_level</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="n">Ax4</span> <span class="o">//</span> <span class="mi">4</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">AxC</span> <span class="o">//</span> <span class="n">A</span>
+            <span class="n">box_cls_per_level</span> <span class="o">=</span> <span class="n">permute_and_flatten</span><span class="p">(</span>
+                <span class="n">box_cls_per_level</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span>
+            <span class="p">)</span>
+            <span class="n">box_cls_flattened</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box_cls_per_level</span><span class="p">)</span>
+
+            <span class="n">box_regression_per_level</span> <span class="o">=</span> <span class="n">permute_and_flatten</span><span class="p">(</span>
+                <span class="n">box_regression_per_level</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span>
+            <span class="p">)</span>
+            <span class="n">box_regression_flattened</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box_regression_per_level</span><span class="p">)</span>
+        <span class="c1"># concatenate on the first dimension (representing the feature levels), to</span>
+        <span class="c1"># take into account the way the labels were generated (with all feature maps</span>
+        <span class="c1"># being concatenated as well)</span>
+        <span class="n">box_cls</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">box_cls_flattened</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="c1">#.flatten(0, -2)</span>
+        <span class="n">box_regression</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">box_regression_flattened</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="c1">#.reshape(-1, 4)</span>
+        <span class="k">return</span> <span class="n">box_cls</span><span class="p">,</span> <span class="n">box_regression</span></div>
+
+
+<div class="viewcode-block" id="Retinanet.postprocess_detections">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.postprocess_detections">[docs]</a>
+    <span class="k">def</span> <span class="nf">postprocess_detections</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">anchors</span><span class="p">,</span> <span class="n">image_shapes</span><span class="p">,</span> <span class="n">box_coder</span><span class="p">):</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">preds</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pred_boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">image_shape</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">bs</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">bs</span><span class="p">],</span> <span class="n">image_shapes</span><span class="p">[</span><span class="n">bs</span><span class="p">]</span>
+            <span class="n">image_shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">image_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">clip_boxes_to_image</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">)</span>
+
+            <span class="n">image_all_boxes</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">image_all_scores</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">image_all_labels</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">n_cls</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+                <span class="c1"># remove low scoring boxes</span>
+                <span class="n">inds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scores</span><span class="p">[:,</span><span class="n">n_cls</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;nms_score_threshold&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># print(scores[:,n_cls].max())</span>
+                    <span class="c1"># print(&#39;no detections for label = {}&#39;.format(n_cls))</span>
+                    <span class="k">continue</span>
+                <span class="n">box</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">inds</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">sc</span>  <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">inds</span><span class="p">,</span> <span class="n">n_cls</span><span class="p">]</span>
+                <span class="c1"># print(&#39;candidata box {:d}&#39;.format(len(inds)))</span>
+
+                <span class="c1"># remove empty boxes</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">remove_small_boxes</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+                <span class="n">box</span><span class="p">,</span> <span class="n">sc</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">sc</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+
+                <span class="c1"># non-maximum suppression</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">nms</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;nms_iou_threshold&#39;</span><span class="p">])</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:</span><span class="bp">self</span><span class="o">.</span><span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;detections_per_class&#39;</span><span class="p">]]</span>
+                <span class="n">box</span><span class="p">,</span> <span class="n">sc</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">sc</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+                <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="n">n_cls</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">sc</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+                <span class="n">image_all_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+                <span class="n">image_all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+                <span class="n">image_all_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_all_boxes</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">image_all_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_boxes</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">image_all_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">image_all_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_all_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_all_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_all_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">&quot;boxes&quot;</span><span class="p">:</span>  <span class="n">image_all_boxes</span><span class="p">,</span>
+                        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">image_all_labels</span><span class="p">,</span>
+                        <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">image_all_scores</span><span class="p">,</span>
+                    <span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">permute_and_flatten</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">):</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+    <span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">layer</span>
+
+
+<span class="nd">@HEADS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RetinanetHeadSingle</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="n">num_conv</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">feature_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">81</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RetinanetHeadSingle</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span> <span class="o">=</span> <span class="n">in_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_size</span> <span class="o">=</span> <span class="n">feature_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_conv</span> <span class="o">=</span> <span class="n">num_conv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_feat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_layers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bbox_feat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_layers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_pred</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">([</span>
+                                      <span class="p">(</span><span class="s1">&#39;cls&#39;</span><span class="p">,</span>    <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">feature_size</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">*</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                                      <span class="p">(</span><span class="s1">&#39;sigmod&#39;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
+                                    <span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bbox_pred</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">feature_size</span><span class="p">,</span> <span class="n">num_anchors</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">bias_value</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">((</span><span class="mi">1</span> <span class="o">-</span> <span class="n">prior</span><span class="p">)</span> <span class="o">/</span> <span class="n">prior</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_pred</span><span class="o">.</span><span class="n">cls</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">fill_</span><span class="p">(</span><span class="n">bias_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_layers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">in_channels</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">in_channels</span>
+        <span class="n">feature_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_size</span>
+        <span class="n">num_conv</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_conv</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">layers</span><span class="p">[</span><span class="s1">&#39;conv1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">feature_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">layers</span><span class="p">[</span><span class="s1">&#39;relu1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">num_conv</span><span class="p">):</span>
+            <span class="n">layers</span><span class="p">[</span><span class="s1">&#39;conv&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">feature_size</span><span class="p">,</span> <span class="n">feature_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">layers</span><span class="p">[</span><span class="s1">&#39;relu&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">cls_feat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_feat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">bbox_feat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_feat</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">cls_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_pred</span><span class="p">(</span><span class="n">cls_feat</span><span class="p">)</span>
+        <span class="n">bbox_reg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bbox_pred</span><span class="p">(</span><span class="n">bbox_feat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls_pred</span><span class="p">,</span> <span class="n">bbox_reg</span>
+
+
+<div class="viewcode-block" id="RetinanetHead">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.RetinanetHead">[docs]</a>
+<span class="nd">@HEADS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RetinanetHead</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Head of Retinanet from </span>
+<span class="sd">    T. Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, &quot;Focal loss for dense object detection&quot;, </span>
+<span class="sd">    In Proceedings of the IEEE international conference on computer vision, pp. 2980-2988, 2017.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="n">num_conv</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">feature_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">81</span><span class="p">,</span> <span class="n">num_fpn</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RetinanetHead</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="n">num_classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heads_list</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_fpn</span><span class="p">):</span>
+            <span class="n">single_head</span> <span class="o">=</span> <span class="n">RetinanetHeadSingle</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">num_anchors</span><span class="p">,</span> <span class="n">num_conv</span><span class="p">,</span> <span class="n">feature_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">prior</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">heads_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">single_head</span><span class="p">)</span>
+       
+<div class="viewcode-block" id="RetinanetHead.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.retinanet.RetinanetHead.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heads_list</span><span class="p">)</span><span class="o">==</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">cls_preds</span><span class="p">,</span> <span class="n">bbox_reg</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">heads</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads_list</span><span class="p">):</span>
+            <span class="n">v_cls</span><span class="p">,</span> <span class="n">v_reg</span> <span class="o">=</span> <span class="n">heads</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">cls_preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v_cls</span><span class="p">)</span>
+            <span class="n">bbox_reg</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v_reg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">cls_preds</span><span class="p">,</span> <span class="n">bbox_reg</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

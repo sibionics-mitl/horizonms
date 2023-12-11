@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.transforms.augment &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.transforms.augment</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.transforms.augment</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.spatial</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.image_cv</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.spatial_cv</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.batch_transforms</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">Compose</span>
+<span class="kn">from</span> <span class="nn">..builder</span> <span class="kn">import</span> <span class="n">TRANSFORMS</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;CustomizedTrivialAugment&quot;</span><span class="p">,</span> <span class="s2">&quot;HorizonmsTrivialAugment&quot;</span><span class="p">,</span> <span class="s2">&quot;SequentialAugment&quot;</span><span class="p">)</span>
+
+
+<span class="n">SUPPORT_OPERATORS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># image.py</span>
+    <span class="s2">&quot;Uint8ToFloat&quot;</span><span class="p">,</span> <span class="s2">&quot;Identity&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Brightness&quot;</span><span class="p">,</span> <span class="s2">&quot;Contrast&quot;</span><span class="p">,</span> <span class="s2">&quot;Saturation&quot;</span><span class="p">,</span> <span class="s2">&quot;Hue&quot;</span><span class="p">,</span> <span class="s2">&quot;Sharpness&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Posterize&quot;</span><span class="p">,</span> <span class="s2">&quot;Solarize&quot;</span><span class="p">,</span> <span class="s2">&quot;AutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;Equalize&quot;</span><span class="p">,</span> <span class="s2">&quot;Invert&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;GaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;GaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;Lighting&quot;</span><span class="p">,</span>
+    <span class="c1"># image_cv.py</span>
+    <span class="s2">&quot;CVUint8ToFloat&quot;</span><span class="p">,</span> <span class="s2">&quot;CVIdentity&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;CVContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;CVHue&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSharpness&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVInvert&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;CVGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;CVLighting&quot;</span><span class="p">,</span> 
+    <span class="c1"># spatial</span>
+    <span class="s2">&quot;ShearX&quot;</span><span class="p">,</span> <span class="s2">&quot;ShearY&quot;</span><span class="p">,</span> <span class="s2">&quot;TranslateX&quot;</span><span class="p">,</span> <span class="s2">&quot;TranslateY&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CropX&quot;</span><span class="p">,</span> <span class="s2">&quot;CropY&quot;</span><span class="p">,</span> <span class="s2">&quot;Fliplr&quot;</span><span class="p">,</span> <span class="s2">&quot;Flipud&quot;</span><span class="p">,</span> <span class="s2">&quot;Rotate&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;Resize&quot;</span><span class="p">,</span> <span class="s2">&quot;ResizeWidth&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ImagePadding&quot;</span><span class="p">,</span> <span class="s2">&quot;ImageHeightPaddingOrCrop&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;Scale&quot;</span><span class="p">,</span>
+    <span class="c1"># spatial_cv</span>
+    <span class="s2">&quot;CVShearX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVShearY&quot;</span><span class="p">,</span> <span class="s2">&quot;CVTranslateX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVTranslateY&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVCropX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVCropY&quot;</span><span class="p">,</span> <span class="s2">&quot;CVFliplr&quot;</span><span class="p">,</span> <span class="s2">&quot;CVFlipud&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRotate&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVResize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVResizeWidth&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVImagePadding&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVScale&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+<span class="n">SUPPORT_OPERATORS_HMS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># image.py</span>
+    <span class="s2">&quot;Normalizer&quot;</span><span class="p">,</span> 
+    <span class="c1"># image_cv.py</span>
+    <span class="s2">&quot;CVCvtColor&quot;</span><span class="p">,</span> <span class="s2">&quot;CVNormalizer&quot;</span>
+<span class="p">]</span>
+
+<span class="n">SUPPORT_OPERATORS_EXTRA</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="c1"># image.py</span>
+    <span class="s2">&quot;RandomBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomHue&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSharpness&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RandomPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomInvert&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RandomGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomLighting&quot;</span><span class="p">,</span>
+    <span class="c1"># image_cv.py</span>
+    <span class="s2">&quot;CVRandomBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomHue&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSharpness&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVRandomPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomInvert&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVRandomGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomLighting&quot;</span><span class="p">,</span> 
+    <span class="c1"># spatial</span>
+    <span class="s2">&quot;RandomResizedCrop&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomCrop&quot;</span><span class="p">,</span>        
+    <span class="s2">&quot;RandomShearX&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomShearY&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomTranslateX&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomTranslateY&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RandomCropX&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomCropY&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomFliplr&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomFlipud&quot;</span><span class="p">,</span> <span class="s2">&quot;RandomRotate&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;RandomScale&quot;</span><span class="p">,</span>
+    <span class="c1"># spatial_cv</span>
+    <span class="s2">&quot;CVRandomResizedCrop&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomCrop&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVRandomScale&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomShift&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CVRandomShearX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomShearY&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomTranslateX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomTranslateY&quot;</span><span class="p">,</span> 
+    <span class="s2">&quot;CVRandomCropX&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomCropY&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomFliplr&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomFlipud&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomRotate&quot;</span><span class="p">,</span>
+    <span class="c1"># other augment</span>
+    <span class="s2">&quot;CustomizedTrivialAugment&quot;</span><span class="p">,</span> <span class="s2">&quot;HorizonmsTrivialAugment&quot;</span><span class="p">,</span>
+    <span class="c1"># batch transforms</span>
+    <span class="s2">&quot;ToOnehotLabels&quot;</span><span class="p">,</span> <span class="s2">&quot;Mixup&quot;</span><span class="p">,</span> <span class="s2">&quot;SoftmaxLabelSmoothing&quot;</span><span class="p">,</span> <span class="s2">&quot;SigmoidLabelSmoothing&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="CustomizedTrivialAugment">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.CustomizedTrivialAugment">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CustomizedTrivialAugment</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Dataset-independent data-augmentation with TrivialAugment using customized augmentation operators, as described in</span>
+<span class="sd">    `&quot;TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation&quot; &lt;https://arxiv.org/abs/2103.10158&gt;`.</span>
+<span class="sd">    If the image is torch Tensor, it should be of type torch.uint8, and it is expected</span>
+<span class="sd">    to have [..., 1 or 3, H, W] shape, where ... means an arbitrary number of leading dimensions.</span>
+<span class="sd">    If img is PIL Image, it is expected to be in mode &quot;L&quot; or &quot;RGB&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">augment_operators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+            <span class="n">num_magnitude_bins</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">31</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span> <span class="o">=</span> <span class="n">augment_operators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_magnitude_bins</span> <span class="o">=</span> <span class="n">num_magnitude_bins</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">SUPPORT_OPERATORS</span><span class="p">)</span>
+        <span class="n">operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">aug</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">aug</span> <span class="ow">in</span> <span class="n">augment_operators</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Supported operators are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="CustomizedTrivialAugment.forward">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.CustomizedTrivialAugment.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="n">op_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">op_setting</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span><span class="p">[</span><span class="n">op_index</span><span class="p">])</span>
+        <span class="n">op_name</span> <span class="o">=</span> <span class="n">op_setting</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op_setting</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op_param_range</span> <span class="o">=</span> <span class="n">op_setting</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;param_range&#39;</span><span class="p">)</span>
+            <span class="n">magnitudes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">op_param_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">op_param_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_magnitude_bins</span><span class="p">)</span>
+            <span class="n">magnitude</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">magnitudes</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">magnitudes</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)]</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+                <span class="k">if</span> <span class="n">magnitudes</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="c1"># print(f&quot;op name = {op_name}, magnitude = {magnitude}&quot;)</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)(</span><span class="n">magnitude</span><span class="p">,</span> <span class="o">**</span><span class="n">op_setting</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, augment_operators=</span><span class="si">{augment_operators}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, num_magnitude_bins=</span><span class="si">{num_magnitude_bins}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="HorizonmsTrivialAugment">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.HorizonmsTrivialAugment">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">HorizonmsTrivialAugment</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">augment_operators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span> <span class="o">=</span> <span class="n">augment_operators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">SUPPORT_OPERATORS</span> <span class="o">+</span> <span class="n">SUPPORT_OPERATORS_HMS</span><span class="p">)</span>
+        <span class="n">operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">aug</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">aug</span> <span class="ow">in</span> <span class="n">augment_operators</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Supported operators are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="si">}</span><span class="s2">&quot;</span>
+
+<div class="viewcode-block" id="HorizonmsTrivialAugment.forward">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.HorizonmsTrivialAugment.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="n">op_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span><span class="o">.</span><span class="n">item</span><span class="p">())</span>
+        <span class="n">op_setting</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span><span class="p">[</span><span class="n">op_index</span><span class="p">])</span>
+        <span class="n">op_name</span> <span class="o">=</span> <span class="n">op_setting</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op_setting</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)(</span><span class="o">**</span><span class="n">op_setting</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)()</span>
+        <span class="k">return</span> <span class="n">op</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;augment_operators=</span><span class="si">{augment_operators}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SequentialAugment">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.SequentialAugment">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">SequentialAugment</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">augment_operators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span> <span class="o">=</span> <span class="n">augment_operators</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">SUPPORT_OPERATORS</span> <span class="o">+</span> <span class="n">SUPPORT_OPERATORS_HMS</span> <span class="o">+</span> <span class="n">SUPPORT_OPERATORS_EXTRA</span><span class="p">)</span>
+        <span class="n">operators</span> <span class="o">=</span> <span class="p">[</span><span class="n">aug</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">aug</span> <span class="ow">in</span> <span class="n">augment_operators</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">operators</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Supported operators are </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppert_operators</span><span class="si">}</span><span class="s2">&quot;</span>
+        
+        <span class="n">transforms</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">op_setting_org</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">augment_operators</span><span class="p">:</span>
+            <span class="n">op_setting</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">op_setting_org</span><span class="p">)</span>
+            <span class="n">op_name</span> <span class="o">=</span> <span class="n">op_setting</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op_setting</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)(</span><span class="o">**</span><span class="n">op_setting</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">op</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">op_name</span><span class="p">)()</span>
+            <span class="n">transforms</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">Compose</span><span class="p">(</span><span class="n">transforms</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SequentialAugment.forward">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.augment.SequentialAugment.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Dict</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">transforms</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;augment_operators=</span><span class="si">{augment_operators}</span><span class="s2">&quot;</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

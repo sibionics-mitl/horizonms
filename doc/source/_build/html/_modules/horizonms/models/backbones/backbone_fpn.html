@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.backbones.backbone_fpn &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.backbones.backbone_fpn</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.backbones.backbone_fpn</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">..nets</span> <span class="kn">import</span> <span class="n">vgg</span><span class="p">,</span> <span class="n">resnet</span><span class="c1">#, densenet, mobilenet</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BackboneWithFPN</span>
+<span class="kn">from</span> <span class="nn">...builder</span> <span class="kn">import</span> <span class="n">BACKBONES</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;vgg_fpn_backbone&quot;</span><span class="p">,</span> <span class="s2">&quot;resnet_fpn_backbone&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="vgg_fpn_backbone">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.backbones.html#horizonms.models.backbones.backbone_fpn.vgg_fpn_backbone">[docs]</a>
+<span class="nd">@BACKBONES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">vgg_fpn_backbone</span><span class="p">(</span><span class="n">backbone_name</span><span class="p">,</span> <span class="n">input_dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+                     <span class="n">pyramid_levels</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> 
+                     <span class="n">trainable_stages</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">fpn_out_channels</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;It extracts a backbone from VGG network and adds FPN to the backbone.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        backbone_name (str): the name of backbone.</span>
+<span class="sd">        input_dim (int): the dimension of input.</span>
+<span class="sd">        pretrained (bool): whether to use pretrained weights when extracting.</span>
+<span class="sd">        model_dir (str): the directory to save the pretrained weights.</span>
+<span class="sd">        pyramid_levels (List[int]): the levels of FPN.</span>
+<span class="sd">        trainable_stages (int): number of trainable (not frozen) stages starting from final stage.</span>
+<span class="sd">            Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.</span>
+<span class="sd">        fpn_out_channels (int): the number of channels for the FPN output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>  
+    <span class="n">vgg_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;VGG&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg11&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg11_bn&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg13&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg13_bn&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg16&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;vgg16_bn&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg19_bn&#39;</span><span class="p">,</span> <span class="s1">&#39;vgg19&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">backbone_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vgg_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;backbone name is wrong, it has to be in </span><span class="si">{</span><span class="n">vgg_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">backbone</span> <span class="o">=</span> <span class="n">vgg</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">backbone_name</span><span class="p">](</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="n">pretrained</span><span class="p">,</span> 
+                                           <span class="n">model_dir</span><span class="o">=</span><span class="n">model_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">backbone</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">features</span>
+    <span class="n">all_stages</span><span class="p">,</span> <span class="n">stage</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">backbone</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+        <span class="n">stage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">):</span>
+            <span class="n">all_stages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stage</span><span class="p">)</span>
+            <span class="n">stage</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">all_stages</span> <span class="o">=</span> <span class="n">all_stages</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">trainable_stages</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">trainable_stages</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">assert</span> <span class="n">trainable_stages</span> <span class="o">&lt;=</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">trainable_stages</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">trainable_stages</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">pretrained</span><span class="p">,</span> <span class="s2">&quot;When trainable_stages &lt; 5, pretrained has to be True&quot;</span>
+    <span class="n">stages_to_train</span> <span class="o">=</span> <span class="n">all_stages</span><span class="p">[:</span><span class="n">trainable_stages</span><span class="p">]</span>
+
+    <span class="c1"># freeze layers</span>
+    <span class="n">layers_to_train</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">stage</span> <span class="ow">in</span> <span class="n">stages_to_train</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stage</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">pretrained</span> <span class="ow">and</span> <span class="p">(</span><span class="n">trainable_stages</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">backbone</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers_to_train</span><span class="p">]):</span>
+                <span class="n">parameter</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">return_stages_index</span> <span class="o">=</span> <span class="n">all_stages</span><span class="p">[:</span><span class="mi">4</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">return_stages</span> <span class="o">=</span> <span class="p">{</span><span class="n">cand</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="sa">f</span><span class="s2">&quot;stage</span><span class="si">{</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">cand</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">return_stages_index</span><span class="p">)}</span>
+    <span class="k">if</span> <span class="s1">&#39;narrow&#39;</span> <span class="ow">in</span> <span class="n">backbone_name</span><span class="p">:</span>
+        <span class="n">in_channels_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">in_channels_list</span> <span class="o">=</span> <span class="p">[</span><span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">BackboneWithFPN</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="n">return_stages</span><span class="p">,</span> <span class="n">in_channels_list</span><span class="p">,</span> <span class="n">fpn_out_channels</span><span class="p">,</span> <span class="n">pyramid_levels</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="resnet_fpn_backbone">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.backbones.html#horizonms.models.backbones.backbone_fpn.resnet_fpn_backbone">[docs]</a>
+<span class="nd">@BACKBONES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">resnet_fpn_backbone</span><span class="p">(</span><span class="n">backbone_name</span><span class="p">,</span> <span class="n">input_dim</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">model_dir</span><span class="o">=</span><span class="s1">&#39;.&#39;</span><span class="p">,</span>
+                        <span class="n">pyramid_levels</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> 
+                        <span class="n">trainable_stages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fpn_out_channels</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;It extracts a backbone from VGG network and adds FPN to the backbone.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        backbone_name (str): the name of backbone.</span>
+<span class="sd">        input_dim (int): the dimension of input.</span>
+<span class="sd">        pretrained (bool): whether to use pretrained weights when extracting.</span>
+<span class="sd">        model_dir (str): the directory to save the pretrained weights.</span>
+<span class="sd">        pyramid_levels (List[int]): the levels of FPN.</span>
+<span class="sd">        trainable_stages (int): number of trainable (not frozen) stages starting from final stage.</span>
+<span class="sd">            Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.</span>
+<span class="sd">        fpn_out_channels (int): the number of channels for the FPN output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>   
+    <span class="n">resnet_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;resnet18&#39;</span><span class="p">,</span> <span class="s1">&#39;resnet34&#39;</span><span class="p">,</span> <span class="s1">&#39;resnet50&#39;</span><span class="p">,</span> <span class="s1">&#39;resnet101&#39;</span><span class="p">,</span> <span class="s1">&#39;resnet152&#39;</span><span class="p">,</span> <span class="s1">&#39;resnext50_32x4d&#39;</span><span class="p">,</span> 
+                    <span class="s1">&#39;resnext101_32x8d&#39;</span><span class="p">,</span> <span class="s1">&#39;wide_resnet50_2&#39;</span><span class="p">,</span> <span class="s1">&#39;wide_resnet101_2&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">backbone_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resnet_names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;backbone name is wrong, it has to be in </span><span class="si">{</span><span class="n">resnet_names</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">backbone</span> <span class="o">=</span> <span class="n">resnet</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">backbone_name</span><span class="p">](</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="n">pretrained</span><span class="p">,</span>
+                                              <span class="n">model_dir</span><span class="o">=</span><span class="n">model_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">all_stages</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;layer4&#39;</span><span class="p">,</span> <span class="s1">&#39;layer3&#39;</span><span class="p">,</span> <span class="s1">&#39;layer2&#39;</span><span class="p">,</span> <span class="s1">&#39;layer1&#39;</span><span class="p">,</span> <span class="s1">&#39;conv1&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">trainable_stages</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">trainable_stages</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="k">assert</span> <span class="n">trainable_stages</span> <span class="o">&lt;=</span> <span class="mi">5</span> <span class="ow">and</span> <span class="n">trainable_stages</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">trainable_stages</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">pretrained</span><span class="p">,</span> <span class="s2">&quot;When trainable_stages &lt; 5, pretrained has to be True&quot;</span>
+    <span class="n">stages_to_train</span> <span class="o">=</span> <span class="n">all_stages</span><span class="p">[:</span><span class="n">trainable_stages</span><span class="p">]</span>
+
+    <span class="c1"># freeze layers</span>
+    <span class="k">if</span> <span class="n">pretrained</span> <span class="ow">and</span> <span class="p">(</span><span class="n">trainable_stages</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">backbone</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="ow">not</span> <span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">stages_to_train</span><span class="p">]):</span>
+                <span class="n">parameter</span><span class="o">.</span><span class="n">requires_grad_</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">return_layers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;layer1&#39;</span><span class="p">:</span> <span class="s1">&#39;stage2&#39;</span><span class="p">,</span> <span class="s1">&#39;layer2&#39;</span><span class="p">:</span> <span class="s1">&#39;stage3&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;layer3&#39;</span><span class="p">:</span> <span class="s1">&#39;stage4&#39;</span><span class="p">,</span> <span class="s1">&#39;layer4&#39;</span><span class="p">:</span> <span class="s1">&#39;stage5&#39;</span><span class="p">}</span>
+    <span class="n">in_channels_stage2</span> <span class="o">=</span> <span class="n">backbone</span><span class="o">.</span><span class="n">inplanes</span> <span class="o">//</span> <span class="mi">8</span>
+    <span class="n">in_channels_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">in_channels_stage2</span><span class="p">,</span> <span class="n">in_channels_stage2</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span>
+                        <span class="n">in_channels_stage2</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="n">in_channels_stage2</span><span class="o">*</span><span class="mi">8</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">BackboneWithFPN</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="n">return_layers</span><span class="p">,</span> <span class="n">in_channels_list</span><span class="p">,</span> <span class="n">fpn_out_channels</span><span class="p">,</span> <span class="n">pyramid_levels</span><span class="p">)</span></div>
+
+
+
+
+<span class="c1"># def densenet_fpn_backbone(backbone_name, input_dim=3, pyramid_levels=[2,3,4,5,6,7], pretrained=False, model_dir=&#39;.&#39;,</span>
+<span class="c1">#                      trainable_layers=5, fpn_out_channels=256):</span>
+<span class="c1">#     densenet_names = [&#39;densenet121&#39;, &#39;densenet169&#39;, &#39;densenet201&#39;, &#39;densenet161&#39;]</span>
+<span class="c1">#     if backbone_name not in densenet_names:</span>
+<span class="c1">#         raise ValueError(f&quot;backbone name is wrong, it has to be in {densenet_names}&quot;)</span>
+
+<span class="c1">#     backbone = densenet.__dict__[backbone_name](input_dim, pretrained=pretrained, model_dir=model_dir)</span>
+<span class="c1">#     backbone = backbone.features</span>
+
+<span class="c1">#     # select layers that wont be frozen</span>
+<span class="c1">#     assert trainable_layers &lt;= 5 and trainable_layers &gt;= 0</span>
+<span class="c1">#     layers_to_train = [&#39;denseblock4&#39;, &#39;denseblock3&#39;, &#39;denseblock2&#39;, &#39;denseblock1&#39;, &#39;conv0&#39;][:trainable_layers]</span>
+<span class="c1">#     # freeze layers only if pretrained backbone is used</span>
+<span class="c1">#     for name, parameter in backbone.named_parameters():</span>
+<span class="c1">#         if all([not name.startswith(layer) for layer in layers_to_train]):</span>
+<span class="c1">#             parameter.requires_grad_(False)</span>
+
+<span class="c1">#     return_layers = {&#39;denseblock1&#39;: &#39;0&#39;, &#39;denseblock2&#39;: &#39;1&#39;, &#39;denseblock3&#39;: &#39;2&#39;, &#39;denseblock4&#39;: &#39;3&#39;}</span>
+<span class="c1">#     if backbone_name==&#39;densenet121&#39;:</span>
+<span class="c1">#         in_channels_list = [256,512,1024,1024]</span>
+<span class="c1">#     elif backbone_name==&#39;densenet169&#39;:</span>
+<span class="c1">#         in_channels_list = [256,512,1280,1664]</span>
+<span class="c1">#     elif backbone_name==&#39;densenet201&#39;:</span>
+<span class="c1">#         in_channels_list = [256,512,1792,1920]</span>
+<span class="c1">#     elif backbone_name==&#39;densenet161&#39;:</span>
+<span class="c1">#         in_channels_list = [384,768,2112,2208]</span>
+<span class="c1">#     return BackboneWithFPN(backbone, return_layers, in_channels_list, fpn_out_channels, pyramid_levels)</span>
+
+<span class="c1"># def mobilenetv2_fpn_backbone(backbone_name, input_dim=3, pyramid_levels=[2,3,4,5,6,7], pretrained=False, model_dir=&#39;.&#39;,</span>
+<span class="c1">#                      trainable_layers=19, fpn_out_channels=256):</span>
+    
+<span class="c1">#     backbone = mobilenet.__dict__[backbone_name](input_dim, pretrained=pretrained, model_dir=model_dir)</span>
+<span class="c1">#     backbone = backbone.features</span>
+<span class="c1">#     # print(backbone)</span>
+
+<span class="c1">#     # # select layers that wont be frozen</span>
+<span class="c1">#     assert trainable_layers &lt;= 19 and trainable_layers &gt;= 0</span>
+<span class="c1">#     layers_to_train = [str(k) for k in range(19)][:trainable_layers]</span>
+<span class="c1">#     # freeze layers only if pretrained backbone is used</span>
+<span class="c1">#     for name, parameter in backbone.named_parameters():</span>
+<span class="c1">#         if all([not name.startswith(layer) for layer in layers_to_train]):</span>
+<span class="c1">#             parameter.requires_grad_(False)</span>
+
+<span class="c1">#     return_layers = {&#39;3&#39;: &#39;0&#39;, &#39;6&#39;: &#39;1&#39;, &#39;13&#39;: &#39;2&#39;, &#39;18&#39;: &#39;3&#39;}</span>
+<span class="c1">#     if backbone_name==&#39;mobilenet_v2_50&#39;:</span>
+<span class="c1">#         in_channels_list = [16,16,48,1280]</span>
+<span class="c1">#     elif backbone_name==&#39;mobilenet_v2_75&#39;:</span>
+<span class="c1">#         in_channels_list = [24,24,72,1280]</span>
+<span class="c1">#     elif backbone_name==&#39;mobilenet_v2_100&#39;:</span>
+<span class="c1">#         in_channels_list = [32,32,96,1280]</span>
+<span class="c1">#     return BackboneWithFPN(backbone, return_layers, in_channels_list, fpn_out_channels, pyramid_levels)</span>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

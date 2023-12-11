@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.detection.yolov1 &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.models.detection.yolov1</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.models.detection.yolov1</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+<span class="kn">from</span> <span class="nn">.anchors_yolo</span> <span class="kn">import</span> <span class="n">generate_stride</span><span class="p">,</span> <span class="n">generate_feature_shape</span><span class="p">,</span> <span class="n">generate_target_yolov1</span>
+<span class="kn">from</span> <span class="nn">.boxes</span> <span class="kn">import</span> <span class="n">paired_box_iou</span>
+<span class="kn">from</span> <span class="nn">torchvision.ops</span> <span class="kn">import</span> <span class="n">boxes</span> <span class="k">as</span> <span class="n">box_ops</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">NETS</span><span class="p">,</span> <span class="n">LOSSES</span><span class="p">,</span> <span class="n">METRICS</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">build_backbone</span><span class="p">,</span> <span class="n">build_head</span><span class="p">,</span> <span class="n">build_neck</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;YOLOv1&quot;</span><span class="p">,</span> <span class="s2">&quot;YOLOv1Losses&quot;</span><span class="p">,</span> <span class="s2">&quot;YOLOv1Metrics&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="YOLOv1">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1">[docs]</a>
+<span class="nd">@NETS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">YOLOv1</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Yolov1 from </span>
+<span class="sd">    J. Redmon, S. Divvala, R. Girshick, A. Farhadi, &quot;You only look once: Unified, real-time object detection&quot;,</span>
+<span class="sd">    In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 779-788, 2016.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        backbone (Dict): the configuration of the backbone.</span>
+<span class="sd">        neck (Dict): the configuration of the neck.</span>
+<span class="sd">        head (Dict): the configuration of the head.</span>
+<span class="sd">        stride (int): the number of stride of the network in the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backbone</span><span class="p">,</span> <span class="n">neck</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">head</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">YOLOv1</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">|</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">),</span> \
+            <span class="sa">f</span><span class="s2">&quot;backbone has to be a dictionary for backbone parameters or a nn.Module for backbone, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">backbone</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neck</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">|</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neck</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">neck</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">),</span> \
+            <span class="sa">f</span><span class="s2">&quot;net has to be a dictionary for backbone parameters, a nn.Module for net, or None, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">neck</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">|</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">),</span> \
+            <span class="sa">f</span><span class="s2">&quot;head has to be a dictionary for head parameters or a nn.Module for head, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">head</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">backbone</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span> <span class="o">=</span> <span class="n">build_backbone</span><span class="p">(</span><span class="n">backbone</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span> <span class="o">=</span> <span class="n">backbone</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">neck</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="o">=</span> <span class="n">build_neck</span><span class="p">(</span><span class="n">neck</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="o">=</span> <span class="n">neck</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">build_head</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">head</span> <span class="o">=</span> <span class="n">head</span>
+
+        <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in backbone: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in neck: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">nb_params</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;# trainable parameters in head: </span><span class="si">{</span><span class="n">nb_params</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span> <span class="s2">&quot;num_classes&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;head should contain an attribute num_classes &quot;</span>
+                <span class="s2">&quot;specifying the number of classes&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span> <span class="s2">&quot;num_boxes&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;head should contain an attribute num_boxes &quot;</span>
+                <span class="s2">&quot;specifying the number of boxes&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">stride</span> <span class="o">=</span> <span class="n">stride</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">num_classes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_boxes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">num_boxes</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">,</span> <span class="s1">&#39;feature_shape&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">feature_shape</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_shape</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># self.initialize_weights()</span>
+
+<div class="viewcode-block" id="YOLOv1.forward">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.forward">[docs]</a>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        x = (classification, confidence, txtytwth)</span>
+<span class="sd">        classification, [B, num_classes, H, W]</span>
+<span class="sd">        confidence, [B, num_boxes, H, W]</span>
+<span class="sd">        bboxes, [B, 4*num_boxes, H, W]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">backbone</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neck</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="YOLOv1.initialize_weights">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.initialize_weights">[docs]</a>
+    <span class="k">def</span> <span class="nf">initialize_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;fan_out&#39;</span><span class="p">,</span> <span class="n">nonlinearity</span><span class="o">=</span><span class="s1">&#39;leaky_relu&#39;</span><span class="p">)</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.01</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+                <span class="c1"># nn.init.normal_(m.weight, 0, 0.01)</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="YOLOv1.get_stride">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_stride">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_stride</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">generate_stride</span><span class="p">(</span><span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="YOLOv1.get_feature_shape">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_feature_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_feature_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">generate_feature_shape</span><span class="p">(</span><span class="n">stride</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="YOLOv1.get_gts">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_gts">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_gts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">generate_target_yolov1</span><span class="p">(</span><span class="n">feature_shape</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_boxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="YOLOv1.nms_postprocessing">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.nms_postprocessing">[docs]</a>
+    <span class="k">def</span> <span class="nf">nms_postprocessing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pred_boxes</span><span class="p">,</span> <span class="n">pred_scores</span><span class="p">,</span> <span class="n">pred_cls_inds</span><span class="p">,</span>
+                           <span class="n">image_shapes_list</span><span class="p">,</span> <span class="n">nms_params</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">for</span> <span class="n">bs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">pred_boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">boxes</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">cls_inds</span> <span class="o">=</span> <span class="n">pred_boxes</span><span class="p">[</span><span class="n">bs</span><span class="p">],</span> <span class="n">pred_scores</span><span class="p">[</span><span class="n">bs</span><span class="p">],</span> <span class="n">pred_cls_inds</span><span class="p">[</span><span class="n">bs</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">flags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">flag_conf</span> <span class="o">=</span> <span class="n">flags</span><span class="p">[</span><span class="n">bs</span><span class="p">]</span>
+                <span class="n">boxes</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">flag_conf</span><span class="p">,</span> <span class="p">:]</span>
+                <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">flag_conf</span><span class="p">]</span>
+                <span class="n">cls_inds</span> <span class="o">=</span> <span class="n">cls_inds</span><span class="p">[</span><span class="n">flag_conf</span><span class="p">]</span>
+            <span class="n">image_shape</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">image_shapes_list</span><span class="p">[</span><span class="n">bs</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">boxes</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">clip_boxes_to_image</span><span class="p">(</span><span class="n">boxes</span><span class="p">,</span> <span class="n">image_shape</span><span class="p">)</span>
+
+            <span class="n">image_all_boxes</span><span class="p">,</span> <span class="n">image_all_scores</span><span class="p">,</span> <span class="n">image_all_labels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">n_cls</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">):</span>
+                <span class="c1"># remove low scoring boxes</span>
+                <span class="n">flag</span> <span class="o">=</span> <span class="p">(</span><span class="n">cls_inds</span><span class="o">==</span><span class="n">n_cls</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;nms_score_threshold&#39;</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">flag</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="n">box</span> <span class="o">=</span> <span class="n">boxes</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+                <span class="n">sc</span>  <span class="o">=</span> <span class="n">scores</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+                <span class="n">label</span> <span class="o">=</span> <span class="n">cls_inds</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+
+                <span class="c1"># remove empty boxes</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">remove_small_boxes</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">min_size</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+                <span class="n">box</span><span class="p">,</span> <span class="n">sc</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">sc</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+
+                <span class="c1"># non-maximum suppression</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">box_ops</span><span class="o">.</span><span class="n">nms</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;nms_iou_threshold&#39;</span><span class="p">])</span>
+                <span class="n">keep</span> <span class="o">=</span> <span class="n">keep</span><span class="p">[:</span><span class="n">nms_params</span><span class="p">[</span><span class="s1">&#39;detections_per_class&#39;</span><span class="p">]]</span>
+                <span class="n">box</span><span class="p">,</span> <span class="n">sc</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">box</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">sc</span><span class="p">[</span><span class="n">keep</span><span class="p">],</span> <span class="n">label</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+
+                <span class="n">image_all_boxes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">box</span><span class="p">)</span>
+                <span class="n">image_all_scores</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sc</span><span class="p">)</span>
+                <span class="n">image_all_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">label</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image_all_boxes</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+                <span class="n">image_all_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_boxes</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">image_all_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">image_all_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">image_all_labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image_all_boxes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_all_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">image_all_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">&quot;boxes&quot;</span><span class="p">:</span>  <span class="n">image_all_boxes</span><span class="p">,</span>
+                        <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">image_all_labels</span><span class="p">,</span>
+                        <span class="s2">&quot;scores&quot;</span><span class="p">:</span> <span class="n">image_all_scores</span><span class="p">,</span>
+                    <span class="p">})</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="YOLOv1Losses">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1Losses">[docs]</a>
+<span class="nd">@LOSSES</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">YOLOv1Losses</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lambda_coord</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">lambda_obj</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">lambda_noobj</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">YOLOv1Losses</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_coord</span> <span class="o">=</span> <span class="n">lambda_coord</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_obj</span> <span class="o">=</span> <span class="n">lambda_obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_noobj</span> <span class="o">=</span> <span class="n">lambda_noobj</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gts</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">box_coder</span><span class="p">):</span>
+        <span class="n">pred_cls</span><span class="p">,</span> <span class="n">pred_confidence</span><span class="p">,</span> <span class="n">pred_txtytwth</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">gt_cls</span><span class="p">,</span> <span class="n">gt_objectness</span><span class="p">,</span> <span class="n">gt_txtytwth</span> <span class="o">=</span> <span class="n">gts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">gts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">pred_cls</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="n">obj_mask</span> <span class="o">=</span> <span class="n">gt_objectness</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">obj_mask</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">nobj</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">gt_cls_pos</span> <span class="o">=</span> <span class="n">gt_cls</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">pd_cls_pos</span> <span class="o">=</span> <span class="n">pred_cls</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">pred_confidence_pos</span> <span class="o">=</span> <span class="n">pred_confidence</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth_pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobj</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth_pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobj</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">gt_txtytwth</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">pred_txtytwth</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">iou</span> <span class="o">=</span> <span class="n">paired_box_iou</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">,</span> <span class="n">pred_boxes</span><span class="p">)</span>
+        
+        <span class="c1"># keep only one &quot;responsible&quot; predictor</span>
+        <span class="n">iou_pos</span> <span class="o">=</span> <span class="n">iou</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">idx_pos</span> <span class="o">=</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pred_confidence_pos_sel</span> <span class="o">=</span> <span class="n">pred_confidence_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">idx_pos</span><span class="p">)</span>
+        <span class="n">iou_pos_sel</span> <span class="o">=</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">idx_pos</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">idx_pos</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idx</span><span class="p">)</span>
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">iou_pos</span> <span class="o">!=</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">pred_confidence_pos_notsel</span> <span class="o">=</span> <span class="n">pred_confidence_pos</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+
+        <span class="n">index_neg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">obj_mask</span><span class="o">&lt;=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pred_confidence_neg</span> <span class="o">=</span> <span class="n">pred_confidence</span><span class="p">[</span><span class="n">index_neg</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">gt_response_neg</span> <span class="o">=</span> <span class="n">gt_objectness</span><span class="p">[</span><span class="n">index_neg</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">loss_cls_pos</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pd_cls_pos</span><span class="p">,</span> <span class="n">gt_cls_pos</span><span class="p">,</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">/</span><span class="n">bs</span>
+        <span class="n">loss_box_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_txtytwth_pos</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">gt_txtytwth_pos</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+         <span class="o">+</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_txtytwth_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:]),</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gt_txtytwth_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:]),</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span><span class="o">/</span><span class="n">bs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_coord</span>
+        <span class="n">loss_confidence_pos_sel</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_confidence_pos_sel</span><span class="p">,</span> <span class="n">iou_pos_sel</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">/</span><span class="n">bs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_obj</span>
+        <span class="n">loss_confidence_neg</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_confidence_neg</span><span class="p">,</span> <span class="n">gt_response_neg</span><span class="p">,</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">/</span> <span class="n">bs</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_noobj</span>
+        <span class="n">loss_confidence_pos_notsel</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_confidence_pos_notsel</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">pred_confidence_pos_notsel</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">size_average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">/</span><span class="n">bs</span>
+        
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loss_cls_pos&quot;</span><span class="p">:</span> <span class="n">loss_cls_pos</span><span class="p">,</span> <span class="s2">&quot;loss_box_pos&quot;</span><span class="p">:</span> <span class="n">loss_box_pos</span><span class="p">,</span>
+            <span class="s2">&quot;loss_confidence_pos_sel&quot;</span><span class="p">:</span> <span class="n">loss_confidence_pos_sel</span><span class="p">,</span> <span class="s2">&quot;loss_confidence_pos_notsel&quot;</span><span class="p">:</span> <span class="n">loss_confidence_pos_notsel</span><span class="p">,</span>
+            <span class="s2">&quot;loss_confidence_neg&quot;</span><span class="p">:</span> <span class="n">loss_confidence_neg</span><span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">losses</span></div>
+
+
+
+<div class="viewcode-block" id="YOLOv1Metrics">
+<a class="viewcode-back" href="../../../../HorizonMS/horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1Metrics">[docs]</a>
+<span class="nd">@METRICS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">YOLOv1Metrics</span><span class="p">():</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">YOLOv1Metrics</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gts</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">,</span> <span class="n">box_coder</span><span class="p">):</span>
+        <span class="n">pred_cls</span><span class="p">,</span> <span class="n">pred_confidence</span><span class="p">,</span> <span class="n">pred_txtytwth</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">preds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">gt_cls</span><span class="p">,</span> <span class="n">gt_objectness</span><span class="p">,</span> <span class="n">gt_txtytwth</span> <span class="o">=</span> <span class="n">gts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">gts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">gts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">pred_cls</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="n">obj_mask</span> <span class="o">=</span> <span class="n">gt_objectness</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">obj_mask</span><span class="o">&gt;</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">nobj</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">gt_cls_pos</span> <span class="o">=</span> <span class="n">gt_cls</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">pd_cls_pos</span> <span class="o">=</span> <span class="n">pred_cls</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">pred_confidence_pos</span> <span class="o">=</span> <span class="n">pred_confidence</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth_pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobj</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth_pos</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nobj</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+        
+        <span class="n">gt_boxes</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">gt_txtytwth</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">pred_boxes</span> <span class="o">=</span> <span class="n">box_coder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">pred_txtytwth</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+        <span class="n">iou</span> <span class="o">=</span> <span class="n">paired_box_iou</span><span class="p">(</span><span class="n">gt_boxes</span><span class="p">,</span> <span class="n">pred_boxes</span><span class="p">)</span>
+        
+        <span class="c1"># keep only one &quot;responsible&quot; predictor</span>
+        <span class="n">iou_pos</span> <span class="o">=</span> <span class="n">iou</span><span class="p">[</span><span class="n">index</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">idx_pos</span> <span class="o">=</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pred_confidence_pos</span> <span class="o">=</span> <span class="n">pred_confidence_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">idx_pos</span><span class="p">)</span>
+        <span class="n">iou_pos</span> <span class="o">=</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">idx_pos</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">idx_pos</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">pred_txtytwth_pos</span> <span class="o">=</span> <span class="n">pred_txtytwth_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idx</span><span class="p">)</span>
+        <span class="n">gt_txtytwth_pos</span> <span class="o">=</span> <span class="n">gt_txtytwth_pos</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">idx</span><span class="p">)</span>
+
+        <span class="n">index_neg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">obj_mask</span><span class="o">&lt;=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">pred_confidence_neg</span> <span class="o">=</span> <span class="n">pred_confidence</span><span class="p">[</span><span class="n">index_neg</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+        <span class="n">gt_response_neg</span> <span class="o">=</span> <span class="n">gt_objectness</span><span class="p">[</span><span class="n">index_neg</span><span class="p">[:,</span><span class="mi">0</span><span class="p">],</span> <span class="p">:,</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">index_neg</span><span class="p">[:,</span><span class="mi">3</span><span class="p">]]</span>
+
+        <span class="n">loss_cls_pos</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">gt_cls_pos</span><span class="p">,</span> <span class="n">pd_cls_pos</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+        <span class="n">loss_box_pos</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">gt_txtytwth_pos</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">pred_txtytwth_pos</span><span class="p">[:,:</span><span class="mi">2</span><span class="p">],</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gt_txtytwth_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:]),</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">pred_txtytwth_pos</span><span class="p">[:,</span><span class="mi">2</span><span class="p">:]),</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+        <span class="n">loss_confidence_pos</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_confidence_pos</span><span class="p">,</span> <span class="n">iou_pos</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+        <span class="n">loss_confidence_neg</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">mse_loss</span><span class="p">(</span><span class="n">pred_confidence_neg</span><span class="p">,</span> <span class="n">gt_response_neg</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">)</span>
+
+        <span class="n">pd_cls_label</span> <span class="o">=</span> <span class="n">pd_cls_pos</span><span class="p">[</span><span class="n">gt_cls_pos</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loss_cls_pos_avg&quot;</span><span class="p">:</span> <span class="n">loss_cls_pos</span><span class="p">,</span> <span class="s2">&quot;loss_box_pos_avg&quot;</span><span class="p">:</span> <span class="n">loss_box_pos</span><span class="p">,</span>
+            <span class="s2">&quot;loss_confidence_pos_avg&quot;</span><span class="p">:</span> <span class="n">loss_confidence_pos</span><span class="p">,</span> <span class="s2">&quot;loss_confidence_neg_avg&quot;</span><span class="p">:</span> <span class="n">loss_confidence_neg</span><span class="p">,</span>
+            <span class="s2">&quot;iou_pos_avg&quot;</span><span class="p">:</span> <span class="n">iou_pos</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="s2">&quot;pd_cls_label&quot;</span><span class="p">:</span> <span class="n">pd_cls_label</span><span class="o">.</span><span class="n">mean</span><span class="p">()}</span>
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

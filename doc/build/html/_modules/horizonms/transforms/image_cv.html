@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.transforms.image_cv &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.transforms.image_cv</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.transforms.image_cv</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">re</span> <span class="kn">import</span> <span class="n">RegexFlag</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_input_check_value_range_set</span><span class="p">,</span> <span class="n">_input_get_value_range_set</span><span class="p">,</span> \
+            <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">,</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span>
+<span class="kn">from</span> <span class="nn">..builder</span> <span class="kn">import</span> <span class="n">TRANSFORMS</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;CVImageBase&quot;</span><span class="p">,</span> <span class="s2">&quot;CVUint8ToFloat&quot;</span><span class="p">,</span> <span class="s2">&quot;CVIdentity&quot;</span><span class="p">,</span> <span class="s2">&quot;CVCvtColor&quot;</span><span class="p">,</span> <span class="s2">&quot;CVNormalizer&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;CVContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;CVHue&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSharpness&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVInvert&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;CVGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;CVLighting&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVRandomBrightness&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSaturation&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomHue&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSharpness&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVRandomPosterize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomSolarize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomAutoContrast&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomEqualize&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomInvert&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;CVRandomGaussianBlur&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomGaussianNoise&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomLighting&quot;</span><span class="p">,</span> <span class="s2">&quot;CVRandomBlur&quot;</span><span class="p">,</span>
+           <span class="p">)</span>
+
+
+<span class="n">IMG_ROW_AXIS</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">IMG_COL_AXIS</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">IMG_CHANNEL_AXIS</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<span class="k">def</span> <span class="nf">_max_value_cv</span><span class="p">(</span><span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">255</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">127</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int16</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">32767</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">2147483647</span>
+    <span class="k">elif</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">9223372036854775807</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># This is only here for completeness. This value is implicitly assumed in a lot of places so changing it is not</span>
+        <span class="c1"># easy.</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+
+<span class="k">def</span> <span class="nf">_is_floating_point_cv</span><span class="p">(</span><span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">permitted</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">_get_dimensions_cv</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">permitted</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input image tensor permitted channel values are </span><span class="si">{</span><span class="n">permitted</span><span class="si">}</span><span class="s2">, but found </span><span class="si">{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_dimensions_cv</span><span class="p">(</span><span class="n">img</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+    <span class="n">channels</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">]</span>
+    <span class="n">height</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">height</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">channels</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_blend_cv</span><span class="p">(</span><span class="n">img1</span><span class="p">,</span> <span class="n">img2</span><span class="p">,</span> <span class="n">ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ratio</span><span class="p">)</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="n">_max_value_cv</span><span class="p">(</span><span class="n">img1</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">ratio</span> <span class="o">*</span> <span class="n">img1</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">ratio</span><span class="p">)</span> <span class="o">*</span> <span class="n">img2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">img1</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_blurred_degenerate_image_cv</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+
+    <span class="n">kernel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">kernel</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">kernel</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
+
+    <span class="n">result_tmp</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">filter2D</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">CV_32F</span><span class="p">,</span> <span class="n">kernel</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result_tmp</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">result_tmp</span> <span class="o">=</span> <span class="n">result_tmp</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">result_tmp</span>
+
+
+<span class="k">def</span> <span class="nf">_rgb_to_grayscale_cv</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+    <span class="n">l_img</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.2989</span> <span class="o">*</span> <span class="n">r</span> <span class="o">+</span> <span class="mf">0.587</span> <span class="o">*</span> <span class="n">g</span> <span class="o">+</span> <span class="mf">0.114</span> <span class="o">*</span> <span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">l_img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="CVImageBase">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVImageBase">[docs]</a>
+<span class="k">class</span> <span class="nc">CVImageBase</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+
+<div class="viewcode-block" id="CVImageBase.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVImageBase.calculate">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">image</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">target</span></div>
+
+
+
+<div class="viewcode-block" id="CVUint8ToFloat">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVUint8ToFloat">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVUint8ToFloat</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<div class="viewcode-block" id="CVUint8ToFloat.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVUint8ToFloat.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CVIdentity">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVIdentity">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVIdentity</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CVIdentity.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVIdentity.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CVCvtColor">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVCvtColor">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVCvtColor</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">code</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">code</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CVCvtColor.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVCvtColor.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">code</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="CVNormalizer">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVNormalizer">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVNormalizer</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;zscore&#39;</span><span class="p">,</span> <span class="n">shift</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">image_base</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;zscore&#39;</span><span class="p">,</span> <span class="s1">&#39;zero-one&#39;</span><span class="p">,</span> <span class="s1">&#39;negative-positive-one&#39;</span><span class="p">,</span> <span class="s1">&#39;customize&#39;</span><span class="p">],</span> \
+            <span class="sa">f</span><span class="s2">&quot;mode shoule be in [&#39;zscore&#39;, &#39;zero-one&#39;, &#39;negative-positive-one&#39;, &#39;customize&#39;], but got </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;customize&#39;</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">shift</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shift</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scale</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span> <span class="o">=</span> <span class="n">image_base</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span>
+
+<div class="viewcode-block" id="CVNormalizer.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVNormalizer.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;zscore&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;zero-one&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;negative-positive-one&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="p">:</span>
+                <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">xmin</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">xmax</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shift</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="p">(</span><span class="n">image</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shift</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(mode=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;image_base=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">image_base</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;epsilon=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVBrightness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVBrightness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVBrightness</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust brightness of an image</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        brightness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the brightness.</span>
+<span class="sd">                        Can be any non-negative number. 0 gives a black image, 1 gives</span>
+<span class="sd">                        the original image while 2 increases the brightness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of brightness .</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of brightness to be  randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">brightness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span> <span class="o">=</span> <span class="n">brightness_factor</span>
+
+<div class="viewcode-block" id="CVBrightness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVBrightness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">brightness_factor</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(brightness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomBrightness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomBrightness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomBrightness</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust brightness of an image</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting brightness.</span>
+<span class="sd">        brightness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the brightness.</span>
+<span class="sd">                        Can be any non-negative number. 0 gives a black image, 1 gives</span>
+<span class="sd">                        the original image while 2 increases the brightness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of brightness .</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of brightness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">brightness_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">brightness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span> <span class="o">=</span> <span class="n">brightness_factor</span>
+
+<div class="viewcode-block" id="CVRandomBrightness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomBrightness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">brightness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">brightness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;brightness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">brightness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="p">):</span>
+    <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">_get_dimensions_cv</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">]</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+
+    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">_rgb_to_grayscale_cv</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_ROW_AXIS</span><span class="p">,</span> <span class="n">IMG_COL_AXIS</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_ROW_AXIS</span><span class="p">,</span> <span class="n">IMG_COL_AXIS</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CVContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVContrast</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust contrast of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        contrast_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the contrast. Can be any</span>
+<span class="sd">                    non-negative number. 0 gives a solid gray image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the contrast by a factor of 2.</span>
+<span class="sd">                tuple[float, float]:  Range of the ratio of contrast.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of contrast to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span> <span class="o">=</span> <span class="n">contrast_factor</span>
+
+<div class="viewcode-block" id="CVContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">contrast_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">contrast_factor_sel</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(contrast_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomContrast</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust contrast of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting contrast.</span>
+<span class="sd">        contrast_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float : How much to adjust the contrast. Can be any</span>
+<span class="sd">                    non-negative number. 0 gives a solid gray image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the contrast by a factor of 2.</span>
+<span class="sd">                tuple[float, float]:  Range of the ratio of contrast.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of contrast to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">contrast_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">contrast_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span> <span class="o">=</span> <span class="n">contrast_factor</span>
+
+<div class="viewcode-block" id="CVRandomContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">contrast_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">contrast_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;contrast_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">contrast_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVSaturation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSaturation">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVSaturation</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust color saturation of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        saturation_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the saturation. 0 will</span>
+<span class="sd">                    give a black and white image, 1 will give the original image while</span>
+<span class="sd">                    2 will enhance the saturation by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of saturation.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of saturation to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">saturation_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span> <span class="o">=</span> <span class="n">saturation_factor</span>
+
+<div class="viewcode-block" id="CVSaturation.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSaturation.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">saturation_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">_rgb_to_grayscale_cv</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">saturation_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(saturation_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomSaturation">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSaturation">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomSaturation</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust color saturation of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):Probability of image adjusting sharpness.</span>
+<span class="sd">        saturation_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the saturation. 0 will</span>
+<span class="sd">                    give a black and white image, 1 will give the original image while</span>
+<span class="sd">                    2 will enhance the saturation by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of saturation.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of saturation to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">saturation_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">saturation_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span> <span class="o">=</span> <span class="n">saturation_factor</span>
+
+<div class="viewcode-block" id="CVRandomSaturation.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSaturation.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">saturation_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">_rgb_to_grayscale_cv</span><span class="p">(</span><span class="n">image</span><span class="p">),</span> <span class="n">saturation_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;saturation_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">saturation_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_rgb2hsv</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Implementation is based on https://github.com/python-pillow/Pillow/blob/4174d4267616897df3746d315d5a2d0f82c656ee/</span>
+    <span class="c1"># src/libImaging/Convert.c#L330</span>
+    <span class="n">maxc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">minc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># The algorithm erases S and H channel where `maxc = minc`. This avoids NaN</span>
+    <span class="c1"># from happening in the results, because</span>
+    <span class="c1">#   + S channel has division by `maxc`, which is zero only if `maxc = minc`</span>
+    <span class="c1">#   + H channel has division by `(maxc - minc)`.</span>
+    <span class="c1">#</span>
+    <span class="c1"># Instead of overwriting NaN afterwards, we just prevent it from occurring, so</span>
+    <span class="c1"># we don&#39;t need to deal with it in case we save the NaN in a buffer in</span>
+    <span class="c1"># backprop, if it is ever supported, but it doesn&#39;t hurt to do so.</span>
+    <span class="n">eqc</span> <span class="o">=</span> <span class="n">maxc</span> <span class="o">==</span> <span class="n">minc</span>
+
+    <span class="n">cr</span> <span class="o">=</span> <span class="n">maxc</span> <span class="o">-</span> <span class="n">minc</span>
+    <span class="c1"># Since `eqc =&gt; cr = 0`, replacing denominator with 1 when `eqc` is fine.</span>
+    <span class="n">ones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">maxc</span><span class="p">)</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">cr</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eqc</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">maxc</span><span class="p">)</span>
+    <span class="c1"># Note that `eqc =&gt; maxc = minc = r = g = b`. So the following calculation</span>
+    <span class="c1"># of `h` would reduce to `bc - gc + 2 + rc - bc + 4 + rc - bc = 6` so it</span>
+    <span class="c1"># would not matter what values `rc`, `gc`, and `bc` have here, and thus</span>
+    <span class="c1"># replacing denominator with 1 when `eqc` is fine.</span>
+    <span class="n">cr_divisor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">eqc</span><span class="p">,</span> <span class="n">ones</span><span class="p">,</span> <span class="n">cr</span><span class="p">)</span>
+    <span class="n">rc</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">-</span> <span class="n">r</span><span class="p">)</span> <span class="o">/</span> <span class="n">cr_divisor</span>
+    <span class="n">gc</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">-</span> <span class="n">g</span><span class="p">)</span> <span class="o">/</span> <span class="n">cr_divisor</span>
+    <span class="n">bc</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="n">cr_divisor</span>
+
+    <span class="n">hr</span> <span class="o">=</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">==</span> <span class="n">r</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">bc</span> <span class="o">-</span> <span class="n">gc</span><span class="p">)</span>
+    <span class="n">hg</span> <span class="o">=</span> <span class="p">((</span><span class="n">maxc</span> <span class="o">==</span> <span class="n">g</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">!=</span> <span class="n">r</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">+</span> <span class="n">rc</span> <span class="o">-</span> <span class="n">bc</span><span class="p">)</span>
+    <span class="n">hb</span> <span class="o">=</span> <span class="p">((</span><span class="n">maxc</span> <span class="o">!=</span> <span class="n">g</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">maxc</span> <span class="o">!=</span> <span class="n">r</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">+</span> <span class="n">gc</span> <span class="o">-</span> <span class="n">rc</span><span class="p">)</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">hr</span> <span class="o">+</span> <span class="n">hg</span> <span class="o">+</span> <span class="n">hb</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fmod</span><span class="p">((</span><span class="n">h</span> <span class="o">/</span> <span class="mf">6.0</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">h</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">maxc</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_hsv2rgb</span><span class="p">(</span><span class="n">hsv_image</span><span class="p">):</span>
+    <span class="c1"># 输入图像的形状：(height, width, 3)，通道顺序为(H, S, V)</span>
+    <span class="c1"># 输出RGB图像，通道顺序为(R, G, B)</span>
+
+    <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">hsv_image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">hsv_image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">hsv_image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">h_i</span> <span class="o">=</span> <span class="p">(</span><span class="n">h</span> <span class="o">*</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">h</span> <span class="o">*</span> <span class="mi">6</span> <span class="o">-</span> <span class="n">h_i</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span> <span class="o">*</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">s</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">f</span><span class="p">))</span>
+
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">v</span><span class="p">)))))</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">)))))</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span>
+                 <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">h_i</span> <span class="o">==</span> <span class="mi">4</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">q</span><span class="p">)))))</span>
+    <span class="n">rgb_image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">b</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">rgb_image</span>
+
+
+<span class="k">def</span> <span class="nf">_hue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">hue_factor</span><span class="p">):</span>
+    <span class="c1"># hsv : 在颜色空间中,          h范围:0-360,s:范围0-100,v:范围0-100</span>
+    <span class="c1"># opencv hsv : RGB2HSV_FULL :h范围:0-255,s:范围0-255,v:范围0-255</span>
+    <span class="c1">#              RGB2HSV      :h范围:0-180,s:范围0-255,v:范围0-255</span>
+
+    <span class="c1">#         hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV_FULL)</span>
+    <span class="c1">#         h, s, v = cv2.split(hsv)</span>
+    <span class="c1">#         h = h /255 *180## 注意opencv的h在COLOR_RGB2HSV_FULL范围时是255,</span>
+    <span class="c1">#         h = ((h + 180* self.hue_factor % 180) / 180. * 255.).astype(hsv.dtype)</span>
+    <span class="c1">#         image = cv2.cvtColor(cv2.merge((h, s, v)), cv2.COLOR_HSV2RGB_FULL)</span>
+    <span class="c1">## 此处的方法和上面的方法等效</span>
+    <span class="c1">#     hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)  ## 注意opencv的h在COLOR_RGB2HSV范围时是180</span>
+    <span class="c1">#     h, s, v = cv2.split(hsv)</span>
+    <span class="c1">#     h = (h + 180 * hue_factor % 180).astype(hsv.dtype)  ## 一个圈,所以是取余数</span>
+    <span class="c1">#     image = cv2.cvtColor(cv2.merge((h, s, v)), cv2.COLOR_HSV2RGB)</span>
+    <span class="c1">## 此处的方法和上面的方法等效</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">_rgb2hsv</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">h</span> <span class="o">+</span> <span class="n">hue_factor</span><span class="p">)</span> <span class="o">%</span> <span class="mf">1.0</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">h</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">_hsv2rgb</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<div class="viewcode-block" id="CVHue">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVHue">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVHue</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust hue of an image.</span>
+<span class="sd">    The image hue is adjusted by converting the image to HSV and</span>
+<span class="sd">    cyclically shifting the intensities in the hue channel (H).</span>
+<span class="sd">    The image is then converted back to original image mode.</span>
+
+<span class="sd">    `hue_factor` is the amount of shift in H channel and must be in the</span>
+<span class="sd">    interval `[-0.5, 0.5]`.</span>
+
+<span class="sd">    See `Hue`_ for more details.</span>
+
+<span class="sd">    .. _Hue: https://en.wikipedia.org/wiki/Hue</span>
+<span class="sd">    Args:</span>
+<span class="sd">        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5</span>
+<span class="sd">                float:  How much to shift the hue channel. Should be in</span>
+<span class="sd">                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in</span>
+<span class="sd">                    HSV space in positive and negative direction respectively.</span>
+<span class="sd">                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image</span>
+<span class="sd">                    with complementary colors while 0 gives the original image.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of hue.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of hue to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hue_factor</span><span class="p">):</span>
+        <span class="c1">## 注意,pytorch的hue范围是[-0.5, 0.5],这里和pytorch保持一致</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span> <span class="o">=</span> <span class="n">hue_factor</span>
+
+<div class="viewcode-block" id="CVHue.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVHue.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">hue_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_hue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">hue_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(hue_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomHue">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomHue">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomHue</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust hue of an image.</span>
+<span class="sd">    The image hue is adjusted by converting the image to HSV and</span>
+<span class="sd">    cyclically shifting the intensities in the hue channel (H).</span>
+<span class="sd">    The image is then converted back to original image mode.</span>
+
+<span class="sd">    `hue_factor` is the amount of shift in H channel and must be in the</span>
+<span class="sd">    interval `[-0.5, 0.5]`.</span>
+
+<span class="sd">    See `Hue`_ for more details.</span>
+
+<span class="sd">    .. _Hue: https://en.wikipedia.org/wiki/Hue</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float): Probability of image adjusting hue.</span>
+<span class="sd">        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5</span>
+<span class="sd">                float:  How much to shift the hue channel. Should be in</span>
+<span class="sd">                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in</span>
+<span class="sd">                    HSV space in positive and negative direction respectively.</span>
+<span class="sd">                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image</span>
+<span class="sd">                    with complementary colors while 0 gives the original image.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of hue.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of hue to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">hue_factor</span><span class="p">):</span>
+        <span class="c1">## 注意,pytorch的hue范围是[-0.5, 0.5],这里和pytorch保持一致</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">hue_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span> <span class="o">=</span> <span class="n">hue_factor</span>
+
+<div class="viewcode-block" id="CVRandomHue.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomHue.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">hue_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_hue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">hue_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;hue_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">hue_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVSharpness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSharpness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVSharpness</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust the sharpness of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sharpness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the sharpness. Can be</span>
+<span class="sd">                    any non-negative number. 0 gives a blurred image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the sharpness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of sharpness.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of sharpness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sharpness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span> <span class="o">=</span> <span class="n">sharpness_factor</span>
+
+<div class="viewcode-block" id="CVSharpness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSharpness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_ROW_AXIS</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_COL_AXIS</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">img</span>
+        <span class="n">sharpness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">_blurred_degenerate_image_cv</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">sharpness_factor_sel</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(sharpness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomSharpness">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSharpness">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomSharpness</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjust the sharpness of an image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting sharpness.</span>
+<span class="sd">        sharpness_factor (float  | tuple[float, float] |  list[float, float] )</span>
+<span class="sd">                float:  How much to adjust the sharpness. Can be</span>
+<span class="sd">                    any non-negative number. 0 gives a blurred image, 1 gives the</span>
+<span class="sd">                    original image while 2 increases the sharpness by a factor of 2.</span>
+<span class="sd">                tuple[float, float]: Range of the ratio of sharpness.</span>
+<span class="sd">                list[float, ... , float] : list of the ratio of sharpness to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">sharpness_factor</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sharpness_factor</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span> <span class="o">=</span> <span class="n">sharpness_factor</span>
+
+<div class="viewcode-block" id="CVRandomSharpness.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSharpness.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_ROW_AXIS</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_COL_AXIS</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">img</span>
+            <span class="n">sharpness_factor_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_blend_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">_blurred_degenerate_image_cv</span><span class="p">(</span><span class="n">img</span><span class="p">),</span> <span class="n">sharpness_factor_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;sharpness_factor=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sharpness_factor</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_posterize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">bits</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input image tensor should have at least 3 dimensions, but found </span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only torch.uint8 image tensors are supported, but found </span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="o">-</span><span class="nb">int</span><span class="p">(</span><span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="mi">8</span> <span class="o">-</span> <span class="n">bits</span><span class="p">))</span>  <span class="c1"># JIT-friendly for: ~(2 ** (8 - bits) - 1)</span>
+    <span class="k">return</span> <span class="n">img</span> <span class="o">&amp;</span> <span class="n">mask</span>
+
+
+<div class="viewcode-block" id="CVPosterize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVPosterize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVPosterize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Posterize an image by reducing the number of bits for each color channel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8</span>
+<span class="sd">                int: The number of bits to keep for each channel (0-8).</span>
+<span class="sd">                tuple[int, int]: Range of the number of bits.</span>
+<span class="sd">                list[int, ... , int] : list of the number to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posterize_bins</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span> <span class="o">=</span> <span class="n">posterize_bins</span>
+
+<div class="viewcode-block" id="CVPosterize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVPosterize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_posterize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_posterize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(posterize_bins=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomPosterize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomPosterize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomPosterize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Posterize an image by reducing the number of bits for each color channel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting posterize.</span>
+<span class="sd">        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8</span>
+<span class="sd">                int: The number of bits to keep for each channel (0-8).</span>
+<span class="sd">                tuple[int, int]: Range of the number of bits.</span>
+<span class="sd">                list[int, ... , int] : list of the number to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">posterize_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span> <span class="o">=</span> <span class="n">posterize_bins</span>
+
+<div class="viewcode-block" id="CVRandomPosterize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomPosterize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">posterize_bins_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">_posterize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">_posterize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">posterize_bins_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;posterize_bins=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">posterize_bins</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_solarize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input image tensor should have at least 3 dimensions, but found </span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">threshold</span> <span class="o">&gt;</span> <span class="n">_max_value_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Threshold should be less than bound of img.&quot;</span><span class="p">)</span>
+
+    <span class="n">inverted_img</span> <span class="o">=</span> <span class="n">_invert</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">img</span> <span class="o">&gt;=</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">inverted_img</span><span class="p">,</span> <span class="n">img</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CVSolarize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSolarize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVSolarize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solarize an RGB/grayscale image by inverting all pixel values above a threshold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1</span>
+<span class="sd">                float: All pixels equal or above this value are inverted.</span>
+<span class="sd">                tuple[float, float]: Range of values to be randomly chosen.</span>
+<span class="sd">                list[float, ... , float] : list of values to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solarize_threshold</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span> <span class="o">=</span> <span class="n">solarize_threshold</span>
+
+<div class="viewcode-block" id="CVSolarize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVSolarize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">solarize_threshold_sel</span> <span class="o">*</span> <span class="mi">255</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">_solarize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">solarize_threshold_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(solarize_threshold=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomSolarize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSolarize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomSolarize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Solarize an RGB/grayscale image by inverting all pixel values above a threshold.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting solarize.</span>
+<span class="sd">        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1</span>
+<span class="sd">                float: All pixels equal or above this value are inverted.</span>
+<span class="sd">                tuple[float, float]: Range of values to be randomly chosen.</span>
+<span class="sd">                list[float, ... , float] : list of values to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">solarize_threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">solarize_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span> <span class="o">=</span> <span class="n">solarize_threshold</span>
+
+<div class="viewcode-block" id="CVRandomSolarize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomSolarize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="n">solarize_threshold_sel</span> <span class="o">=</span> <span class="n">solarize_threshold_sel</span> <span class="o">*</span> <span class="mi">255</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_solarize</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">solarize_threshold_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;solarize_threshold=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">solarize_threshold</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_auto_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="c1">## img shape [row,col,channel]</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="n">_max_value_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span>
+    <span class="n">minimum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_ROW_AXIS</span><span class="p">,</span> <span class="n">IMG_COL_AXIS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+        <span class="n">dtype</span><span class="p">)</span>
+    <span class="n">maximum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="n">IMG_ROW_AXIS</span><span class="p">,</span> <span class="n">IMG_COL_AXIS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">bound</span> <span class="o">/</span> <span class="p">(</span><span class="n">maximum</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span>
+    <span class="n">eq_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">scale</span><span class="p">))</span>
+    <span class="n">minimum</span><span class="p">[</span><span class="n">eq_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">scale</span><span class="p">[</span><span class="n">eq_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(((</span><span class="n">img</span> <span class="o">-</span> <span class="n">minimum</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="CVAutoContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVAutoContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVAutoContrast</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximize contrast of an image by remapping its</span>
+<span class="sd">    pixels per channel so that the lowest becomes black and the lightest</span>
+<span class="sd">    becomes white.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CVAutoContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVAutoContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_auto_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomAutoContrast">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomAutoContrast">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomAutoContrast</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Maximize contrast of an image by remapping its</span>
+<span class="sd">    pixels per channel so that the lowest becomes black and the lightest</span>
+<span class="sd">    becomes white.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob  (float):  Probability of image adjusting contrast.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="CVRandomAutoContrast.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomAutoContrast.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_auto_contrast</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_scale_channel</span><span class="p">(</span><span class="n">img_chan</span><span class="p">):</span>
+    <span class="c1"># TODO: we should expect bincount to always be faster than histc, but this</span>
+    <span class="c1"># isn&#39;t always the case. Once</span>
+    <span class="c1"># https://github.com/pytorch/pytorch/issues/53194 is fixed, remove the if</span>
+    <span class="c1"># block and only use bincount.</span>
+
+    <span class="n">hist</span><span class="p">,</span> <span class="n">bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">img_chan</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">bins</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="nb">range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span>
+
+    <span class="n">nonzero_hist</span> <span class="o">=</span> <span class="n">hist</span><span class="p">[</span><span class="n">hist</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">nonzero_hist</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="mf">255.</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">img_chan</span>
+
+    <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">hist</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">step</span> <span class="o">/</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="n">step</span><span class="p">)</span>
+    <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s1">&#39;constant&#39;</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">lut</span><span class="p">[</span><span class="n">img_chan</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)]</span>  <span class="c1"># .astype(np.uint8)</span>
+
+
+<span class="k">def</span> <span class="nf">_equalize</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">_get_dimensions_cv</span><span class="p">(</span><span class="n">img</span><span class="p">)[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="c1"># img_list = [cv2.equalizeHist(img[..., index])[..., None] for index in range(c)]</span>
+        <span class="n">img_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">_scale_channel</span><span class="p">(</span><span class="n">img</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">index</span><span class="p">])[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">img_list</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># img = cv2.equalizeHist(img)</span>
+        <span class="n">img</span> <span class="o">=</span> <span class="n">_scale_channel</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">img</span>
+
+
+<div class="viewcode-block" id="CVEqualize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVEqualize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVEqualize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equalize the histogram of an image by applying</span>
+<span class="sd">    a non-linear mapping to the input in order to create a uniform</span>
+<span class="sd">    distribution of grayscale values in the output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CVEqualize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVEqualize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_equalize</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">img</span> <span class="o">=</span> <span class="n">_equalize</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomEqualize">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomEqualize">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomEqualize</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Equalize the histogram of an image by applying</span>
+<span class="sd">    a non-linear mapping to the input in order to create a uniform</span>
+<span class="sd">    distribution of grayscale values in the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob  (float):  Probability of image adjusting equalize.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="CVRandomEqualize.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomEqualize.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">img</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="p">(</span><span class="n">img</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">_equalize</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">img</span> <span class="o">=</span> <span class="n">_equalize</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">img</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">) &#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_invert</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">img</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Input image tensor should have at least 3 dimensions, but found </span><span class="si">{</span><span class="n">img</span><span class="o">.</span><span class="n">ndim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">_assert_channels_cv</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">_max_value_cv</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">-</span> <span class="n">img</span>
+
+
+<div class="viewcode-block" id="CVInvert">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVInvert">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVInvert</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Invert the colors of an RGB/grayscale image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CVInvert.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVInvert.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_invert</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomInvert">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomInvert">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomInvert</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Invert the colors of an RGB/grayscale image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting invert.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="CVRandomInvert.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomInvert.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_invert</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVGaussianBlur">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVGaussianBlur">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVGaussianBlur</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian blurring on the image by given kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sigma (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        kernel_size (int  | tuple[int, int] |  list[int, int] ):</span>
+<span class="sd">                int: Gaussian kernel size.</span>
+<span class="sd">                tuple[int, int]: Range of the Gaussian kernel size.</span>
+<span class="sd">                list[int, int]: list of the  Gaussian kernel size to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+<div class="viewcode-block" id="CVGaussianBlur.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVGaussianBlur.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">sigma_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">kernel_size_sel</span> <span class="o">=</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size_sel</span><span class="p">,</span> <span class="n">kernel_size_sel</span><span class="p">),</span> <span class="n">sigma_sel</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(sigma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;kernel_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomGaussianBlur">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomGaussianBlur">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomGaussianBlur</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian blurring on the image by given kernel.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        blur_prob (float):  Probability of image adjusting Gaussian blurring.</span>
+<span class="sd">        sigma (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        kernel_size (int  | tuple[int, int] |  list[int, int] ):</span>
+<span class="sd">                int: Gaussian kernel size.</span>
+<span class="sd">                tuple[int, int]: Range of the Gaussian kernel size.</span>
+<span class="sd">                list[int, int]: list of the  Gaussian kernel size to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">sigma</span><span class="p">)</span>
+        <span class="n">_gaussian_kernel_size_check_value_range_set</span><span class="p">(</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+<div class="viewcode-block" id="CVRandomGaussianBlur.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomGaussianBlur.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">sigma_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="n">kernel_size_sel</span> <span class="o">=</span> <span class="n">_gaussian_kernel_size_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">GaussianBlur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="p">(</span><span class="n">kernel_size_sel</span><span class="p">,</span> <span class="n">kernel_size_sel</span><span class="p">),</span> <span class="n">sigma_sel</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;sigma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;kernel_size=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="p">):</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">else</span> <span class="mf">255.0</span>
+    <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="n">std</span><span class="p">,</span> <span class="n">mean</span> <span class="o">=</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">std</span> <span class="o">*</span> <span class="mf">255.0</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">*</span> <span class="mf">255.0</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="o">*</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span> <span class="o">+</span> <span class="n">mean</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="n">image</span> <span class="o">+</span> <span class="n">noise</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<div class="viewcode-block" id="CVGaussianNoise">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVGaussianNoise">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVGaussianNoise</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian noise on the image by given std.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        std (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        mean (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel mean.</span>
+<span class="sd">                tuple[float, float]: Range of the Gaussian kernel mean.</span>
+<span class="sd">                list[float, float]: list of the Gaussian kernel mean to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+
+<div class="viewcode-block" id="CVGaussianNoise.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVGaussianNoise.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">std_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">mean_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std_sel</span><span class="p">,</span> <span class="n">mean_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomGaussianNoise">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomGaussianNoise">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomGaussianNoise</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Performs Gaussian noise on the image by given std.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob ( float):  Probability of image adjusting Gaussian noise.</span>
+<span class="sd">        std (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel standard deviation.</span>
+<span class="sd">                tuple[float, float]: Range of the standard deviation.</span>
+<span class="sd">                list[float, float]: list of the standard deviation to be randomly chosen.</span>
+<span class="sd">        mean (float  | tuple[float, float] |  list[float, float] ):</span>
+<span class="sd">                float: Gaussian kernel mean.</span>
+<span class="sd">                tuple[float, float]: Range of the Gaussian kernel mean.</span>
+<span class="sd">                list[float, float]: list of the Gaussian kernel mean to be randomly chosen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span>
+
+<div class="viewcode-block" id="CVRandomGaussianNoise.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomGaussianNoise.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">std_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span>
+            <span class="n">mean_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_gaussian_noise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">std_sel</span><span class="p">,</span> <span class="n">mean_sel</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;std=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;mean=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">alphastd</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">image</span>
+    <span class="c1"># alpha = np.array([0.4638, 0.2112, 0.1410])</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">random</span><span class="o">.</span><span class="n">normalvariate</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)])</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+
+    <span class="n">rgb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">eigvec</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">eigval</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">image</span> <span class="o">=</span> <span class="n">image</span> <span class="o">+</span> <span class="n">rgb</span>
+
+    <span class="k">return</span> <span class="n">image</span>
+
+
+<div class="viewcode-block" id="CVLighting">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVLighting">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVLighting</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lighting noise(AlexNet - style PCA - based noise)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigval</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">_input_check_value_range_set</span><span class="p">(</span><span class="n">alphastd</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span> <span class="o">=</span> <span class="n">alphastd</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span> <span class="o">=</span> <span class="n">eigval</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span> <span class="o">=</span> <span class="n">eigvec</span>
+
+<div class="viewcode-block" id="CVLighting.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVLighting.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="n">alphastd_sel</span> <span class="o">=</span> <span class="n">_input_get_value_range_set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd_sel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd_sel</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(alphastd=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alphastd</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;eigval=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eigval</span><span class="si">}</span><span class="s1">, &#39;</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;eigvec=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">eigvec</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomLighting">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomLighting">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomLighting</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Lighting noise(AlexNet - style PCA - based noise)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        prob (float):  Probability of image adjusting Lighting noise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+
+<div class="viewcode-block" id="CVRandomLighting.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomLighting.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">alphastd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">eigval</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">]))</span>
+            <span class="n">eigvec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">IMG_CHANNEL_AXIS</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="n">_is_floating_point_cv</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float32&#39;</span><span class="p">)</span> <span class="o">/</span> <span class="mf">255.</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">_lighting</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">alphastd</span><span class="p">,</span> <span class="n">eigvec</span><span class="p">,</span> <span class="n">eigval</span><span class="p">)</span>  <span class="c1"># 差异来自alpha的生成,torch的随机数和random的随机数不一致</span>
+                <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">image</span> <span class="o">*</span> <span class="mf">255.</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">repr_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="n">repr_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s1">&#39;(prob=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="si">}</span><span class="s1">)&#39;</span>
+        <span class="k">return</span> <span class="n">repr_str</span></div>
+
+
+
+<div class="viewcode-block" id="CVRandomBlur">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomBlur">[docs]</a>
+<span class="nd">@TRANSFORMS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">CVRandomBlur</span><span class="p">(</span><span class="n">CVImageBase</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">)):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prob</span> <span class="o">=</span> <span class="n">prob</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span>
+
+<div class="viewcode-block" id="CVRandomBlur.calculate">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.transforms.html#horizonms.transforms.image_cv.CVRandomBlur.calculate">[docs]</a>
+    <span class="k">def</span> <span class="nf">calculate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">blur</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">image</span></div>
+</div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.metrics &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models" href="horizonms.models.html" />
+    <link rel="prev" title="horizonms.losses" href="horizonms.losses.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">horizonms.metrics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.base">horizonms.metrics.base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.sigmoid_metrics">horizonms.metrics.sigmoid_metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_metrics.SigmoidAccuracy"><code class="docutils literal notranslate"><span class="pre">SigmoidAccuracy</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.sigmoid_metrics_func">horizonms.metrics.sigmoid_metrics_func</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_metrics_func.sigmoid_accuracy"><code class="docutils literal notranslate"><span class="pre">sigmoid_accuracy()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.sigmoid_softmax_func">horizonms.metrics.sigmoid_softmax_func</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_softmax_func.dice_coefficient"><code class="docutils literal notranslate"><span class="pre">dice_coefficient()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_softmax_func.iou_score"><code class="docutils literal notranslate"><span class="pre">iou_score()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.sigmoid_softmax_metrics">horizonms.metrics.sigmoid_softmax_metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_softmax_metrics.DiceCoefficient"><code class="docutils literal notranslate"><span class="pre">DiceCoefficient</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.sigmoid_softmax_metrics.IouScore"><code class="docutils literal notranslate"><span class="pre">IouScore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.softmax_metrics">horizonms.metrics.softmax_metrics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics.SoftmaxAccuracy"><code class="docutils literal notranslate"><span class="pre">SoftmaxAccuracy</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics.SoftmaxAccuracyTopk"><code class="docutils literal notranslate"><span class="pre">SoftmaxAccuracyTopk</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics.SoftmaxCohenKappaScore"><code class="docutils literal notranslate"><span class="pre">SoftmaxCohenKappaScore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.metrics.softmax_metrics_func">horizonms.metrics.softmax_metrics_func</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics_func.softmax_accuracy"><code class="docutils literal notranslate"><span class="pre">softmax_accuracy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics_func.softmax_accuracy_topk"><code class="docutils literal notranslate"><span class="pre">softmax_accuracy_topk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.metrics.softmax_metrics_func.softmax_cohen_kappa_score"><code class="docutils literal notranslate"><span class="pre">softmax_cohen_kappa_score()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.html">horizonms.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+      <li class="breadcrumb-item active">horizonms.metrics</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.metrics.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-metrics">
+<h1>horizonms.metrics<a class="headerlink" href="#horizonms-metrics" title="Link to this heading"></a></h1>
+<section id="module-horizonms.metrics.base">
+<span id="horizonms-metrics-base"></span><h2>horizonms.metrics.base<a class="headerlink" href="#module-horizonms.metrics.base" title="Link to this heading"></a></h2>
+</section>
+<section id="module-horizonms.metrics.sigmoid_metrics">
+<span id="horizonms-metrics-sigmoid-metrics"></span><h2>horizonms.metrics.sigmoid_metrics<a class="headerlink" href="#module-horizonms.metrics.sigmoid_metrics" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_metrics.SigmoidAccuracy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_metrics.</span></span><span class="sig-name descname"><span class="pre">SigmoidAccuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_average</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_metrics.html#SigmoidAccuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_metrics.SigmoidAccuracy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Accuracy for sigmoid output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>float</em>) – threshold of the sigmoid output. Default is 0.5.</p></li>
+<li><p><strong>return_average</strong> (<em>bool</em>) – whether to average among samples.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.metrics.sigmoid_metrics_func">
+<span id="horizonms-metrics-sigmoid-metrics-func"></span><h2>horizonms.metrics.sigmoid_metrics_func<a class="headerlink" href="#module-horizonms.metrics.sigmoid_metrics_func" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_metrics_func.sigmoid_accuracy">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_metrics_func.</span></span><span class="sig-name descname"><span class="pre">sigmoid_accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_average</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_metrics_func.html#sigmoid_accuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_metrics_func.sigmoid_accuracy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.metrics.sigmoid_softmax_func">
+<span id="horizonms-metrics-sigmoid-softmax-func"></span><h2>horizonms.metrics.sigmoid_softmax_func<a class="headerlink" href="#module-horizonms.metrics.sigmoid_softmax_func" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_softmax_func.dice_coefficient">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_softmax_func.</span></span><span class="sig-name descname"><span class="pre">dice_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_softmax_func.html#dice_coefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_softmax_func.dice_coefficient" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_softmax_func.iou_score">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_softmax_func.</span></span><span class="sig-name descname"><span class="pre">iou_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_softmax_func.html#iou_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_softmax_func.iou_score" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.metrics.sigmoid_softmax_metrics">
+<span id="horizonms-metrics-sigmoid-softmax-metrics"></span><h2>horizonms.metrics.sigmoid_softmax_metrics<a class="headerlink" href="#module-horizonms.metrics.sigmoid_softmax_metrics" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_softmax_metrics.DiceCoefficient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_softmax_metrics.</span></span><span class="sig-name descname"><span class="pre">DiceCoefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_softmax_metrics.html#DiceCoefficient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_softmax_metrics.DiceCoefficient" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Dice coefficient for network output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epsilon</strong> (<em>float</em>) – a small number for the stability of metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.sigmoid_softmax_metrics.IouScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.sigmoid_softmax_metrics.</span></span><span class="sig-name descname"><span class="pre">IouScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/sigmoid_softmax_metrics.html#IouScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.sigmoid_softmax_metrics.IouScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Intersection over union for network output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epsilon</strong> (<em>float</em>) – a small number for the stability of metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.metrics.softmax_metrics">
+<span id="horizonms-metrics-softmax-metrics"></span><h2>horizonms.metrics.softmax_metrics<a class="headerlink" href="#module-horizonms.metrics.softmax_metrics" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics.SoftmaxAccuracy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics.</span></span><span class="sig-name descname"><span class="pre">SoftmaxAccuracy</span></span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics.html#SoftmaxAccuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics.SoftmaxAccuracy" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Accuracy for softmax output.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics.SoftmaxAccuracyTopk">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics.</span></span><span class="sig-name descname"><span class="pre">SoftmaxAccuracyTopk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics.html#SoftmaxAccuracyTopk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics.SoftmaxAccuracyTopk" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Top-k accuracy for softmax output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>k</strong> (<em>int</em>) – parameter in top-k.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics.SoftmaxCohenKappaScore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics.</span></span><span class="sig-name descname"><span class="pre">SoftmaxCohenKappaScore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics.html#SoftmaxCohenKappaScore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics.SoftmaxCohenKappaScore" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Cohen’s kappa for softmax output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>weights</strong> (<em>str</em>) – the type of Cohen’s kappa.</p></li>
+<li><p><strong>category</strong> (<em>bool</em>) – <cite>category=True</cite> converts both predictions and ground truths as one-hot.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) – a small number for the stability of metric.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.metrics.softmax_metrics_func">
+<span id="horizonms-metrics-softmax-metrics-func"></span><h2>horizonms.metrics.softmax_metrics_func<a class="headerlink" href="#module-horizonms.metrics.softmax_metrics_func" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics_func.softmax_accuracy">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics_func.</span></span><span class="sig-name descname"><span class="pre">softmax_accuracy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics_func.html#softmax_accuracy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics_func.softmax_accuracy" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics_func.softmax_accuracy_topk">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics_func.</span></span><span class="sig-name descname"><span class="pre">softmax_accuracy_topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">topk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics_func.html#softmax_accuracy_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics_func.softmax_accuracy_topk" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.metrics.softmax_metrics_func.softmax_cohen_kappa_score">
+<span class="sig-prename descclassname"><span class="pre">horizonms.metrics.softmax_metrics_func.</span></span><span class="sig-name descname"><span class="pre">softmax_cohen_kappa_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ytrue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-10</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/metrics/softmax_metrics_func.html#softmax_cohen_kappa_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.metrics.softmax_metrics_func.softmax_cohen_kappa_score" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.losses.html" class="btn btn-neutral float-left" title="horizonms.losses" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.html" class="btn btn-neutral float-right" title="horizonms.models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

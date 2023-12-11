@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.utils &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="horizonms.transforms" href="horizonms.transforms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.html">horizonms.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">horizonms.utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.config">horizonms.utils.config</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.config.read_config_file"><code class="docutils literal notranslate"><span class="pre">read_config_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.config.save_config_file"><code class="docutils literal notranslate"><span class="pre">save_config_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.config.config_updates"><code class="docutils literal notranslate"><span class="pre">config_updates()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.misc">horizonms.utils.misc</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.misc.is_seq_of"><code class="docutils literal notranslate"><span class="pre">is_seq_of()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.misc.deprecated_api_warning"><code class="docutils literal notranslate"><span class="pre">deprecated_api_warning()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.pd_utils">horizonms.utils.pd_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.pd_utils.append_df_to_excel"><code class="docutils literal notranslate"><span class="pre">append_df_to_excel()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.registry">horizonms.utils.registry</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.registry.build_from_cfg"><code class="docutils literal notranslate"><span class="pre">build_from_cfg()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.registry.Registry"><code class="docutils literal notranslate"><span class="pre">Registry</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.summary">horizonms.utils.summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.summary.summary"><code class="docutils literal notranslate"><span class="pre">summary()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.utils.training_utils">horizonms.utils.training_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.training_utils.save_checkpoints_update"><code class="docutils literal notranslate"><span class="pre">save_checkpoints_update()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.utils.training_utils.summary_update"><code class="docutils literal notranslate"><span class="pre">summary_update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+      <li class="breadcrumb-item active">horizonms.utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-utils">
+<h1>horizonms.utils<a class="headerlink" href="#horizonms-utils" title="Link to this heading"></a></h1>
+<section id="module-horizonms.utils.config">
+<span id="horizonms-utils-config"></span><h2>horizonms.utils.config<a class="headerlink" href="#module-horizonms.utils.config" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.config.read_config_file">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.config.</span></span><span class="sig-name descname"><span class="pre">read_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/config.html#read_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.config.read_config_file" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.config.save_config_file">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.config.</span></span><span class="sig-name descname"><span class="pre">save_config_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/config.html#save_config_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.config.save_config_file" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.config.config_updates">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.config.</span></span><span class="sig-name descname"><span class="pre">config_updates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_new</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/config.html#config_updates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.config.config_updates" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.utils.misc">
+<span id="horizonms-utils-misc"></span><h2>horizonms.utils.misc<a class="headerlink" href="#module-horizonms.utils.misc" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.misc.is_seq_of">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.misc.</span></span><span class="sig-name descname"><span class="pre">is_seq_of</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expected_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/misc.html#is_seq_of"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.misc.is_seq_of" title="Link to this definition"></a></dt>
+<dd><p>Check whether it is a sequence of some type.
+:param seq: The sequence to be checked.
+:type seq: Sequence
+:param expected_type: Expected type of sequence items.
+:type expected_type: type
+:param seq_type: Expected sequence type.
+:type seq_type: type, optional</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Whether the sequence is valid.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.misc.deprecated_api_warning">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.misc.</span></span><span class="sig-name descname"><span class="pre">deprecated_api_warning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cls_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/misc.html#deprecated_api_warning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.misc.deprecated_api_warning" title="Link to this definition"></a></dt>
+<dd><p>A decorator to check if some arguments are deprecate and try to replace
+deprecate src_arg_name to dst_arg_name.
+:param name_dict: key (str): Deprecate argument names.</p>
+<blockquote>
+<div><p>val (str): Expected argument names.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>New function.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>func</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.utils.pd_utils">
+<span id="horizonms-utils-pd-utils"></span><h2>horizonms.utils.pd_utils<a class="headerlink" href="#module-horizonms.utils.pd_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.pd_utils.append_df_to_excel">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.pd_utils.</span></span><span class="sig-name descname"><span class="pre">append_df_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sheet_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Sheet1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startrow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">truncate_sheet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">to_excel_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/pd_utils.html#append_df_to_excel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.pd_utils.append_df_to_excel" title="Link to this definition"></a></dt>
+<dd><p>Append a DataFrame [df] to existing Excel file [filename]
+into [sheet_name] Sheet.
+If [filename] doesn’t exist, then this function will create it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> – File path or existing ExcelWriter
+(Example: ‘/path/to/file.xlsx’)</p></li>
+<li><p><strong>df</strong> – dataframe to save to workbook</p></li>
+<li><p><strong>sheet_name</strong> – Name of sheet which will contain DataFrame.
+(default: ‘Sheet1’)</p></li>
+<li><p><strong>startrow</strong> – upper left cell row to dump data frame.
+Per default (startrow=None) calculate the last row
+in the existing DF and write to the next row…</p></li>
+<li><p><strong>truncate_sheet</strong> – truncate (remove and recreate) [sheet_name]
+before writing DataFrame to Excel file</p></li>
+<li><p><strong>to_excel_kwargs</strong> – arguments which will be passed to <cite>DataFrame.to_excel()</cite>
+[can be dictionary]</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: None</p>
+<p>(c) [MaxU](<a class="reference external" href="https://stackoverflow.com/users/5741205/maxu?tab=profile">https://stackoverflow.com/users/5741205/maxu?tab=profile</a>)
+codes: <a class="reference external" href="https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas">https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas</a></p>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.utils.registry">
+<span id="horizonms-utils-registry"></span><h2>horizonms.utils.registry<a class="headerlink" href="#module-horizonms.utils.registry" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.registry.build_from_cfg">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.registry.</span></span><span class="sig-name descname"><span class="pre">build_from_cfg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">registry</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#horizonms.utils.registry.Registry" title="horizonms.utils.registry.Registry"><span class="pre">Registry</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Any</span></span></span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#build_from_cfg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.build_from_cfg" title="Link to this definition"></a></dt>
+<dd><p>Build a module from config dict when it is a class configuration, or
+call a function from config dict when it is a function configuration.
+.. rubric:: Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MODELS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@MODELS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ResNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resnet</span> <span class="o">=</span> <span class="n">build_from_cfg</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;Resnet&#39;</span><span class="p">),</span> <span class="n">MODELS</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Returns an instantiated object</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@MODELS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">resnet50</span><span class="p">():</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resnet</span> <span class="o">=</span> <span class="n">build_from_cfg</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;resnet50&#39;</span><span class="p">),</span> <span class="n">MODELS</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Return a result of the calling function</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg</strong> (<em>dict</em>) – Config dict. It should at least contain the key “type”.</p></li>
+<li><p><strong>registry</strong> (<a class="reference internal" href="#horizonms.utils.registry.Registry" title="horizonms.utils.registry.Registry"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Registry</span></code></a>) – The registry to search the type from.</p></li>
+<li><p><strong>default_args</strong> (<em>dict</em><em>, </em><em>optional</em>) – Default initialization arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The constructed object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.utils.registry.</span></span><span class="sig-name descname"><span class="pre">Registry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">build_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scope</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A registry to map strings to classes or functions.
+Registered object could be built from registry. Meanwhile, registered
+functions could be called from registry.
+.. rubric:: Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MODELS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@MODELS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ResNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resnet</span> <span class="o">=</span> <span class="n">MODELS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;ResNet&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@MODELS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">resnet50</span><span class="p">():</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">resnet</span> <span class="o">=</span> <span class="n">MODELS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s1">&#39;resnet50&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Please refer to
+<a class="reference external" href="https://mmcv.readthedocs.io/en/latest/understand_mmcv/registry.html">https://mmcv.readthedocs.io/en/latest/understand_mmcv/registry.html</a> for
+advanced usage.
+:param name: Registry name.
+:type name: str
+:param build_func: Build function to construct instance from</p>
+<blockquote>
+<div><p>Registry, func:<cite>build_from_cfg</cite> is used if neither <code class="docutils literal notranslate"><span class="pre">parent</span></code> or
+<code class="docutils literal notranslate"><span class="pre">build_func</span></code> is specified. If <code class="docutils literal notranslate"><span class="pre">parent</span></code> is specified and
+<code class="docutils literal notranslate"><span class="pre">build_func</span></code> is not given,  <code class="docutils literal notranslate"><span class="pre">build_func</span></code> will be inherited
+from <code class="docutils literal notranslate"><span class="pre">parent</span></code>. Default: None.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent</strong> (<a class="reference internal" href="#horizonms.utils.registry.Registry" title="horizonms.utils.registry.Registry"><em>Registry</em></a><em>, </em><em>optional</em>) – Parent registry. The class registered in
+children registry could be built from parent. Default: None.</p></li>
+<li><p><strong>scope</strong> (<em>str</em><em>, </em><em>optional</em>) – The scope of registry. It is the key to search
+for children registry. If not specified, scope will be the name of
+the package where class is defined, e.g. mmdet, mmcls, mmseg.
+Default: None.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.infer_scope">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">infer_scope</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.infer_scope"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.infer_scope" title="Link to this definition"></a></dt>
+<dd><p>Infer the scope of registry.
+The name of the package where registry is defined will be returned.
+.. rubric:: Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># in mmdet/models/backbone/resnet.py</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">MODELS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@MODELS</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ResNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="go">The scope of ``ResNet`` will be ``mmdet``.</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The inferred scope name.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.split_scope_key">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">split_scope_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.split_scope_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.split_scope_key" title="Link to this definition"></a></dt>
+<dd><p>Split scope and key.
+The first scope will be split from key.
+.. rubric:: Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Registry</span><span class="o">.</span><span class="n">split_scope_key</span><span class="p">(</span><span class="s1">&#39;mmdet.ResNet&#39;</span><span class="p">)</span>
+<span class="go">&#39;mmdet&#39;, &#39;ResNet&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Registry</span><span class="o">.</span><span class="n">split_scope_key</span><span class="p">(</span><span class="s1">&#39;ResNet&#39;</span><span class="p">)</span>
+<span class="go">None, &#39;ResNet&#39;</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The former element is the first scope of
+the key, which can be <code class="docutils literal notranslate"><span class="pre">None</span></code>. The latter is the remaining key.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple[str | None, str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#horizonms.utils.registry.Registry.name" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.scope">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">scope</span></span><a class="headerlink" href="#horizonms.utils.registry.Registry.scope" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.module_dict">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">module_dict</span></span><a class="headerlink" href="#horizonms.utils.registry.Registry.module_dict" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.children">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children</span></span><a class="headerlink" href="#horizonms.utils.registry.Registry.children" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.get" title="Link to this definition"></a></dt>
+<dd><p>Get the registry record.
+:param key: The class name in string format.
+:type key: str</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The corresponding class.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>class</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.build" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.deprecated_register_module">
+<span class="sig-name descname"><span class="pre">deprecated_register_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.deprecated_register_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.deprecated_register_module" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.utils.registry.Registry.register_module">
+<span class="sig-name descname"><span class="pre">register_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/registry.html#Registry.register_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.registry.Registry.register_module" title="Link to this definition"></a></dt>
+<dd><p>Register a module.
+A record will be added to <cite>self._module_dict</cite>, whose key is the class
+name or the specified name, and value is the class itself.
+It can be used as a decorator or a normal function.
+.. rubric:: Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">backbones</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@backbones</span><span class="o">.</span><span class="n">register_module</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ResNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backbones</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@backbones</span><span class="o">.</span><span class="n">register_module</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;mnet&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MobileNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backbones</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;backbone&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">ResNet</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">backbones</span><span class="o">.</span><span class="n">register_module</span><span class="p">(</span><span class="n">ResNet</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em><em> | </em><em>None</em>) – The module name to be registered. If not
+specified, the class name will be used.</p></li>
+<li><p><strong>force</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to override an existing class with
+the same name. Default: False.</p></li>
+<li><p><strong>module</strong> (<em>type</em>) – Module class or function to be registered.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.utils.summary">
+<span id="horizonms-utils-summary"></span><h2>horizonms.utils.summary<a class="headerlink" href="#module-horizonms.utils.summary" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.summary.summary">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.summary.</span></span><span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cuda'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/summary.html#summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.summary.summary" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-horizonms.utils.training_utils">
+<span id="horizonms-utils-training-utils"></span><h2>horizonms.utils.training_utils<a class="headerlink" href="#module-horizonms.utils.training_utils" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.training_utils.save_checkpoints_update">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.training_utils.</span></span><span class="sig-name descname"><span class="pre">save_checkpoints_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_checkpoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_metric_logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/training_utils.html#save_checkpoints_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.training_utils.save_checkpoints_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.utils.training_utils.summary_update">
+<span class="sig-prename descclassname"><span class="pre">horizonms.utils.training_utils.</span></span><span class="sig-name descname"><span class="pre">summary_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_save</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'epoch':</span> <span class="pre">[]}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_metric_logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/utils/training_utils.html#summary_update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.utils.training_utils.summary_update" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.transforms.html" class="btn btn-neutral float-left" title="horizonms.transforms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

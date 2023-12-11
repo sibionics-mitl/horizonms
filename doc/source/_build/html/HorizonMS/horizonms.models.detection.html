@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models.detection &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models.heads" href="horizonms.models.heads.html" />
+    <link rel="prev" title="horizonms.models.classification" href="horizonms.models.classification.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="horizonms.models.html">horizonms.models</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">horizonms.models.detection</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.anchors_retinanet">horizonms.models.detection.anchors_retinanet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.anchors_yolo">horizonms.models.detection.anchors_yolo</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.boxes">horizonms.models.detection.boxes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.detection">horizonms.models.detection.detection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.detection_base">horizonms.models.detection.detection_base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.retinanet">horizonms.models.detection.retinanet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.yolonet">horizonms.models.detection.yolonet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.yolov1">horizonms.models.detection.yolov1</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-horizonms.models.detection.yolov1_utils">horizonms.models.detection.yolov1_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.batch_image">horizonms.models.batch_image</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.html#module-horizonms.models.model_base">horizonms.models.model_base</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+          <li class="breadcrumb-item"><a href="horizonms.models.html">horizonms.models</a></li>
+      <li class="breadcrumb-item active">horizonms.models.detection</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.detection.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models-detection">
+<h1>horizonms.models.detection<a class="headerlink" href="#horizonms-models-detection" title="Link to this heading"></a></h1>
+<section id="module-horizonms.models.detection.anchors_retinanet">
+<span id="horizonms-models-detection-anchors-retinanet"></span><h2>horizonms.models.detection.anchors_retinanet<a class="headerlink" href="#module-horizonms.models.detection.anchors_retinanet" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">AnchorGenerator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchor_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((128,</span> <span class="pre">256,</span> <span class="pre">512),)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_aspect_ratios</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0),)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_scales</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">((1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994),)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.cell_anchors">
+<span class="sig-name descname"><span class="pre">cell_anchors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.cell_anchors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.generate_anchors">
+<span class="sig-name descname"><span class="pre">generate_anchors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.generate_anchors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.generate_anchors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.set_cell_anchors">
+<span class="sig-name descname"><span class="pre">set_cell_anchors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Device</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.set_cell_anchors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.set_cell_anchors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.num_anchors_per_location">
+<span class="sig-name descname"><span class="pre">num_anchors_per_location</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.num_anchors_per_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.num_anchors_per_location" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.grid_anchors">
+<span class="sig-name descname"><span class="pre">grid_anchors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.grid_anchors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.grid_anchors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.cached_grid_anchors">
+<span class="sig-name descname"><span class="pre">cached_grid_anchors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid_sizes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strides</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.cached_grid_anchors"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.cached_grid_anchors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.AnchorGenerator.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_maps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">org_image_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#AnchorGenerator.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.AnchorGenerator.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.bbox_transform">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">bbox_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#bbox_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.bbox_transform" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Compute bounding-box regression targets for an image.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.bbox_transform_batch">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">bbox_transform_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_boxes_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#bbox_transform_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.bbox_transform_batch" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Compute bounding-box regression targets for an image.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.bbox_transform_inv_batch">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">bbox_transform_inv_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deltas_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#bbox_transform_inv_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.bbox_transform_inv_batch" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Applies deltas (usually regression results) to boxes (usually anchors).</p>
+<p class="linemarker linemarker-3">Before applying the deltas to the boxes, the normalization that was previously applied (in the generator) has to be removed.
+The mean and std are the mean and std as applied in the generator. They are unnormalized in this function and then applied to the boxes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>boxes</strong> – np.array of shape (B, N, 4), where B is the batch size, N the number of boxes and 4 values for (x1, y1, x2, y2).</p></li>
+<li><p><strong>deltas</strong> – np.array of same shape as boxes. These deltas (d_x1, d_y1, d_x2, d_y2) are a factor of the width/height.</p></li>
+<li><p><strong>mean</strong> – The mean value used when computing deltas (defaults to [0, 0, 0, 0]).</p></li>
+<li><p><strong>std</strong> – The standard deviation used when computing deltas (defaults to [0.2, 0.2, 0.2, 0.2]).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A np.array of the same shape as boxes, but with deltas applied to each box.
+The mean and std are used during training to normalize the regression values (networks love normalization).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.BBoxCoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">BBoxCoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.2,</span> <span class="pre">0.2,</span> <span class="pre">0.2,</span> <span class="pre">0.2]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_xform_clip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.135166556742356</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#BBoxCoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.BBoxCoder" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p class="linemarker linemarker-1">This class encodes and decodes a set of bounding boxes into
+the representation used for training the regressors.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.BBoxCoder.encode">
+<span class="sig-name descname"><span class="pre">encode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_boxes_group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#BBoxCoder.encode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.BBoxCoder.encode_single">
+<span class="sig-name descname"><span class="pre">encode_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gt_boxes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#BBoxCoder.encode_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode_single" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Encode a set of proposals with respect to some
+reference boxes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reference_boxes</strong> (<em>Tensor</em>) – reference boxes</p></li>
+<li><p><strong>proposals</strong> (<em>Tensor</em>) – boxes to be encoded</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.BBoxCoder.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deltas_group</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#BBoxCoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.BBoxCoder.decode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.clip_boxes">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">clip_boxes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#clip_boxes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.clip_boxes" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.anchor_targets_bbox">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">anchor_targets_bbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations_group</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_size_group</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positive_overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#anchor_targets_bbox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.anchor_targets_bbox" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Generate anchor targets for bbox detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>anchors_group</strong> – List of anchors with each anchor shape (N, 4) for (x1, y1, x2, y2).</p></li>
+<li><p><strong>annotations_group</strong> – List of annotation dictionaries with each annotation containing ‘labels’ and ‘boxes’ of an image.</p></li>
+<li><p><strong>num_classes</strong> – Number of classes to predict.</p></li>
+<li><p><strong>mask_shape</strong> – If the image is padded with zeros, mask_shape can be used to mark the relevant part of the image.</p></li>
+<li><p><strong>negative_overlap</strong> – IoU overlap for negative anchors (all anchors with overlap &lt; negative_overlap are negative).</p></li>
+<li><p><strong>positive_overlap</strong> – IoU overlap or positive anchors (all anchors with overlap &gt; positive_overlap are positive).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>batch that contains labels &amp; anchor states (np.array of shape (batch_size, N, num_classes + 1),</dt><dd><p class="linemarker linemarker-13">where N is the number of anchors for an image and the last column defines the anchor state (-1 for ignore, 0 for bg, 1 for fg).</p>
+</dd>
+<dt>regression_batch: batch that contains bounding-box regression targets for an image &amp; anchor states (np.array of shape (batch_size, N, 4 + 1),</dt><dd><p class="linemarker linemarker-15">where N is the number of anchors for an image, the first 4 columns define regression targets for (x1, y1, x2, y2) and the
+last column defines anchor states (-1 for ignore, 0 for bg, 1 for fg).</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>labels_batch</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_retinanet.compute_gt_annotations">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_retinanet.</span></span><span class="sig-name descname"><span class="pre">compute_gt_annotations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">positive_overlap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_retinanet.html#compute_gt_annotations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_retinanet.compute_gt_annotations" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Obtain indices of gt annotations with the greatest overlap.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>anchors</strong> – np.array of annotations of shape (N, 4) for (x1, y1, x2, y2).</p></li>
+<li><p><strong>annotations</strong> – np.array of shape (N, 5) for (x1, y1, x2, y2, label).</p></li>
+<li><p><strong>negative_overlap</strong> – IoU overlap for negative anchors (all anchors with overlap &lt; negative_overlap are negative).</p></li>
+<li><p><strong>positive_overlap</strong> – IoU overlap or positive anchors (all anchors with overlap &gt; positive_overlap are positive).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>indices of positive anchors
+ignore_indices: indices of ignored anchors
+argmax_overlaps_inds: ordered overlaps indices</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>positive_indices</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.anchors_yolo">
+<span id="horizonms-models-detection-anchors-yolo"></span><h2>horizonms.models.detection.anchors_yolo<a class="headerlink" href="#module-horizonms.models.detection.anchors_yolo" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.encode_box">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">encode_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bbox</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#encode_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.encode_box" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.decode_box">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">decode_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txtytwth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#decode_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.decode_box" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.create_grid">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">create_grid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#create_grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.create_grid" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.generate_target_yolov2">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">generate_target_yolov2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#generate_target_yolov2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.generate_target_yolov2" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.generate_stride">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">generate_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#generate_stride"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.generate_stride" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.generate_feature_shape">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">generate_feature_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#generate_feature_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.generate_feature_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.generate_target_yolov1">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">generate_target_yolov1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#generate_target_yolov1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.generate_target_yolov1" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.BoxCoderYoloV1">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.anchors_yolo.</span></span><span class="sig-name descname"><span class="pre">BoxCoderYoloV1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#BoxCoderYoloV1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode">
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txtytwth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#BoxCoderYoloV1.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.encode_single">
+<span class="sig-name descname"><span class="pre">encode_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#BoxCoderYoloV1.encode_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.encode_single" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode_single">
+<span class="sig-name descname"><span class="pre">decode_single</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">txtytwth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/anchors_yolo.html#BoxCoderYoloV1.decode_single"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode_single" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.boxes">
+<span id="horizonms-models-detection-boxes"></span><h2>horizonms.models.detection.boxes<a class="headerlink" href="#module-horizonms.models.detection.boxes" title="Link to this heading"></a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.boxes.box_area">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.boxes.</span></span><span class="sig-name descname"><span class="pre">box_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/boxes.html#box_area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.boxes.box_area" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.boxes.box_iou">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.boxes.</span></span><span class="sig-name descname"><span class="pre">box_iou</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/boxes.html#box_iou"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.boxes.box_iou" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Return intersection-over-union (Jaccard index) between two sets of boxes.</p>
+<p class="linemarker linemarker-3">Both sets of boxes are expected to be in <code class="docutils literal notranslate"><span class="pre">(x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2)</span></code> format with
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">x1</span> <span class="pre">&lt;</span> <span class="pre">x2</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y1</span> <span class="pre">&lt;</span> <span class="pre">y2</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>boxes1</strong> (<em>Tensor</em><em>[</em><em>N</em><em>, </em><em>4</em><em>]</em>) – first set of boxes</p></li>
+<li><p><strong>boxes2</strong> (<em>Tensor</em><em>[</em><em>M</em><em>, </em><em>4</em><em>]</em>) – second set of boxes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the NxM matrix containing the pairwise IoU values for every element in boxes1 and boxes2</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor[N, M]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="horizonms.models.detection.boxes.paired_box_iou">
+<span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.boxes.</span></span><span class="sig-name descname"><span class="pre">paired_box_iou</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">boxes1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boxes2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tensor</span></span></span><a class="reference internal" href="../_modules/horizonms/models/detection/boxes.html#paired_box_iou"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.boxes.paired_box_iou" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Return intersection-over-union (Jaccard index) between two sets of paired boxes.</p>
+<p class="linemarker linemarker-3">Both sets of boxes are expected to be in <code class="docutils literal notranslate"><span class="pre">(x1,</span> <span class="pre">y1,</span> <span class="pre">x2,</span> <span class="pre">y2)</span></code> format with
+<code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">x1</span> <span class="pre">&lt;</span> <span class="pre">x2</span></code> and <code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">y1</span> <span class="pre">&lt;</span> <span class="pre">y2</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>boxes1</strong> (<em>Tensor</em><em>[</em><em>N1</em><em>, </em><em>N2</em><em>, </em><em>N3</em><em>, </em><em>...</em><em>, </em><em>4</em><em>]</em>) – first set of boxes</p></li>
+<li><p><strong>boxes2</strong> (<em>Tensor</em><em>[</em><em>N1</em><em>, </em><em>N2</em><em>, </em><em>N3</em><em>, </em><em>...</em><em>, </em><em>4</em><em>]</em>) – second set of boxes</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the N1xN2xN3x… matrix containing the IoU values for paired elements in boxes1 and boxes2</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor[N1, N2, N3, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.detection">
+<span id="horizonms-models-detection-detection"></span><h2>horizonms.models.detection.detection<a class="headerlink" href="#module-horizonms.models.detection.detection" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.detection.</span></span><span class="sig-name descname"><span class="pre">Detection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">net_params,</span> <span class="pre">loss_params=[],</span> <span class="pre">metric_params=[],</span> <span class="pre">batch_image=&lt;class</span> <span class="pre">'horizonms.models.batch_image.BatchImage'&gt;,</span> <span class="pre">divisible=32,</span> <span class="pre">batch_transforms=None,</span> <span class="pre">bbox_thresholds={'bbox_high_iou_thresh':</span> <span class="pre">0.5,</span> <span class="pre">'bbox_low_iou_thresh':</span> <span class="pre">0.4},</span> <span class="pre">bbox_stats={'bbox_stat_mean':</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0],</span> <span class="pre">'bbox_stat_std':</span> <span class="pre">[0.2,</span> <span class="pre">0.2,</span> <span class="pre">0.2,</span> <span class="pre">0.2]}</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="#horizonms.models.detection.detection_base.BaseDetection" title="horizonms.models.detection.detection_base.BaseDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDetection</span></code></a></p>
+<p class="linemarker linemarker-1">General model of the object detection task for network training and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net_params</strong> (<em>Dict</em>) – the configuration of the network.</p></li>
+<li><p><strong>loss_params</strong> (<em>Dict</em>) – the configuration of losses for training.</p></li>
+<li><p><strong>metric_params</strong> (<em>Dict</em>) – the configuration of the metrics for validation.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>divisible</strong> (<em>int</em>) – it determines the size of the batched input such that it is divisible by <cite>divisible</cite> and larger than the size of the input.</p></li>
+<li><p><strong>batch_transforms</strong> – batch transformation for network training.</p></li>
+<li><p><strong>bbox_thresholds</strong> (<em>Dict</em>) – the parameters for bounding boxes.</p></li>
+<li><p><strong>bbox_stats</strong> (<em>Dict</em>) – the statistics for bounding boxes.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.calculate_loss">
+<span class="sig-name descname"><span class="pre">calculate_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.calculate_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.calculate_loss" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.calculate_losses">
+<span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.calculate_metric">
+<span class="sig-name descname"><span class="pre">calculate_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kwargs_opt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.calculate_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.calculate_metric" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.calculate_metrics">
+<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.forward_train">
+<span class="sig-name descname"><span class="pre">forward_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.forward_train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.forward_train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.test_one_batch">
+<span class="sig-name descname"><span class="pre">test_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.test_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.test_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection.Detection.predict_one_batch">
+<span class="sig-name descname"><span class="pre">predict_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_dense_results</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection.html#Detection.predict_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection.Detection.predict_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.detection_base">
+<span id="horizonms-models-detection-detection-base"></span><h2>horizonms.models.detection.detection_base<a class="headerlink" href="#module-horizonms.models.detection.detection_base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.detection_base.</span></span><span class="sig-name descname"><span class="pre">BaseDetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">divisible</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_transforms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="horizonms.models.html#horizonms.models.model_base.BaseModel" title="horizonms.models.model_base.BaseModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p class="linemarker linemarker-1">Base class for object detection task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>nn.Module</em>) – Deep learning network.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>divisible</strong> – it determines the size of the batched input such that it is divisible by <cite>divisible</cite> and larger than the size of the input.</p></li>
+<li><p><strong>batch_transforms</strong> – batch transformation for network training.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.preprocessing_input">
+<span class="sig-name descname"><span class="pre">preprocessing_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.preprocessing_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.preprocessing_input" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.calculate_losses">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.calculate_metrics">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.forward_train">
+<span class="sig-name descname"><span class="pre">forward_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.forward_train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.forward_train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.test_one_batch">
+<span class="sig-name descname"><span class="pre">test_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.test_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.test_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.detection_base.BaseDetection.predict_one_batch">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/detection_base.html#BaseDetection.predict_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.detection_base.BaseDetection.predict_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.retinanet">
+<span id="horizonms-models-detection-retinanet"></span><h2>horizonms.models.detection.retinanet<a class="headerlink" href="#module-horizonms.models.detection.retinanet" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.Retinanet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.retinanet.</span></span><span class="sig-name descname"><span class="pre">Retinanet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neck</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchor_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'anchor_aspect_ratios':</span> <span class="pre">((0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0),</span> <span class="pre">(0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0),</span> <span class="pre">(0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0),</span> <span class="pre">(0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0),</span> <span class="pre">(0.5,</span> <span class="pre">1.0,</span> <span class="pre">2.0)),</span> <span class="pre">'anchor_scales':</span> <span class="pre">((1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994),</span> <span class="pre">(1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994),</span> <span class="pre">(1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994),</span> <span class="pre">(1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994),</span> <span class="pre">(1,</span> <span class="pre">1.2599210498948732,</span> <span class="pre">1.5874010519681994)),</span> <span class="pre">'anchor_sizes':</span> <span class="pre">((32,),</span> <span class="pre">(64,),</span> <span class="pre">(128,),</span> <span class="pre">(256,),</span> <span class="pre">(512,))}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nms_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{'detections_per_class':</span> <span class="pre">10,</span> <span class="pre">'nms_iou_threshold':</span> <span class="pre">0.05,</span> <span class="pre">'nms_score_threshold':</span> <span class="pre">0.005}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#Retinanet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.Retinanet" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">Retinanet from
+T. Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, “Focal loss for dense object detection”,
+In Proceedings of the IEEE international conference on computer vision, pp. 2980-2988, 2017.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>Dict</em>) – the configuration of the backbone.</p></li>
+<li><p><strong>neck</strong> (<em>Dict</em>) – the configuration of the neck.</p></li>
+<li><p><strong>head</strong> (<em>Dict</em>) – the configuration of the head.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – the number of classes.</p></li>
+<li><p><strong>anchor_params</strong> (<em>Dict</em>) – the parameters of anchors.</p></li>
+<li><p><strong>nms_params</strong> (<em>Dict</em>) – the parameters of NMS.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.Retinanet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_sizes_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#Retinanet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.Retinanet.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.Retinanet.get_gts">
+<span class="sig-name descname"><span class="pre">get_gts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original_image_sizes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_coder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_thresholds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#Retinanet.get_gts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.Retinanet.get_gts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.Retinanet.pred_postprocessing_for_loss_calculation">
+<span class="sig-name descname"><span class="pre">pred_postprocessing_for_loss_calculation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">box_preds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#Retinanet.pred_postprocessing_for_loss_calculation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.Retinanet.pred_postprocessing_for_loss_calculation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.Retinanet.postprocess_detections">
+<span class="sig-name descname"><span class="pre">postprocess_detections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_coder</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#Retinanet.postprocess_detections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.Retinanet.postprocess_detections" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.RetinanetHead">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.retinanet.</span></span><span class="sig-name descname"><span class="pre">RetinanetHead</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_anchors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_conv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">81</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_fpn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#RetinanetHead"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.RetinanetHead" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">Head of Retinanet from
+T. Y. Lin, P. Goyal, R. Girshick, K. He, and P. Dollár, “Focal loss for dense object detection”,
+In Proceedings of the IEEE international conference on computer vision, pp. 2980-2988, 2017.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.retinanet.RetinanetHead.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/retinanet.html#RetinanetHead.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.retinanet.RetinanetHead.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.yolonet">
+<span id="horizonms-models-detection-yolonet"></span><h2>horizonms.models.detection.yolonet<a class="headerlink" href="#module-horizonms.models.detection.yolonet" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolonet.</span></span><span class="sig-name descname"><span class="pre">YOLODetection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_params=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_transforms=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_image=&lt;class</span> <span class="pre">'horizonms.models.batch_image.BatchImage'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">box_coder=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nms_params={'detections_per_class':</span> <span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'nms_iou_threshold':</span> <span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'nms_score_threshold':</span> <span class="pre">0.1}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <a class="reference internal" href="#horizonms.models.detection.detection_base.BaseDetection" title="horizonms.models.detection.detection_base.BaseDetection"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDetection</span></code></a></p>
+<p class="linemarker linemarker-1">Class of the object detection task for Yolo training and testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net_params</strong> (<em>Dict</em>) – the configuration of the network.</p></li>
+<li><p><strong>loss_params</strong> (<em>Dict</em>) – the configuration of losses for training.</p></li>
+<li><p><strong>metric_params</strong> (<em>Dict</em>) – the configuration of the metrics for validation.</p></li>
+<li><p><strong>batch_transforms</strong> – batch transformation for network training.</p></li>
+<li><p><strong>batch_image</strong> – class used to convert a list of (input, target) into batch format used in network training and testing.</p></li>
+<li><p><strong>box_coder</strong> – encoder and decoder of anchors.</p></li>
+<li><p><strong>nms_params</strong> (<em>Dict</em>) – the parameters of NMS.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection.calculate_losses">
+<span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection.calculate_metrics">
+<span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection.forward_train">
+<span class="sig-name descname"><span class="pre">forward_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection.forward_train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection.forward_train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection.test_one_batch">
+<span class="sig-name descname"><span class="pre">test_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection.test_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection.test_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolonet.YOLODetection.predict_one_batch">
+<span class="sig-name descname"><span class="pre">predict_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolonet.html#YOLODetection.predict_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolonet.YOLODetection.predict_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.yolov1">
+<span id="horizonms-models-detection-yolov1"></span><h2>horizonms.models.detection.yolov1<a class="headerlink" href="#module-horizonms.models.detection.yolov1" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1.</span></span><span class="sig-name descname"><span class="pre">YOLOv1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">backbone</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neck</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">Yolov1 from
+J. Redmon, S. Divvala, R. Girshick, A. Farhadi, “You only look once: Unified, real-time object detection”,
+In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 779-788, 2016.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>backbone</strong> (<em>Dict</em>) – the configuration of the backbone.</p></li>
+<li><p><strong>neck</strong> (<em>Dict</em>) – the configuration of the neck.</p></li>
+<li><p><strong>head</strong> (<em>Dict</em>) – the configuration of the head.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – the number of stride of the network in the input.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">x = (classification, confidence, txtytwth)
+classification, [B, num_classes, H, W]
+confidence, [B, num_boxes, H, W]
+bboxes, [B, 4*num_boxes, H, W]</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.initialize_weights">
+<span class="sig-name descname"><span class="pre">initialize_weights</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.initialize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.initialize_weights" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.get_stride">
+<span class="sig-name descname"><span class="pre">get_stride</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.get_stride"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.get_stride" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.get_feature_shape">
+<span class="sig-name descname"><span class="pre">get_feature_shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.get_feature_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.get_feature_shape" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.get_gts">
+<span class="sig-name descname"><span class="pre">get_gts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.get_gts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.get_gts" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1.nms_postprocessing">
+<span class="sig-name descname"><span class="pre">nms_postprocessing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pred_boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pred_cls_inds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_shapes_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nms_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1.nms_postprocessing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1.nms_postprocessing" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1Losses">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1.</span></span><span class="sig-name descname"><span class="pre">YOLOv1Losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lambda_coord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lambda_noobj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1Losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1Losses" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1.YOLOv1Metrics">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1.</span></span><span class="sig-name descname"><span class="pre">YOLOv1Metrics</span></span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1.html#YOLOv1Metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1.YOLOv1Metrics" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.detection.yolov1_utils">
+<span id="horizonms-models-detection-yolov1-utils"></span><h2>horizonms.models.detection.yolov1_utils<a class="headerlink" href="#module-horizonms.models.detection.yolov1_utils" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DefaultDarknet">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1_utils.</span></span><span class="sig-name descname"><span class="pre">DefaultDarknet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[(7,</span> <span class="pre">64,</span> <span class="pre">2,</span> <span class="pre">3),</span> <span class="pre">'M',</span> <span class="pre">(3,</span> <span class="pre">192,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">'M',</span> <span class="pre">(1,</span> <span class="pre">128,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">(3,</span> <span class="pre">256,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">(1,</span> <span class="pre">256,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">(3,</span> <span class="pre">512,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">'M',</span> <span class="pre">[(1,</span> <span class="pre">256,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">(3,</span> <span class="pre">512,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">4],</span> <span class="pre">(1,</span> <span class="pre">512,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">'M',</span> <span class="pre">[(1,</span> <span class="pre">512,</span> <span class="pre">1,</span> <span class="pre">0),</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">2],</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">2,</span> <span class="pre">1),</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">1,</span> <span class="pre">1),</span> <span class="pre">(3,</span> <span class="pre">1024,</span> <span class="pre">1,</span> <span class="pre">1)]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DefaultDarknet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DefaultDarknet" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DefaultDarknet.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DefaultDarknet.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DefaultDarknet.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DefaultYolov1Head">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1_utils.</span></span><span class="sig-name descname"><span class="pre">DefaultYolov1Head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_boxes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DefaultYolov1Head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DefaultYolov1Head" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DefaultYolov1Head.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DefaultYolov1Head.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DefaultYolov1Head.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DetNeckBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1_utils.</span></span><span class="sig-name descname"><span class="pre">DetNeckBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'A'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DetNeckBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DetNeckBlock" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.DetNeckBlock.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#DetNeckBlock.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.DetNeckBlock.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.BottlenetNeck">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1_utils.</span></span><span class="sig-name descname"><span class="pre">BottlenetNeck</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expansion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#BottlenetNeck"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.BottlenetNeck" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.BottlenetNeck.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#BottlenetNeck.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.BottlenetNeck.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.Yolov1Head">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.detection.yolov1_utils.</span></span><span class="sig-name descname"><span class="pre">Yolov1Head</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_boxes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prior</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#Yolov1Head"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.Yolov1Head" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.detection.yolov1_utils.Yolov1Head.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/detection/yolov1_utils.html#Yolov1Head.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.detection.yolov1_utils.Yolov1Head.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.models.classification.html" class="btn btn-neutral float-left" title="horizonms.models.classification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.heads.html" class="btn btn-neutral float-right" title="horizonms.models.heads" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

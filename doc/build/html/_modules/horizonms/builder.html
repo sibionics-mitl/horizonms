@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.builder &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../HorizonMS/horizonms.html">horizonms</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.builder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.builder</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">Registry</span>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;build_net&quot;</span><span class="p">,</span> <span class="s2">&quot;build_detector&quot;</span><span class="p">,</span> <span class="s2">&quot;build_backbone&quot;</span><span class="p">,</span> <span class="s2">&quot;build_neck&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;build_head&quot;</span><span class="p">,</span> <span class="s2">&quot;build_loss&quot;</span><span class="p">,</span> <span class="s2">&quot;build_metric&quot;</span><span class="p">,</span> <span class="s2">&quot;build_transforms&quot;</span><span class="p">)</span>
+
+
+<span class="n">MODELS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;models&#39;</span><span class="p">)</span>
+<span class="n">NETS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;nets&#39;</span><span class="p">)</span>
+<span class="n">BACKBONES</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;backbones&#39;</span><span class="p">)</span>
+<span class="n">NECKS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;necks&#39;</span><span class="p">)</span>
+<span class="n">HEADS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;heads&#39;</span><span class="p">)</span>
+<span class="n">LOSSES</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;losses&#39;</span><span class="p">)</span>
+<span class="n">METRICS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;metrics&#39;</span><span class="p">)</span>
+<span class="n">TRANSFORMS</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s1">&#39;transforms&#39;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">build_models</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">MODELS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="build_net">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_net">[docs]</a>
+<span class="k">def</span> <span class="nf">build_net</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">NETS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_backbone">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_backbone">[docs]</a>
+<span class="k">def</span> <span class="nf">build_backbone</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">BACKBONES</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_neck">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_neck">[docs]</a>
+<span class="k">def</span> <span class="nf">build_neck</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">NECKS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_head">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_head">[docs]</a>
+<span class="k">def</span> <span class="nf">build_head</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">HEADS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_loss">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">build_loss</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">LOSSES</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="build_metric">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_metric">[docs]</a>
+<span class="k">def</span> <span class="nf">build_metric</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">METRICS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">build_losses_list</span><span class="p">(</span><span class="n">cfg_list</span><span class="p">):</span>
+    <span class="n">loss_funcs</span><span class="p">,</span> <span class="n">loss_weights</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="n">cfg_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">loss_func_list</span><span class="p">,</span> <span class="n">loss_weight_list</span> <span class="o">=</span> <span class="n">build_losses_list</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cfg_cp</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+            <span class="n">loss_weight_list</span> <span class="o">=</span> <span class="n">cfg_cp</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;loss_weight&#39;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+            <span class="n">loss_func_list</span> <span class="o">=</span> <span class="n">build_loss</span><span class="p">(</span><span class="n">cfg_cp</span><span class="p">)</span>
+        <span class="n">loss_funcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_func_list</span><span class="p">)</span>
+        <span class="n">loss_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_weight_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loss_funcs</span><span class="p">,</span> <span class="n">loss_weights</span>
+
+
+<span class="k">def</span> <span class="nf">build_metrics_list</span><span class="p">(</span><span class="n">cfg_list</span><span class="p">):</span>
+    <span class="n">metric_funcs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cfg</span> <span class="ow">in</span> <span class="n">cfg_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">metric_func_list</span> <span class="o">=</span> <span class="n">build_metrics_list</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">metric_func_list</span> <span class="o">=</span> <span class="n">build_metric</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+        <span class="n">metric_funcs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric_func_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">metric_funcs</span>
+
+
+<div class="viewcode-block" id="build_transforms">
+<a class="viewcode-back" href="../../HorizonMS/horizonms.html#horizonms.builder.build_transforms">[docs]</a>
+<span class="k">def</span> <span class="nf">build_transforms</span><span class="p">(</span><span class="n">cfg</span><span class="p">):</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cfg</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">TRANSFORMS</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

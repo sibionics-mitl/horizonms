@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.losses.losses_func &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.losses.losses_func</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.losses.losses_func</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+
+<div class="viewcode-block" id="smooth_l1_loss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.losses_func.smooth_l1_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_l1_loss</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">size_average</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Compute the smooth L1 loss of y_pred w.r.t. y_true.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Tensor from the generator of shape (N, 4). </span>
+<span class="sd">        y_pred: Tensor from the network of shape (N, 4).</span>
+<span class="sd">        sigma: This argument defines the point where the loss changes from L2 to L1.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The smooth L1 loss of y_pred w.r.t. y_true.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">==</span><span class="n">preds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">sigma_squared</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span>
+        
+    <span class="c1"># compute smooth L1 loss</span>
+    <span class="c1"># f(x) = 0.5 * (sigma * x)^2          if |x| &lt; 1 / sigma / sigma</span>
+    <span class="c1">#        |x| - 0.5 / sigma / sigma    otherwise</span>
+    <span class="n">diff</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">preds</span> <span class="o">-</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">regression_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff</span><span class="o">&lt;</span><span class="mf">1.0</span><span class="o">/</span><span class="n">sigma_squared</span><span class="p">,</span>
+                                  <span class="mf">0.5</span><span class="o">*</span><span class="n">sigma_squared</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+                                  <span class="n">diff</span><span class="o">-</span><span class="mf">0.5</span><span class="o">/</span><span class="n">sigma_squared</span>
+                                  <span class="p">)</span>
+    <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">regression_loss</span> <span class="o">=</span> <span class="n">regression_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">normalizer</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">regression_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">regression_loss</span> <span class="o">*</span> <span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">normalizer</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1e-6</span>
+
+    <span class="k">if</span> <span class="n">size_average</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">regression_loss</span><span class="o">/</span><span class="n">normalizer</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">regression_loss</span></div>
+
+
+
+<div class="viewcode-block" id="weak_cross_entropy">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.losses_func.weak_cross_entropy">[docs]</a>
+<span class="k">def</span> <span class="nf">weak_cross_entropy</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="n">w_alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">,</span>
+        <span class="n">toppk</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">focal_params</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="mf">0.25</span><span class="p">,</span> <span class="s1">&#39;gamma&#39;</span><span class="p">:</span><span class="mf">2.0</span><span class="p">},</span>
+        <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span><span class="p">):</span>
+    <span class="n">ypred</span> <span class="o">=</span>  <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">epsilon</span><span class="p">)</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">ypred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">bw_pos</span> <span class="o">=</span> <span class="n">mask</span><span class="o">&gt;=</span><span class="mf">0.5</span>
+    <span class="k">if</span> <span class="n">toppk</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">bw_pos</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">nb_ob</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">gt_boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">nb_img</span> <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">c</span>      <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">box</span>    <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">pred</span>   <span class="o">=</span> <span class="n">ypred</span><span class="p">[</span><span class="n">nb_img</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">loc</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span><span class="o">*</span><span class="n">toppk</span><span class="p">)</span>
+            <span class="nb">sorted</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">pred</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">descending</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">T</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">[</span><span class="n">loc</span><span class="p">]</span>
+            <span class="n">bw_pos</span><span class="p">[</span><span class="n">nb_img</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pred</span><span class="o">&gt;</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">num_pos</span> <span class="o">=</span> <span class="n">bw_pos</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">mode</span><span class="o">==</span><span class="s1">&#39;focal&#39;</span><span class="p">:</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">focal_params</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">focal_params</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span>
+        <span class="n">loss_neg</span> <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="n">mask</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">alpha</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ypred</span><span class="o">**</span><span class="n">gamma</span><span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ypred</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">loss_pos</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">bw_pos</span><span class="o">*</span><span class="n">alpha</span><span class="o">*</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">ypred</span><span class="p">)</span><span class="o">**</span><span class="n">gamma</span><span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">w_alpha</span><span class="o">*</span><span class="p">(</span><span class="n">ypred</span><span class="o">-</span><span class="mf">0.5</span><span class="p">))</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ypred</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">(</span><span class="n">loss_neg</span> <span class="o">+</span> <span class="n">loss_pos</span><span class="p">)</span><span class="o">/</span><span class="n">num_pos</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">num_neg</span> <span class="o">=</span> <span class="p">(</span><span class="n">mask</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">loss_neg</span> <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="n">mask</span><span class="o">&lt;</span><span class="mf">0.5</span><span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ypred</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">loss_pos</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">bw_pos</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">w_alpha</span><span class="o">*</span><span class="p">(</span><span class="n">ypred</span><span class="o">-</span><span class="mf">0.5</span><span class="p">))</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">ypred</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">loss_pos_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">bw_pos</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">w_alpha</span><span class="o">*</span><span class="p">(</span><span class="n">ypred</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">loss_pos</span> <span class="o">=</span> <span class="n">loss_pos</span> <span class="o">/</span> <span class="n">loss_pos_weight</span> <span class="o">*</span> <span class="n">num_pos</span>
+        <span class="k">if</span> <span class="n">num_pos</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;all&#39;</span><span class="p">:</span>
+                <span class="n">losses</span> <span class="o">=</span> <span class="p">(</span><span class="n">loss_neg</span> <span class="o">+</span> <span class="n">loss_pos</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">num_neg</span> <span class="o">+</span> <span class="n">num_pos</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">mode</span><span class="o">==</span><span class="s1">&#39;balance&#39;</span><span class="p">:</span>
+                <span class="n">losses</span> <span class="o">=</span> <span class="n">loss_neg</span><span class="o">/</span><span class="n">num_neg</span> <span class="o">+</span> <span class="n">loss_pos</span><span class="o">/</span><span class="n">num_pos</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">losses</span> <span class="o">=</span> <span class="n">loss_neg</span><span class="o">/</span><span class="n">num_neg</span>
+    <span class="k">return</span> <span class="n">losses</span></div>
+
+
+
+<div class="viewcode-block" id="size_constraint_loss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.losses_func.size_constraint_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">size_constraint_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">ytrue</span><span class="p">,</span> <span class="n">is_true</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+    <span class="n">size_pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+    <span class="n">size_true</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ytrue</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>  
+    <span class="n">losses</span> <span class="o">=</span> <span class="p">(</span><span class="n">size_pred</span><span class="o">/</span><span class="n">size_true</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+    <span class="k">if</span> <span class="n">is_true</span><span class="o">==</span><span class="kc">False</span><span class="p">:</span> <span class="c1">## weakly supervised size using bounding box, and ytrue is mask</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">size_pred</span><span class="o">&lt;</span><span class="n">size_true</span>
+        <span class="n">losses</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># print(&#39;-------&#39;,size_pred, size_true, losses)</span>
+    <span class="k">return</span> <span class="n">losses</span></div>
+
+
+
+<span class="c1"># mil locations: pos</span>
+<span class="c1"># threshold can be learnt from network using a new branch with num_classes outputs</span>
+<div class="viewcode-block" id="weak_bce_sigmoid_loss">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.losses_func.weak_bce_sigmoid_loss">[docs]</a>
+<span class="k">def</span> <span class="nf">weak_bce_sigmoid_loss</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">gt_boxes</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+    <span class="n">ypred</span> <span class="o">=</span>  <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">ypred</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">,</span> <span class="mi">1</span><span class="o">-</span><span class="n">epsilon</span><span class="p">)</span>
+    <span class="n">num_classes</span> <span class="o">=</span> <span class="n">ypred</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># ypred_pos = {c:[] for c in range(num_classes)}</span>
+    <span class="n">ypred_box</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)}</span>
+    <span class="n">label_box</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:[]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">nb_ob</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">gt_boxes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="n">nb_img</span> <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">c</span>      <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">box</span>    <span class="o">=</span> <span class="n">gt_boxes</span><span class="p">[</span><span class="n">nb_ob</span><span class="p">,</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">pred</span>   <span class="o">=</span> <span class="n">ypred</span><span class="p">[</span><span class="n">nb_img</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">box</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">box</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span><span class="n">box</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">label</span>  <span class="o">=</span> <span class="p">(</span><span class="n">pred</span><span class="o">&gt;</span><span class="n">threshold</span><span class="p">)</span><span class="c1">#.detach()</span>
+        <span class="c1"># assign gt</span>
+        <span class="n">max_v0</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_v1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mil</span> <span class="o">=</span> <span class="p">((</span><span class="n">pred</span><span class="o">==</span><span class="n">max_v0</span><span class="p">)</span><span class="o">|</span><span class="p">(</span><span class="n">pred</span><span class="o">==</span><span class="n">max_v1</span><span class="p">))</span><span class="c1">#.detach()</span>
+        <span class="n">label</span><span class="p">[</span><span class="n">mil</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">label</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">ypred_box</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">pred</span><span class="p">))</span>
+        <span class="n">label_box</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">label</span><span class="p">))</span>
+        
+    <span class="n">losses</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_classes</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ypred</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">ypred</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+        <span class="n">pred</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">ypred_box</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">gt</span>   <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">label_box</span><span class="p">[</span><span class="n">c</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">loss_neg</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="mi">1</span><span class="o">-</span><span class="n">gt</span><span class="p">)</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">pred</span><span class="p">))</span>
+        <span class="n">loss_pos</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gt</span><span class="o">*</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">pred</span><span class="p">))</span>
+        <span class="n">losses</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">loss_neg</span><span class="o">+</span><span class="n">loss_pos</span><span class="p">)</span><span class="o">/</span><span class="mf">2.0</span>
+    <span class="k">return</span> <span class="n">losses</span></div>
+
+
+
+<div class="viewcode-block" id="bbox_overlaps">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.losses.html#horizonms.losses.losses_func.bbox_overlaps">[docs]</a>
+<span class="k">def</span> <span class="nf">bbox_overlaps</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">,</span> <span class="n">bboxes2</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="n">is_aligned</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate overlap between two set of bboxes.</span>
+
+<span class="sd">    If ``is_aligned `` is ``False``, then calculate the overlaps between each</span>
+<span class="sd">    bbox of bboxes1 and bboxes2, otherwise the overlaps between each aligned</span>
+<span class="sd">    pair of bboxes1 and bboxes2.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        bboxes1 (Tensor): shape (B, m, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">        bboxes2 (Tensor): shape (B, n, 4) in &lt;x1, y1, x2, y2&gt; format or empty.</span>
+<span class="sd">            B indicates the batch dim, in shape (B1, B2, ..., Bn).</span>
+<span class="sd">            If ``is_aligned `` is ``True``, then m and n must be equal.</span>
+<span class="sd">        mode (str): &quot;iou&quot; (intersection over union), &quot;iof&quot; (intersection over</span>
+<span class="sd">            foreground) or &quot;giou&quot; (generalized intersection over union).</span>
+<span class="sd">            Default &quot;iou&quot;.</span>
+<span class="sd">        is_aligned (bool, optional): If True, then m and n must be equal.</span>
+<span class="sd">            Default False.</span>
+<span class="sd">        eps (float, optional): A value added to the denominator for numerical</span>
+<span class="sd">            stability. Default 1e-6.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tensor: shape (m, n) if ``is_aligned `` is False else shape (m,)</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; bboxes1 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 10],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [32, 32, 38, 42],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; bboxes2 = torch.FloatTensor([</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 0, 10, 20],</span>
+<span class="sd">        &gt;&gt;&gt;     [0, 10, 10, 19],</span>
+<span class="sd">        &gt;&gt;&gt;     [10, 10, 20, 20],</span>
+<span class="sd">        &gt;&gt;&gt; ])</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = bbox_overlaps(bboxes1, bboxes2)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, 3)</span>
+<span class="sd">        &gt;&gt;&gt; overlaps = bbox_overlaps(bboxes1, bboxes2, is_aligned=True)</span>
+<span class="sd">        &gt;&gt;&gt; assert overlaps.shape == (3, )</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; empty = torch.empty(0, 4)</span>
+<span class="sd">        &gt;&gt;&gt; nonempty = torch.FloatTensor([[0, 0, 10, 9]])</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(empty, nonempty).shape) == (0, 1)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(nonempty, empty).shape) == (1, 0)</span>
+<span class="sd">        &gt;&gt;&gt; assert tuple(bbox_overlaps(empty, empty).shape) == (0, 0)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;iof&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">],</span> <span class="sa">f</span><span class="s1">&#39;Unsupported mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s1">&#39;</span>
+    <span class="c1"># Either the boxes are empty or the length of boxes&#39;s last dimenstion is 4</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="p">(</span><span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Batch dim must be the same</span>
+    <span class="c1"># Batch dim: (B1, B2, ... Bn)</span>
+    <span class="k">assert</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">batch_shape</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">cols</span> <span class="o">=</span> <span class="n">bboxes2</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">rows</span> <span class="o">==</span> <span class="n">cols</span>
+
+    <span class="k">if</span> <span class="n">rows</span> <span class="o">*</span> <span class="n">cols</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">batch_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">bboxes1</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">batch_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
+
+    <span class="n">area1</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">area2</span> <span class="o">=</span> <span class="p">(</span><span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">is_aligned</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># [B, rows, 2]</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">]:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span> <span class="o">+</span> <span class="n">area2</span> <span class="o">-</span> <span class="n">overlap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;giou&#39;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span> <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span>
+                       <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+        <span class="n">rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span>
+                       <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>  <span class="c1"># [B, rows, cols, 2]</span>
+
+        <span class="n">wh</span> <span class="o">=</span> <span class="p">(</span><span class="n">rb</span> <span class="o">-</span> <span class="n">lt</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># [B, rows, cols, 2]</span>
+        <span class="n">overlap</span> <span class="o">=</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;giou&#39;</span><span class="p">]:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">area2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">overlap</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">union</span> <span class="o">=</span> <span class="n">area1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;giou&#39;</span><span class="p">:</span>
+            <span class="n">enclosed_lt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span>
+                                    <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">enclosed_rb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bboxes1</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:],</span>
+                                    <span class="n">bboxes2</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:,</span> <span class="mi">2</span><span class="p">:])</span>
+
+    <span class="n">eps</span> <span class="o">=</span> <span class="n">union</span><span class="o">.</span><span class="n">new_tensor</span><span class="p">([</span><span class="n">eps</span><span class="p">])</span>
+    <span class="n">union</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">union</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">ious</span> <span class="o">=</span> <span class="n">overlap</span> <span class="o">/</span> <span class="n">union</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;iou&#39;</span><span class="p">,</span> <span class="s1">&#39;iof&#39;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="n">ious</span>
+    <span class="c1"># calculate gious</span>
+    <span class="n">enclose_wh</span> <span class="o">=</span> <span class="p">(</span><span class="n">enclosed_rb</span> <span class="o">-</span> <span class="n">enclosed_lt</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">enclose_wh</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">enclose_area</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">enclose_area</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="n">gious</span> <span class="o">=</span> <span class="n">ious</span> <span class="o">-</span> <span class="p">(</span><span class="n">enclose_area</span> <span class="o">-</span> <span class="n">union</span><span class="p">)</span> <span class="o">/</span> <span class="n">enclose_area</span>
+    <span class="k">return</span> <span class="n">gious</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

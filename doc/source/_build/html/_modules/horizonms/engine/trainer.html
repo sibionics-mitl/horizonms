@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.engine.trainer &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">horizonms.engine.trainer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for horizonms.engine.trainer</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s1">&#39;agg&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pylab</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">from</span> <span class="nn">..datasets</span> <span class="kn">import</span> <span class="n">TrainDataLoaderIter</span><span class="p">,</span> <span class="n">ValidDataLoaderIter</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">MetricLogger</span><span class="p">,</span> <span class="n">SmoothedValue</span><span class="p">,</span> <span class="n">warmup_lr_scheduler</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">reduce_dict</span><span class="p">,</span> <span class="n">save_on_master</span>
+<span class="kn">from</span> <span class="nn">.lr_finder</span> <span class="kn">import</span> <span class="n">LRFinder</span>
+<span class="kn">from</span> <span class="nn">.early_stop</span> <span class="kn">import</span> <span class="n">EarlyStopping</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">CheckpointMetric</span><span class="p">,</span> <span class="n">save_checkpoints_update</span>
+
+
+<div class="viewcode-block" id="Trainer">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer">[docs]</a>
+<span class="k">class</span> <span class="nc">Trainer</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;model traning class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (nn.Module): the network.</span>
+<span class="sd">        optimizer (callable): optimizer for network optimization.</span>
+<span class="sd">        train_loader (callable): data loader for training subset.</span>
+<span class="sd">        valid_loader (callable): data loader for validation subset.</span>
+<span class="sd">        lr_scheduler (float): lr scheduler.</span>
+<span class="sd">        lr_scheduler_mode (str): lr scheduler is updated in each `&#39;epoch&#39;` or in each `&#39;iteration&#39;`.</span>
+<span class="sd">        lr_scheduler_metric (bool): if True, update lr scheduler based on validation loss.</span>
+<span class="sd">        warmup_epochs (int): number of epochs for warmup.</span>
+<span class="sd">        distributed (bool): if True, distributed training is conducted.</span>
+<span class="sd">        train_sampler (callable): sampler for training subset.</span>
+<span class="sd">        epochs (int): total epochs for training.</span>
+<span class="sd">        non_blocking (bool): if True, achieves non_blocking transfer to GPU.</span>
+<span class="sd">        early_stop_patience (int): number of epcohs for early stop.</span>
+<span class="sd">        output_dir (str): directory for model output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">valid_loader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">lr_scheduler_mode</span><span class="o">=</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="n">lr_scheduler_metric</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">warmup_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">distributed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">train_sampler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">early_stop_patience</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">output_dir</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">train_loader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valid_loader</span> <span class="o">=</span> <span class="n">valid_loader</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
+        <span class="k">assert</span> <span class="n">lr_scheduler_mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">,</span> <span class="s1">&#39;iteration&#39;</span><span class="p">],</span> \
+            <span class="sa">f</span><span class="s2">&quot;lr_scheduler_mode has to be &#39;epoch&#39; or &#39;iteration&#39;, but got </span><span class="si">{</span><span class="n">lr_scheduler_mode</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_mode</span> <span class="o">=</span> <span class="n">lr_scheduler_mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_metric</span> <span class="o">=</span> <span class="n">lr_scheduler_metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span> <span class="o">=</span> <span class="n">warmup_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span> <span class="o">=</span> <span class="n">distributed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_sampler</span> <span class="o">=</span> <span class="n">train_sampler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="n">epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span> <span class="o">=</span> <span class="n">non_blocking</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">early_stop_patience</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">early_stop_patience</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">early_stop</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">early_stop</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="n">early_stop_patience</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span> <span class="o">=</span> <span class="n">output_dir</span>
+
+        <span class="k">if</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">device</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="s2">&quot;cpu&quot;</span>
+
+        <span class="k">if</span> <span class="n">distributed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_without_ddp</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">module</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_without_ddp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="p">[]}</span>
+
+<div class="viewcode-block" id="Trainer.set_lr_scheduler">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.set_lr_scheduler">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lr_scheduler</span><span class="p">,</span> <span class="n">lr_scheduler_metric</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">lr_scheduler</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_metric</span> <span class="o">=</span> <span class="n">lr_scheduler_metric</span></div>
+
+
+<div class="viewcode-block" id="Trainer.get_warmup_lr_scheduler">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.get_warmup_lr_scheduler">[docs]</a>
+    <span class="k">def</span> <span class="nf">get_warmup_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">warmup_epochs</span><span class="p">):</span>
+        <span class="n">warmup_factor</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="mi">1000</span>
+        <span class="n">warmup_iters</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="n">warmup_epochs</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_warmup</span> <span class="o">=</span> <span class="n">warmup_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">warmup_iters</span><span class="p">,</span> <span class="n">warmup_factor</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Trainer.lr_finder">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.lr_finder">[docs]</a>
+    <span class="k">def</span> <span class="nf">lr_finder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_lr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_lr</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">num_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">step_mode</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                  <span class="n">smooth_f</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">diverge_th</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">accumulation_steps</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">train_loader</span> <span class="o">=</span> <span class="n">TrainDataLoaderIter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="p">)</span>
+        <span class="n">val_loader</span> <span class="o">=</span> <span class="n">ValidDataLoaderIter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_loader</span><span class="p">)</span>
+        <span class="n">lr_finder</span> <span class="o">=</span> <span class="n">LRFinder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">)</span>
+        <span class="n">lr_finder</span><span class="o">.</span><span class="n">range_test</span><span class="p">(</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">val_loader</span><span class="p">,</span> <span class="n">start_lr</span><span class="p">,</span> <span class="n">end_lr</span><span class="p">,</span> <span class="n">num_iter</span><span class="p">,</span> <span class="n">step_mode</span><span class="p">,</span>
+        <span class="n">smooth_f</span><span class="p">,</span> <span class="n">diverge_th</span><span class="p">,</span> <span class="n">accumulation_steps</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">lr_finder</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">skip_start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">skip_end</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No max_lr is found.&quot;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="p">,</span> <span class="n">max_lr</span> <span class="o">=</span> <span class="n">outputs</span>
+        <span class="k">return</span> <span class="n">max_lr</span></div>
+
+
+<div class="viewcode-block" id="Trainer.train">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.train">[docs]</a>
+    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub_epoch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">epoch_per_save</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">epoch_save_start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">save_checkpoints</span><span class="o">=</span><span class="p">[</span><span class="n">CheckpointMetric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;save_all&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">)],</span>
+            <span class="n">clipnorm</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">print_freq</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;model training. An &#39;equivalent epoch&#39; is defined during training, which is </span>
+<span class="sd">        used as the unit for the number of training iterations. &#39;Equivalent epoch&#39; is </span>
+<span class="sd">        especially useful when the dataset is small.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sub_epoch (int): equivalent epoch. Default: 1.</span>
+<span class="sd">            epoch_per_save (int): save model in each `epoch_per_save` equivalent epochs. Default: 1.</span>
+<span class="sd">            epoch_save_start (int): save model after `epoch_save_start` equivalent epochs. Default: 0.</span>
+<span class="sd">            save_checkpoints (List[CheckpointMetric]): determine which checkpoints are saved.</span>
+<span class="sd">                Default: `[CheckpointMetric(name=&#39;save_all&#39;, mode=&#39;all&#39;)]`.</span>
+<span class="sd">            clipnorm (float): clip norm. Default: 0.001.</span>
+<span class="sd">            print_freq (int): print training information in each `print_freq` iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_warmup_lr_scheduler</span><span class="p">(</span><span class="n">sub_epoch</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start training&quot;</span><span class="p">)</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">):</span>
+            <span class="c1"># Set epoch count for DistributedSampler.</span>
+            <span class="c1"># We don&#39;t need to set_epoch for the validation sampler as we don&#39;t want</span>
+            <span class="c1"># to shuffle for validation.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train_sampler</span><span class="o">.</span><span class="n">set_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+        
+            <span class="c1"># do training</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">sub_epoch</span><span class="p">):</span>
+                <span class="n">metric_logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_one_epoch</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">clipnorm</span><span class="p">,</span> <span class="n">print_freq</span><span class="p">)</span>
+
+            <span class="c1"># do evaluation</span>
+            <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">epoch_per_save</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">val_metric_logger</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_one_epoch</span><span class="p">()</span>
+                <span class="n">checkpoint_keys</span><span class="p">,</span> <span class="n">save_checkpoints</span> <span class="o">=</span> <span class="n">save_checkpoints_update</span><span class="p">(</span><span class="n">save_checkpoints</span><span class="p">,</span>
+                                                                            <span class="n">val_metric_logger</span><span class="p">)</span>
+                <span class="n">val_loss</span> <span class="o">=</span> <span class="n">val_metric_logger</span><span class="o">.</span><span class="n">meters</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">global_avg</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">((</span><span class="n">epoch</span> <span class="o">&gt;=</span> <span class="n">epoch_save_start</span><span class="p">)</span>
+                        <span class="o">&amp;</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">checkpoint_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)):</span>
+                    <span class="n">lr_scheduler_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="s1">&#39;_scale_fn_ref&#39;</span> <span class="ow">in</span> <span class="n">lr_scheduler_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                        <span class="n">lr_scheduler_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_scale_fn_ref&#39;</span><span class="p">)</span>
+                    <span class="n">save_on_master</span><span class="p">({</span>
+                        <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_without_ddp</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                        <span class="s1">&#39;optimizer&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                        <span class="s1">&#39;lr_scheduler&#39;</span><span class="p">:</span> <span class="n">lr_scheduler_dict</span><span class="p">,</span>
+                        <span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="n">epoch</span><span class="p">},</span>
+                        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;model_</span><span class="si">{</span><span class="n">epoch</span><span class="si">:</span><span class="s1">02</span><span class="si">}</span><span class="s1">.pth&#39;</span><span class="p">))</span>
+
+                <span class="n">nb_save</span> <span class="o">=</span> <span class="p">(</span><span class="n">epoch</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">epoch_per_save</span>
+                <span class="c1"># collect the results and save</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">summary</span> <span class="o">=</span> <span class="n">_summary_update</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">nb_save</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">,</span> 
+                                                  <span class="n">metric_logger</span><span class="p">,</span> <span class="n">val_metric_logger</span><span class="p">)</span>
+                <span class="n">summary_save</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">)</span>
+                <span class="n">summary_save</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;summary.csv&#39;</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_mode</span> <span class="o">==</span> <span class="s1">&#39;epoch&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_metric</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">val_loss</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+                
+                <span class="c1"># early stop check</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">&gt;=</span> <span class="n">epoch_save_start</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">early_stop</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">val_loss</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Early stop at epoch = </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">))</span>
+                        <span class="k">break</span>
+
+        <span class="n">total_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+        <span class="n">total_time_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">total_time</span><span class="p">)))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training time </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">total_time_str</span><span class="p">))</span>
+
+        <span class="c1">## plot training and validation loss</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">summary_save</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">],</span> <span class="n">summary_save</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">],</span> <span class="s1">&#39;-ro&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;train&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">summary_save</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">],</span> <span class="n">summary_save</span><span class="p">[</span><span class="s1">&#39;val_loss&#39;</span><span class="p">],</span> <span class="s1">&#39;-g+&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;loss.jpg&#39;</span><span class="p">))</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Training done&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Trainer.train_one_epoch">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.train_one_epoch">[docs]</a>
+    <span class="k">def</span> <span class="nf">train_one_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">clipnorm</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">print_freq</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;model training, one epoch of iterations are achieved. </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            epoch (int): index of epoch.</span>
+<span class="sd">            clipnorm (float): clip norm. Default: 0.001.</span>
+<span class="sd">            print_freq (int): print training information in each `print_freq` iterations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># Prevent possible deadlock during epoch transition</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="n">metric_logger</span> <span class="o">=</span> <span class="n">MetricLogger</span><span class="p">(</span><span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;  &quot;</span><span class="p">)</span>
+        <span class="n">metric_logger</span><span class="o">.</span><span class="n">add_meter</span><span class="p">(</span><span class="s1">&#39;lr&#39;</span><span class="p">,</span> <span class="n">SmoothedValue</span><span class="p">(</span><span class="n">window_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">{value:.6f}</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Epoch: [</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">targets</span> <span class="ow">in</span> <span class="n">metric_logger</span><span class="o">.</span><span class="n">log_every</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_loader</span><span class="p">,</span> <span class="n">print_freq</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="p">)</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+
+            <span class="n">loss_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_without_ddp</span><span class="o">.</span><span class="n">forward_train</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+            <span class="n">losses</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">loss</span> <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">loss_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="c1"># reduce losses over all GPUs for logging purposes</span>
+            <span class="n">loss_dict_reduced</span> <span class="o">=</span> <span class="n">reduce_dict</span><span class="p">(</span><span class="n">loss_dict</span><span class="p">)</span>
+            <span class="n">losses_reduced</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">loss</span> <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">loss_dict_reduced</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="n">loss_value</span> <span class="o">=</span> <span class="n">losses_reduced</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="c1"># if loss_value &gt; 8:</span>
+            <span class="c1">#     print(loss_value)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">loss_value</span><span class="p">):</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loss is </span><span class="si">{}</span><span class="s2">, stopping training&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">loss_value</span><span class="p">))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">loss_dict_reduced</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">losses</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">clipnorm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">max_norm</span><span class="o">=</span><span class="n">clipnorm</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">warmup_epochs</span><span class="p">:</span>
+                <span class="c1"># warmup lr scheduler</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_warmup</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># update lr scheduler</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler_mode</span> <span class="o">==</span> <span class="s1">&#39;iteration&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+            <span class="n">metric_logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">losses_reduced</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict_reduced</span><span class="p">)</span>
+            <span class="n">metric_logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">metric_logger</span></div>
+
+
+<div class="viewcode-block" id="Trainer.evaluate_one_epoch">
+<a class="viewcode-back" href="../../../HorizonMS/horizonms.engine.html#horizonms.engine.trainer.Trainer.evaluate_one_epoch">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">evaluate_one_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;model evaluation. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_threads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">get_num_threads</span><span class="p">()</span>
+        <span class="n">metric_logger</span> <span class="o">=</span> <span class="n">MetricLogger</span><span class="p">(</span><span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;  &quot;</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;Validation: &#39;</span>
+
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">loss_summary</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">images</span><span class="p">,</span> <span class="n">targets</span> <span class="ow">in</span> <span class="n">metric_logger</span><span class="o">.</span><span class="n">log_every</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">valid_loader</span><span class="p">,</span> <span class="n">print_freq</span><span class="o">=</span><span class="mf">10e5</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">images</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">images</span><span class="p">)</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">[{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">non_blocking</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">non_blocking</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">t</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> 
+                        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">targets</span><span class="p">]</span>
+
+            <span class="n">loss_dict</span><span class="p">,</span> <span class="n">metric_dict</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_without_ddp</span><span class="o">.</span><span class="n">test_one_batch</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+            <span class="c1"># reduce losses over all GPUs for logging purposes</span>
+            <span class="n">loss_dict_reduced</span> <span class="o">=</span> <span class="n">reduce_dict</span><span class="p">(</span><span class="n">loss_dict</span><span class="p">)</span>
+            <span class="n">losses_reduced</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">loss</span> <span class="k">for</span> <span class="n">loss</span> <span class="ow">in</span> <span class="n">loss_dict_reduced</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">loss_dict_reduced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="s1">&#39;val_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">loss_dict_reduced</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+            <span class="n">loss_reduced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">loss_dict_reduced</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+            <span class="k">if</span> <span class="n">metric_dict</span><span class="p">:</span>
+                <span class="n">metric_dict_reduced</span> <span class="o">=</span> <span class="n">reduce_dict</span><span class="p">(</span><span class="n">metric_dict</span><span class="p">)</span>
+                <span class="n">metric_dict_reduced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="s1">&#39;val_&#39;</span><span class="o">+</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metric_dict_reduced</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="n">metric_reduced</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">item</span><span class="p">())</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metric_dict_reduced</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                <span class="n">metric_logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_loss</span><span class="o">=</span><span class="n">losses_reduced</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict_reduced</span><span class="p">,</span> <span class="o">**</span><span class="n">metric_dict_reduced</span><span class="p">)</span>
+                <span class="n">loss_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_reduced</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metric_reduced</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">metric_logger</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">val_loss</span><span class="o">=</span><span class="n">losses_reduced</span><span class="p">,</span> <span class="o">**</span><span class="n">loss_dict_reduced</span><span class="p">)</span>
+                <span class="n">loss_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss_reduced</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">n_threads</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">metric_logger</span></div>
+</div>
+
+
+
+<span class="k">def</span> <span class="nf">_summary_update</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">nb_save</span><span class="p">,</span> <span class="n">summary</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;epoch&#39;</span><span class="p">:</span> <span class="p">[]},</span>
+                   <span class="n">metric_logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_metric_logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">summary</span><span class="p">[</span><span class="s1">&#39;epoch&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">meter</span> <span class="ow">in</span> <span class="n">metric_logger</span><span class="o">.</span><span class="n">meters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">name</span><span class="o">==</span><span class="s1">&#39;lr&#39;</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">meter</span><span class="o">.</span><span class="n">global_avg</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">meter</span><span class="o">.</span><span class="n">global_avg</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">nb_save</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">nb_save</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>  
+            <span class="k">else</span><span class="p">:</span>  
+                <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">meter</span> <span class="ow">in</span> <span class="n">val_metric_logger</span><span class="o">.</span><span class="n">meters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">around</span><span class="p">(</span><span class="n">meter</span><span class="o">.</span><span class="n">global_avg</span><span class="p">,</span><span class="mi">8</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">summary</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">nb_save</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">nb_save</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>  
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">summary</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">summary</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

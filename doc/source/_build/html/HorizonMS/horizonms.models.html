@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>horizonms.models &mdash; HorizonMS 0.1.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/documentation_options.js?v=01f34227"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="horizonms.models.backbones" href="horizonms.models.backbones.html" />
+    <link rel="prev" title="horizonms.metrics" href="horizonms.metrics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            HorizonMS
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Python API:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="horizonms.html">horizonms</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="horizonms.configs.html">horizonms.configs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.datasets.html">horizonms.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.engine.html">horizonms.engine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.losses.html">horizonms.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.metrics.html">horizonms.metrics</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">horizonms.models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.models.batch_image">horizonms.models.batch_image</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.models.batch_image.BatchImage"><code class="docutils literal notranslate"><span class="pre">BatchImage</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-horizonms.models.model_base">horizonms.models.model_base</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#horizonms.models.model_base.BaseModel"><code class="docutils literal notranslate"><span class="pre">BaseModel</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.samplers.html">horizonms.samplers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.transforms.html">horizonms.transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.utils.html">horizonms.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.builder">horizonms.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#module-horizonms.testing_utils">horizonms.testing_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.html#horizonms-training-utils">horizonms.training_utils</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">HorizonMS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="horizonms.html">horizonms</a></li>
+      <li class="breadcrumb-item active">horizonms.models</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/HorizonMS/horizonms.models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="horizonms-models">
+<h1>horizonms.models<a class="headerlink" href="#horizonms-models" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.backbones.html">horizonms.models.backbones</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.backbone">horizonms.models.backbones.backbone</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone.vgg_backbone"><code class="docutils literal notranslate"><span class="pre">vgg_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone.resnet_backbone"><code class="docutils literal notranslate"><span class="pre">resnet_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone.efficientnet_backbone"><code class="docutils literal notranslate"><span class="pre">efficientnet_backbone()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.backbone_detection">horizonms.models.backbones.backbone_detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_detection.vgg_fpn_det_v1"><code class="docutils literal notranslate"><span class="pre">vgg_fpn_det_v1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_detection.vgg_fpn_det_v2"><code class="docutils literal notranslate"><span class="pre">vgg_fpn_det_v2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.backbone_fpn">horizonms.models.backbones.backbone_fpn</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_fpn.vgg_fpn_backbone"><code class="docutils literal notranslate"><span class="pre">vgg_fpn_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_fpn.resnet_fpn_backbone"><code class="docutils literal notranslate"><span class="pre">resnet_fpn_backbone()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.backbone_unet">horizonms.models.backbones.backbone_unet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_unet.vgg_unet_backbone"><code class="docutils literal notranslate"><span class="pre">vgg_unet_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_unet.resnet_unet_backbone"><code class="docutils literal notranslate"><span class="pre">resnet_unet_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_unet.densenet_unet_backbone"><code class="docutils literal notranslate"><span class="pre">densenet_unet_backbone()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_unet.mobilenetv2_unet_backbone"><code class="docutils literal notranslate"><span class="pre">mobilenetv2_unet_backbone()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.backbone_vgg_cfg">horizonms.models.backbones.backbone_vgg_cfg</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.VGGCfg"><code class="docutils literal notranslate"><span class="pre">VGGCfg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.VGGCfg.forward"><code class="docutils literal notranslate"><span class="pre">VGGCfg.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg"><code class="docutils literal notranslate"><span class="pre">BackboneVGGCfg</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.BackboneVGGCfg.forward"><code class="docutils literal notranslate"><span class="pre">BackboneVGGCfg.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v1"><code class="docutils literal notranslate"><span class="pre">vgg_cfg_backbone_v1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.backbone_vgg_cfg.vgg_cfg_backbone_v2"><code class="docutils literal notranslate"><span class="pre">vgg_cfg_backbone_v2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.backbones.html#module-horizonms.models.backbones.base">horizonms.models.backbones.base</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.IntermediateLayerGetter"><code class="docutils literal notranslate"><span class="pre">IntermediateLayerGetter</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.IntermediateLayerGetter.forward"><code class="docutils literal notranslate"><span class="pre">IntermediateLayerGetter.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.Backbone"><code class="docutils literal notranslate"><span class="pre">Backbone</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.Backbone.out_channels"><code class="docutils literal notranslate"><span class="pre">Backbone.out_channels</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.Backbone.forward"><code class="docutils literal notranslate"><span class="pre">Backbone.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.BackboneWithFPN"><code class="docutils literal notranslate"><span class="pre">BackboneWithFPN</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.backbones.html#horizonms.models.backbones.base.BackboneWithFPN.forward"><code class="docutils literal notranslate"><span class="pre">BackboneWithFPN.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.classification.html">horizonms.models.classification</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.classification.html#module-horizonms.models.classification.classification">horizonms.models.classification.classification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification.Classification"><code class="docutils literal notranslate"><span class="pre">Classification</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification.Classification.calculate_loss"><code class="docutils literal notranslate"><span class="pre">Classification.calculate_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification.Classification.calculate_losses"><code class="docutils literal notranslate"><span class="pre">Classification.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification.Classification.calculate_metric"><code class="docutils literal notranslate"><span class="pre">Classification.calculate_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification.Classification.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">Classification.calculate_metrics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.classification.html#module-horizonms.models.classification.classification_base">horizonms.models.classification.classification_base</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification"><code class="docutils literal notranslate"><span class="pre">BaseClassification</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.preprocessing_input"><code class="docutils literal notranslate"><span class="pre">BaseClassification.preprocessing_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.calculate_losses"><code class="docutils literal notranslate"><span class="pre">BaseClassification.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">BaseClassification.calculate_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.forward_train"><code class="docutils literal notranslate"><span class="pre">BaseClassification.forward_train()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.test_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseClassification.test_one_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.BaseClassification.predict_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseClassification.predict_one_batch()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.ClassificationNetFromModules"><code class="docutils literal notranslate"><span class="pre">ClassificationNetFromModules</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.ClassificationNetFromModules.forward"><code class="docutils literal notranslate"><span class="pre">ClassificationNetFromModules.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.classification.html#horizonms.models.classification.classification_base.get_classification_net"><code class="docutils literal notranslate"><span class="pre">get_classification_net()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.detection.html">horizonms.models.detection</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.anchors_retinanet">horizonms.models.detection.anchors_retinanet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.cell_anchors"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.cell_anchors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.generate_anchors"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.generate_anchors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.set_cell_anchors"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.set_cell_anchors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.num_anchors_per_location"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.num_anchors_per_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.grid_anchors"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.grid_anchors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.cached_grid_anchors"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.cached_grid_anchors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.AnchorGenerator.forward"><code class="docutils literal notranslate"><span class="pre">AnchorGenerator.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform"><code class="docutils literal notranslate"><span class="pre">bbox_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform_batch"><code class="docutils literal notranslate"><span class="pre">bbox_transform_batch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.bbox_transform_inv_batch"><code class="docutils literal notranslate"><span class="pre">bbox_transform_inv_batch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder"><code class="docutils literal notranslate"><span class="pre">BBoxCoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode"><code class="docutils literal notranslate"><span class="pre">BBoxCoder.encode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.encode_single"><code class="docutils literal notranslate"><span class="pre">BBoxCoder.encode_single()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.BBoxCoder.decode"><code class="docutils literal notranslate"><span class="pre">BBoxCoder.decode()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.clip_boxes"><code class="docutils literal notranslate"><span class="pre">clip_boxes()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.anchor_targets_bbox"><code class="docutils literal notranslate"><span class="pre">anchor_targets_bbox()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_retinanet.compute_gt_annotations"><code class="docutils literal notranslate"><span class="pre">compute_gt_annotations()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.anchors_yolo">horizonms.models.detection.anchors_yolo</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.encode_box"><code class="docutils literal notranslate"><span class="pre">encode_box()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.decode_box"><code class="docutils literal notranslate"><span class="pre">decode_box()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.create_grid"><code class="docutils literal notranslate"><span class="pre">create_grid()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_target_yolov2"><code class="docutils literal notranslate"><span class="pre">generate_target_yolov2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_stride"><code class="docutils literal notranslate"><span class="pre">generate_stride()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_feature_shape"><code class="docutils literal notranslate"><span class="pre">generate_feature_shape()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.generate_target_yolov1"><code class="docutils literal notranslate"><span class="pre">generate_target_yolov1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1"><code class="docutils literal notranslate"><span class="pre">BoxCoderYoloV1</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode"><code class="docutils literal notranslate"><span class="pre">BoxCoderYoloV1.decode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.encode_single"><code class="docutils literal notranslate"><span class="pre">BoxCoderYoloV1.encode_single()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.anchors_yolo.BoxCoderYoloV1.decode_single"><code class="docutils literal notranslate"><span class="pre">BoxCoderYoloV1.decode_single()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.boxes">horizonms.models.detection.boxes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.boxes.box_area"><code class="docutils literal notranslate"><span class="pre">box_area()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.boxes.box_iou"><code class="docutils literal notranslate"><span class="pre">box_iou()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.boxes.paired_box_iou"><code class="docutils literal notranslate"><span class="pre">paired_box_iou()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.detection">horizonms.models.detection.detection</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection"><code class="docutils literal notranslate"><span class="pre">Detection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.calculate_loss"><code class="docutils literal notranslate"><span class="pre">Detection.calculate_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.calculate_losses"><code class="docutils literal notranslate"><span class="pre">Detection.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.calculate_metric"><code class="docutils literal notranslate"><span class="pre">Detection.calculate_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">Detection.calculate_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.forward_train"><code class="docutils literal notranslate"><span class="pre">Detection.forward_train()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.test_one_batch"><code class="docutils literal notranslate"><span class="pre">Detection.test_one_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection.Detection.predict_one_batch"><code class="docutils literal notranslate"><span class="pre">Detection.predict_one_batch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.detection_base">horizonms.models.detection.detection_base</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection"><code class="docutils literal notranslate"><span class="pre">BaseDetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.preprocessing_input"><code class="docutils literal notranslate"><span class="pre">BaseDetection.preprocessing_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.calculate_losses"><code class="docutils literal notranslate"><span class="pre">BaseDetection.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">BaseDetection.calculate_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.forward_train"><code class="docutils literal notranslate"><span class="pre">BaseDetection.forward_train()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.test_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseDetection.test_one_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.detection_base.BaseDetection.predict_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseDetection.predict_one_batch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.retinanet">horizonms.models.detection.retinanet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet"><code class="docutils literal notranslate"><span class="pre">Retinanet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.forward"><code class="docutils literal notranslate"><span class="pre">Retinanet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.get_gts"><code class="docutils literal notranslate"><span class="pre">Retinanet.get_gts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.pred_postprocessing_for_loss_calculation"><code class="docutils literal notranslate"><span class="pre">Retinanet.pred_postprocessing_for_loss_calculation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.Retinanet.postprocess_detections"><code class="docutils literal notranslate"><span class="pre">Retinanet.postprocess_detections()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.RetinanetHead"><code class="docutils literal notranslate"><span class="pre">RetinanetHead</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.retinanet.RetinanetHead.forward"><code class="docutils literal notranslate"><span class="pre">RetinanetHead.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.yolonet">horizonms.models.detection.yolonet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection"><code class="docutils literal notranslate"><span class="pre">YOLODetection</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection.calculate_losses"><code class="docutils literal notranslate"><span class="pre">YOLODetection.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">YOLODetection.calculate_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection.forward_train"><code class="docutils literal notranslate"><span class="pre">YOLODetection.forward_train()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection.test_one_batch"><code class="docutils literal notranslate"><span class="pre">YOLODetection.test_one_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolonet.YOLODetection.predict_one_batch"><code class="docutils literal notranslate"><span class="pre">YOLODetection.predict_one_batch()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.yolov1">horizonms.models.detection.yolov1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1"><code class="docutils literal notranslate"><span class="pre">YOLOv1</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.forward"><code class="docutils literal notranslate"><span class="pre">YOLOv1.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.initialize_weights"><code class="docutils literal notranslate"><span class="pre">YOLOv1.initialize_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_stride"><code class="docutils literal notranslate"><span class="pre">YOLOv1.get_stride()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_feature_shape"><code class="docutils literal notranslate"><span class="pre">YOLOv1.get_feature_shape()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.get_gts"><code class="docutils literal notranslate"><span class="pre">YOLOv1.get_gts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1.nms_postprocessing"><code class="docutils literal notranslate"><span class="pre">YOLOv1.nms_postprocessing()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1Losses"><code class="docutils literal notranslate"><span class="pre">YOLOv1Losses</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1.YOLOv1Metrics"><code class="docutils literal notranslate"><span class="pre">YOLOv1Metrics</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.detection.html#module-horizonms.models.detection.yolov1_utils">horizonms.models.detection.yolov1_utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DefaultDarknet"><code class="docutils literal notranslate"><span class="pre">DefaultDarknet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DefaultDarknet.forward"><code class="docutils literal notranslate"><span class="pre">DefaultDarknet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DefaultYolov1Head"><code class="docutils literal notranslate"><span class="pre">DefaultYolov1Head</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DefaultYolov1Head.forward"><code class="docutils literal notranslate"><span class="pre">DefaultYolov1Head.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DetNeckBlock"><code class="docutils literal notranslate"><span class="pre">DetNeckBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.DetNeckBlock.forward"><code class="docutils literal notranslate"><span class="pre">DetNeckBlock.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.BottlenetNeck"><code class="docutils literal notranslate"><span class="pre">BottlenetNeck</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.BottlenetNeck.forward"><code class="docutils literal notranslate"><span class="pre">BottlenetNeck.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.Yolov1Head"><code class="docutils literal notranslate"><span class="pre">Yolov1Head</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.detection.html#horizonms.models.detection.yolov1_utils.Yolov1Head.forward"><code class="docutils literal notranslate"><span class="pre">Yolov1Head.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.heads.html">horizonms.models.heads</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.heads.html#module-horizonms.models.heads.classification_heads">horizonms.models.heads.classification_heads</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.heads.html#horizonms.models.heads.classification_heads.ClassificationMultiHeads"><code class="docutils literal notranslate"><span class="pre">ClassificationMultiHeads</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.heads.html#horizonms.models.heads.classification_heads.ClassificationMultiHeads.forward"><code class="docutils literal notranslate"><span class="pre">ClassificationMultiHeads.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.necks.html">horizonms.models.necks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.necks.html#module-horizonms.models.necks.classification_necks">horizonms.models.necks.classification_necks</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html#horizonms.models.necks.classification_necks.ClassificationPoolingNecks"><code class="docutils literal notranslate"><span class="pre">ClassificationPoolingNecks</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.necks.html#horizonms.models.necks.classification_necks.ClassificationPoolingNecks.forward"><code class="docutils literal notranslate"><span class="pre">ClassificationPoolingNecks.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.necks.html#module-horizonms.models.necks.feature_pyramid_network">horizonms.models.necks.feature_pyramid_network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.necks.html#horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork"><code class="docutils literal notranslate"><span class="pre">FeaturePyramidNetwork</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.necks.html#horizonms.models.necks.feature_pyramid_network.FeaturePyramidNetwork.forward"><code class="docutils literal notranslate"><span class="pre">FeaturePyramidNetwork.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.nets.html">horizonms.models.nets</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.densenet">horizonms.models.nets.densenet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.DenseNet"><code class="docutils literal notranslate"><span class="pre">DenseNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.DenseNet.forward"><code class="docutils literal notranslate"><span class="pre">DenseNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.densenet121"><code class="docutils literal notranslate"><span class="pre">densenet121()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.densenet169"><code class="docutils literal notranslate"><span class="pre">densenet169()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.densenet201"><code class="docutils literal notranslate"><span class="pre">densenet201()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.densenet.densenet161"><code class="docutils literal notranslate"><span class="pre">densenet161()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.efficientnet">horizonms.models.nets.efficientnet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.EfficientNet"><code class="docutils literal notranslate"><span class="pre">EfficientNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.EfficientNet.forward"><code class="docutils literal notranslate"><span class="pre">EfficientNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b0"><code class="docutils literal notranslate"><span class="pre">efficientnet_b0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b1"><code class="docutils literal notranslate"><span class="pre">efficientnet_b1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b2"><code class="docutils literal notranslate"><span class="pre">efficientnet_b2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b3"><code class="docutils literal notranslate"><span class="pre">efficientnet_b3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b4"><code class="docutils literal notranslate"><span class="pre">efficientnet_b4()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b5"><code class="docutils literal notranslate"><span class="pre">efficientnet_b5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b6"><code class="docutils literal notranslate"><span class="pre">efficientnet_b6()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b7"><code class="docutils literal notranslate"><span class="pre">efficientnet_b7()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_b8"><code class="docutils literal notranslate"><span class="pre">efficientnet_b8()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.efficientnet.efficientnet_l2"><code class="docutils literal notranslate"><span class="pre">efficientnet_l2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.inception_resnet">horizonms.models.nets.inception_resnet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.inception_resnet.InceptionResnetV2"><code class="docutils literal notranslate"><span class="pre">InceptionResnetV2</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.inception_resnet.InceptionResnetV2.forward"><code class="docutils literal notranslate"><span class="pre">InceptionResnetV2.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.inception_resnet.inception_resnet_v2"><code class="docutils literal notranslate"><span class="pre">inception_resnet_v2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.inception_resnet.ens_adv_inception_resnet_v2"><code class="docutils literal notranslate"><span class="pre">ens_adv_inception_resnet_v2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.mobilenetv2">horizonms.models.nets.mobilenetv2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.mobilenetv2.MobileNetV2"><code class="docutils literal notranslate"><span class="pre">MobileNetV2</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.mobilenetv2.MobileNetV2.forward"><code class="docutils literal notranslate"><span class="pre">MobileNetV2.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.mobilenetv2.mobilenet_v2"><code class="docutils literal notranslate"><span class="pre">mobilenet_v2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.nfnet">horizonms.models.nets.nfnet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.NFNet"><code class="docutils literal notranslate"><span class="pre">NFNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.NFNet.forward"><code class="docutils literal notranslate"><span class="pre">NFNet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.NFNet.exclude_from_weight_decay"><code class="docutils literal notranslate"><span class="pre">NFNet.exclude_from_weight_decay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.NFNet.exclude_from_clipping"><code class="docutils literal notranslate"><span class="pre">NFNet.exclude_from_clipping()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f0"><code class="docutils literal notranslate"><span class="pre">nfnet_f0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f1"><code class="docutils literal notranslate"><span class="pre">nfnet_f1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f2"><code class="docutils literal notranslate"><span class="pre">nfnet_f2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f3"><code class="docutils literal notranslate"><span class="pre">nfnet_f3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f4"><code class="docutils literal notranslate"><span class="pre">nfnet_f4()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.nfnet.nfnet_f5"><code class="docutils literal notranslate"><span class="pre">nfnet_f5()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.resenetrs">horizonms.models.nets.resenetrs</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.ResnetRS"><code class="docutils literal notranslate"><span class="pre">ResnetRS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.ResnetRS.make_layers"><code class="docutils literal notranslate"><span class="pre">ResnetRS.make_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.ResnetRS.init_weights"><code class="docutils literal notranslate"><span class="pre">ResnetRS.init_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.ResnetRS.forward"><code class="docutils literal notranslate"><span class="pre">ResnetRS.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.resnetrs50"><code class="docutils literal notranslate"><span class="pre">resnetrs50()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.resnetrs101"><code class="docutils literal notranslate"><span class="pre">resnetrs101()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.resnetrs152"><code class="docutils literal notranslate"><span class="pre">resnetrs152()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resenetrs.resnetrs200"><code class="docutils literal notranslate"><span class="pre">resnetrs200()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.resnet">horizonms.models.nets.resnet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.ResNet"><code class="docutils literal notranslate"><span class="pre">ResNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.ResNet.forward"><code class="docutils literal notranslate"><span class="pre">ResNet.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnet18"><code class="docutils literal notranslate"><span class="pre">resnet18()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnet34"><code class="docutils literal notranslate"><span class="pre">resnet34()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnet50"><code class="docutils literal notranslate"><span class="pre">resnet50()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnet101"><code class="docutils literal notranslate"><span class="pre">resnet101()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnet152"><code class="docutils literal notranslate"><span class="pre">resnet152()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnext50_32x4d"><code class="docutils literal notranslate"><span class="pre">resnext50_32x4d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.resnext101_32x8d"><code class="docutils literal notranslate"><span class="pre">resnext101_32x8d()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.wide_resnet50_2"><code class="docutils literal notranslate"><span class="pre">wide_resnet50_2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.resnet.wide_resnet101_2"><code class="docutils literal notranslate"><span class="pre">wide_resnet101_2()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.shufflenetv2">horizonms.models.nets.shufflenetv2</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.ShuffleNetV2"><code class="docutils literal notranslate"><span class="pre">ShuffleNetV2</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.ShuffleNetV2.forward"><code class="docutils literal notranslate"><span class="pre">ShuffleNetV2.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.shufflenet_v2_x0_5"><code class="docutils literal notranslate"><span class="pre">shufflenet_v2_x0_5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.shufflenet_v2_x1_0"><code class="docutils literal notranslate"><span class="pre">shufflenet_v2_x1_0()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.shufflenet_v2_x1_5"><code class="docutils literal notranslate"><span class="pre">shufflenet_v2_x1_5()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.shufflenetv2.shufflenet_v2_x2_0"><code class="docutils literal notranslate"><span class="pre">shufflenet_v2_x2_0()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.utils">horizonms.models.nets.utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.vgg">horizonms.models.nets.vgg</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.VGG"><code class="docutils literal notranslate"><span class="pre">VGG</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.VGG.forward"><code class="docutils literal notranslate"><span class="pre">VGG.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg11"><code class="docutils literal notranslate"><span class="pre">vgg11()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg11_bn"><code class="docutils literal notranslate"><span class="pre">vgg11_bn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg13"><code class="docutils literal notranslate"><span class="pre">vgg13()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg13_bn"><code class="docutils literal notranslate"><span class="pre">vgg13_bn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg13_bn_narrow"><code class="docutils literal notranslate"><span class="pre">vgg13_bn_narrow()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg16"><code class="docutils literal notranslate"><span class="pre">vgg16()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg16_bn"><code class="docutils literal notranslate"><span class="pre">vgg16_bn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg19"><code class="docutils literal notranslate"><span class="pre">vgg19()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg.vgg19_bn"><code class="docutils literal notranslate"><span class="pre">vgg19_bn()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.vgg_like">horizonms.models.nets.vgg_like</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_like.VGGLike"><code class="docutils literal notranslate"><span class="pre">VGGLike</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_like.VGGLike.forward"><code class="docutils literal notranslate"><span class="pre">VGGLike.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_like.vgg_like_v1"><code class="docutils literal notranslate"><span class="pre">vgg_like_v1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_like.vgg_like_v2"><code class="docutils literal notranslate"><span class="pre">vgg_like_v2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_like.vgg_like_v3"><code class="docutils literal notranslate"><span class="pre">vgg_like_v3()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.nets.html#module-horizonms.models.nets.vgg_se">horizonms.models.nets.vgg_se</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_se.VGG_SE"><code class="docutils literal notranslate"><span class="pre">VGG_SE</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_se.VGG_SE.forward"><code class="docutils literal notranslate"><span class="pre">VGG_SE.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.nets.html#horizonms.models.nets.vgg_se.make_layers"><code class="docutils literal notranslate"><span class="pre">make_layers()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.ops.html">horizonms.models.ops</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.ops.html#module-horizonms.models.ops.bn">horizonms.models.ops.bn</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase"><code class="docutils literal notranslate"><span class="pre">BatchNormBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.num_features"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.num_features</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.eps"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.eps</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.momentum"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.momentum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.affine"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.affine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.track_running_stats"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.track_running_stats</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.reset_running_stats"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.reset_running_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNormBase.reset_parameters"><code class="docutils literal notranslate"><span class="pre">BatchNormBase.reset_parameters()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNorm2d"><code class="docutils literal notranslate"><span class="pre">BatchNorm2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.BatchNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">BatchNorm2d.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.ExpectedBatchNorm2d"><code class="docutils literal notranslate"><span class="pre">ExpectedBatchNorm2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.ExpectedBatchNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">ExpectedBatchNorm2d.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.SampleExpectedBatchNorm2d"><code class="docutils literal notranslate"><span class="pre">SampleExpectedBatchNorm2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.SampleExpectedBatchNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">SampleExpectedBatchNorm2d.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.SampleGExpectedBatchNorm2d"><code class="docutils literal notranslate"><span class="pre">SampleGExpectedBatchNorm2d</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.bn.SampleGExpectedBatchNorm2d.forward"><code class="docutils literal notranslate"><span class="pre">SampleGExpectedBatchNorm2d.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.ops.html#module-horizonms.models.ops.misc">horizonms.models.ops.misc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.misc.PseudomaxPooling2D"><code class="docutils literal notranslate"><span class="pre">PseudomaxPooling2D</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.misc.PseudomaxPooling2D.forward"><code class="docutils literal notranslate"><span class="pre">PseudomaxPooling2D.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.misc.ConvNormActivation"><code class="docutils literal notranslate"><span class="pre">ConvNormActivation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.misc.SqueezeExcitation"><code class="docutils literal notranslate"><span class="pre">SqueezeExcitation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.misc.SqueezeExcitation.forward"><code class="docutils literal notranslate"><span class="pre">SqueezeExcitation.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.ops.html#module-horizonms.models.ops.stochastic_depth">horizonms.models.ops.stochastic_depth</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.stochastic_depth.stochastic_depth"><code class="docutils literal notranslate"><span class="pre">stochastic_depth()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.stochastic_depth.StochasticDepth"><code class="docutils literal notranslate"><span class="pre">StochasticDepth</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.ops.html#horizonms.models.ops.stochastic_depth.StochasticDepth.forward"><code class="docutils literal notranslate"><span class="pre">StochasticDepth.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="horizonms.models.segmentation.html">horizonms.models.segmentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.decoder">horizonms.models.segmentation.decoder</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.UnetSimpleDecoder"><code class="docutils literal notranslate"><span class="pre">UnetSimpleDecoder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.UnetSimpleDecoder.make_layers"><code class="docutils literal notranslate"><span class="pre">UnetSimpleDecoder.make_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.UnetSimpleDecoder.forward"><code class="docutils literal notranslate"><span class="pre">UnetSimpleDecoder.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.Up_Light"><code class="docutils literal notranslate"><span class="pre">Up_Light</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.Up_Light.make_layers"><code class="docutils literal notranslate"><span class="pre">Up_Light.make_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.decoder.Up_Light.forward"><code class="docutils literal notranslate"><span class="pre">Up_Light.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.enet">horizonms.models.segmentation.enet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_1"><code class="docutils literal notranslate"><span class="pre">conv_block_1()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_3_3"><code class="docutils literal notranslate"><span class="pre">conv_block_3_3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.conv_block_Asym"><code class="docutils literal notranslate"><span class="pre">conv_block_Asym()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.convBatch"><code class="docutils literal notranslate"><span class="pre">convBatch()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.upSampleConv"><code class="docutils literal notranslate"><span class="pre">upSampleConv()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.interpolate"><code class="docutils literal notranslate"><span class="pre">interpolate</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.interpolate.forward"><code class="docutils literal notranslate"><span class="pre">interpolate.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSampling"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSampling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSampling.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSampling.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal"><code class="docutils literal notranslate"><span class="pre">BottleNeckNormal</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckNormal.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSamplingDilatedConv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConv.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSamplingDilatedConv.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal_Asym"><code class="docutils literal notranslate"><span class="pre">BottleNeckNormal_Asym</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckNormal_Asym.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckNormal_Asym.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSamplingDilatedConvLast</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckDownSamplingDilatedConvLast.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckDownSamplingDilatedConvLast.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckUpSampling"><code class="docutils literal notranslate"><span class="pre">BottleNeckUpSampling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.BottleNeckUpSampling.forward"><code class="docutils literal notranslate"><span class="pre">BottleNeckUpSampling.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet"><code class="docutils literal notranslate"><span class="pre">ENet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet.forward"><code class="docutils literal notranslate"><span class="pre">ENet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.enet.ENet.init_weights"><code class="docutils literal notranslate"><span class="pre">ENet.init_weights()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.residualunet">horizonms.models.segmentation.residualunet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.maxpool"><code class="docutils literal notranslate"><span class="pre">maxpool()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.conv_block"><code class="docutils literal notranslate"><span class="pre">conv_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.conv_block_3"><code class="docutils literal notranslate"><span class="pre">conv_block_3()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.conv_decod_block"><code class="docutils literal notranslate"><span class="pre">conv_decod_block()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.Conv_residual_conv"><code class="docutils literal notranslate"><span class="pre">Conv_residual_conv</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.Conv_residual_conv.forward"><code class="docutils literal notranslate"><span class="pre">Conv_residual_conv.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.ResidualUNet"><code class="docutils literal notranslate"><span class="pre">ResidualUNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.ResidualUNet.forward"><code class="docutils literal notranslate"><span class="pre">ResidualUNet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.residualunet.ResidualUNet.init_weights"><code class="docutils literal notranslate"><span class="pre">ResidualUNet.init_weights()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.segmentation">horizonms.models.segmentation.segmentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation.Segmentation"><code class="docutils literal notranslate"><span class="pre">Segmentation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation.Segmentation.calculate_loss"><code class="docutils literal notranslate"><span class="pre">Segmentation.calculate_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation.Segmentation.calculate_losses"><code class="docutils literal notranslate"><span class="pre">Segmentation.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation.Segmentation.calculate_metric"><code class="docutils literal notranslate"><span class="pre">Segmentation.calculate_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation.Segmentation.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">Segmentation.calculate_metrics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.segmentation_base">horizonms.models.segmentation.segmentation_base</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.preprocessing_input"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.preprocessing_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_losses"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.calculate_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.forward_train"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.forward_train()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.test_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.test_one_batch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.BaseSegmentation.predict_one_batch"><code class="docutils literal notranslate"><span class="pre">BaseSegmentation.predict_one_batch()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_base.get_segmentation_net"><code class="docutils literal notranslate"><span class="pre">get_segmentation_net()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.segmentation_bbox">horizonms.models.segmentation.segmentation_bbox</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.preprocessing_input"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.preprocessing_input()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_sigmoid_losses"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_sigmoid_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_softmax_losses"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_softmax_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_loss"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_losses"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_losses()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metric"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.segmentation_bbox.BboxSegmentation.calculate_metrics"><code class="docutils literal notranslate"><span class="pre">BboxSegmentation.calculate_metrics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.simpleunet">horizonms.models.segmentation.simpleunet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleEnconderModule"><code class="docutils literal notranslate"><span class="pre">SimpleEnconderModule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleEnconderModule.make_layers"><code class="docutils literal notranslate"><span class="pre">SimpleEnconderModule.make_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleEnconderModule.forward"><code class="docutils literal notranslate"><span class="pre">SimpleEnconderModule.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleUNet"><code class="docutils literal notranslate"><span class="pre">SimpleUNet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleUNet.forward"><code class="docutils literal notranslate"><span class="pre">SimpleUNet.forward()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.simpleunet.SimpleUNet.init_weights"><code class="docutils literal notranslate"><span class="pre">SimpleUNet.init_weights()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="horizonms.models.segmentation.html#module-horizonms.models.segmentation.unet">horizonms.models.segmentation.unet</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V1"><code class="docutils literal notranslate"><span class="pre">UNet_V1</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V1.make_layers"><code class="docutils literal notranslate"><span class="pre">UNet_V1.make_layers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V1.forward"><code class="docutils literal notranslate"><span class="pre">UNet_V1.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V2"><code class="docutils literal notranslate"><span class="pre">UNet_V2</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V2.pred_upsampling"><code class="docutils literal notranslate"><span class="pre">UNet_V2.pred_upsampling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="horizonms.models.segmentation.html#horizonms.models.segmentation.unet.UNet_V2.forward"><code class="docutils literal notranslate"><span class="pre">UNet_V2.forward()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="module-horizonms.models.batch_image">
+<span id="horizonms-models-batch-image"></span><h2>horizonms.models.batch_image<a class="headerlink" href="#module-horizonms.models.batch_image" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.batch_image.BatchImage">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.batch_image.</span></span><span class="sig-name descname"><span class="pre">BatchImage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">size_divisible</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/batch_image.html#BatchImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.batch_image.BatchImage" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p class="linemarker linemarker-1">Convert a list of (input, target) into batch format such that it can be used by network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>size_divisible</strong> (<em>int</em>) – the size of the input is converted to the ceil number which is divisible by size_divisible.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.batch_image.BatchImage.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Tensor</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/horizonms/models/batch_image.html#BatchImage.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.batch_image.BatchImage.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.batch_image.BatchImage.max_by_axis">
+<span class="sig-name descname"><span class="pre">max_by_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">the_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/horizonms/models/batch_image.html#BatchImage.max_by_axis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.batch_image.BatchImage.max_by_axis" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.batch_image.BatchImage.batch_images">
+<span class="sig-name descname"><span class="pre">batch_images</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size_divisible</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/batch_image.html#BatchImage.batch_images"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.batch_image.BatchImage.batch_images" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-horizonms.models.model_base">
+<span id="horizonms-models-model-base"></span><h2>horizonms.models.model_base<a class="headerlink" href="#module-horizonms.models.model_base" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">horizonms.models.model_base.</span></span><span class="sig-name descname"><span class="pre">BaseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">net</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">final_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p class="linemarker linemarker-1">Base class for network model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>net</strong> (<em>nn.Module</em>) – Deep learning network.</p></li>
+<li><p><strong>final_activation</strong> (<em>'softmax'</em><em> | </em><em>'sigmoid'</em><em> | </em><em>None</em>) – Decide which type of operator is used to the output of <cite>net</cite>.
+When final_activation=None, no operator is applied.
+When final_activation=’softmax’, softmax operator is applied.
+When final_activation=’softmax’, sigmoid operator is applied.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.calculate_losses">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_losses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.calculate_losses"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.calculate_losses" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.calculate_metrics">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ypred</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.calculate_metrics" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.forward_train">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward_train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.forward_train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.forward_train" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.test_one_batch">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">test_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.test_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.test_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.predict_one_batch">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_one_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.predict_one_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.predict_one_batch" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.forward" title="Link to this definition"></a></dt>
+<dd><p class="linemarker linemarker-1">Defines the computation performed at every call.</p>
+<p class="linemarker linemarker-3">Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p class="linemarker linemarker-6">Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="horizonms.models.model_base.BaseModel.load_model">
+<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_parallel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/horizonms/models/model_base.html#BaseModel.load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#horizonms.models.model_base.BaseModel.load_model" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="horizonms.metrics.html" class="btn btn-neutral float-left" title="horizonms.metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="horizonms.models.backbones.html" class="btn btn-neutral float-right" title="horizonms.models.backbones" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Medical Imaging Technology Lab @ Sibionics.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
