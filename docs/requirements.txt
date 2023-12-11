@@ -1,0 +1,4 @@
+sphinx==7.2.6
+sphinx_rtd_theme==1.2.1
+sphinx_napoleon==0.7
+myst-parser==1.0.0
