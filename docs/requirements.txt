@@ -1,4 +1,5 @@
 sphinx-rtd-theme
+autoapi
 sphinxcontrib-napoleon==0.7
 myst-parser==1.0.0
 sphinx-markdown-tables
