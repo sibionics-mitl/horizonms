@@ -95,6 +95,7 @@ class CustomizedTrivialAugment(torch.nn.Module):
         self.num_magnitude_bins = num_magnitude_bins
         self._suppert_operators = set(SUPPORT_OPERATORS)
         operators = [aug['name'] for aug in augment_operators]
+
         assert set(operators).issubset(self._suppert_operators), f"Supported operators are {self._suppert_operators}"
 
     def forward(self, image: Tensor, target: Dict = None) -> Tuple[Tensor, Dict]:

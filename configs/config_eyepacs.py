@@ -62,7 +62,7 @@ def get_experiment_config(net_name, scheduler='OneCycleLR', optimizer='AdamW'):
     net_params['input_dim'] = 3
     net_params['num_classes'] = 5
     if 'efficient' in net_name:
-        net_params['pretrained'] = False
+        net_params['pretrained'] = ''
         net_params['model_dir'] = 'results'
     elif net_name == 'InceptionResnetV2':
         net_params['drop_rate'] = 0.2

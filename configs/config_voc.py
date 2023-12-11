@@ -15,12 +15,12 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
     # dataset
     # -----------------------------------------------------------------------------
     dataset = dict(
-                root_path='data/voc',
+                root_path='/data1/home/panxc/wsis/data/voc',
                 name='voc', image_type='float', keep_difficult=False,
-                train_years=['2007','2012'], test_years=['2007'],
+                train_years=['2012'], test_years=['2012'],
                 # train_sets=["train", "train"], #
-                train_sets=["trainval", "all"], 
-                test_sets=['test'])
+                train_sets=["train"], 
+                test_sets=['val'])
     _C['dataset_params'] = dataset
 
     # -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
             dict(name='CVRandomFliplr', prob=0.5),
             dict(name='CVRandomScale', prob=0.5, scale_range=[0.8, 1.2], 
                  scale_width=True, scale_height=False, scale_same=False), 
-            dict(name='CVRandomBlur', prob=0.5, kernel_size=(5,5)),
+            dict(name='CVRandomGaussianBlur', prob=0.5, kernel_size=(5,5)),
             dict(name='CVRandomBrightness', prob=0.5, brightness_factor=[0.5,1.5]),
             dict(name='CVRandomHue', prob=0.5, hue_factor=[0.5,1.5]),
             dict(name='CVRandomSaturation', prob=0.5, saturation_factor=[0.5,1.5]),
@@ -60,7 +60,10 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
     net_params['name'] = net_name
     if net_name == 'YOLOv1':
         backbone = dict(name='resnet_backbone', backbone_name='resnet50',
-            input_dim=3, return_stages=1, pretrained=True)
+            input_dim=3, return_stages=1,
+            #   pretrained=True
+             pretrained='imagenet'
+            )
         neck = dict(name='BottlenetNeck', in_channels=2048, out_channels=256,
             stride=1, expansion=1)
         head = dict(name='Yolov1Head', in_channels=256, num_classes=20, num_boxes=2, prior=0.5)

@@ -53,7 +53,7 @@ def get_experiment_config(net_name, scheduler='OneCycleLR'):
     net_params['input_dim'] = 3
     net_params['num_classes'] = 1000
     if 'efficient' in net_name:
-        net_params['pretrained'] = False
+        net_params['pretrained'] = ''
         net_params['model_dir'] = 'results'
         net_params['softmax'] = True
     elif net_name == 'InceptionResnetV2':
