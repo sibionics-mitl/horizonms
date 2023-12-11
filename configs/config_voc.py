@@ -33,7 +33,7 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
             dict(name='CVRandomFliplr', prob=0.5),
             dict(name='CVRandomScale', prob=0.5, scale_range=[0.8, 1.2], 
                  scale_width=True, scale_height=False, scale_same=False), 
-            dict(name='CVRandomGaussianBlur', prob=0.5, kernel_size=(5,5)),
+            dict(name='CVRandomGaussianBlur', prob=0.5, sigma=0.3, kernel_size=(5,5)),
             dict(name='CVRandomBrightness', prob=0.5, brightness_factor=[0.5,1.5]),
             dict(name='CVRandomHue', prob=0.5, hue_factor=[0.5,1.5]),
             dict(name='CVRandomSaturation', prob=0.5, saturation_factor=[0.5,1.5]),
