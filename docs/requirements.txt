@@ -9,3 +9,6 @@ openpyxl
 opencv-python
 dill
 tqdm
+matplotlib
+scikit-image
+matplotlib
