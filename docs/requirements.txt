@@ -2,7 +2,8 @@ sphinx-rtd-theme
 sphinx-autodoc-typehints
 sphinxcontrib-napoleon
 myst-parser
-torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+torch 
+torchvision
 pandas
 openpyxl
 opencv-python
