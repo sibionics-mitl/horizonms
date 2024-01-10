@@ -6,7 +6,7 @@ import math
 from collections import OrderedDict
 
 
-__all__ = ("PseudomaxPooling2D", "ConvNormActivation", "SqueezeExcitation")
+__all__ = ["PseudomaxPooling2D", "ConvNormActivation", "SqueezeExcitation"]
 
 
 class PseudomaxPooling2D(torch.nn.Module):

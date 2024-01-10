@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-__all__ = ("softmax_accuracy", "softmax_accuracy_topk", "softmax_cohen_kappa_score")
+__all__ = ["softmax_accuracy", "softmax_accuracy_topk", "softmax_cohen_kappa_score"]
 
 
 def softmax_accuracy(ytrue, ypred):
@@ -11,6 +11,9 @@ def softmax_accuracy(ytrue, ypred):
     Args:
         ytrue (Tensor): ground truth.
         ypred (Tensor): prediction.
+
+    Returns:
+        Tensor: accuracy value.
     """
     assert (ytrue.dim() in [1,2]) & (ypred.dim() == 2)
     if ytrue.dim() == 2:
@@ -27,6 +30,9 @@ def softmax_accuracy_topk(ytrue, ypred, topk=1):
         ytrue (Tensor): ground truth.
         ypred (Tensor): prediction.
         k (int): parameter in top-k.
+
+    Returns:
+        Tensor: top-k accuracy value.
     """
     assert (ytrue.dim() in [1,2]) & (ypred.dim() == 2)
     if ytrue.dim() == 2:
@@ -45,6 +51,9 @@ def softmax_cohen_kappa_score(ytrue, ypred, weights=None, category=True, epsilon
         weights (str): the type of Cohen's kappa.
         category (bool): `category=True` converts both predictions and ground truths as one-hot. 
         epsilon (float): a small number for the stability of metric.
+
+    Returns:
+        Tensor: kappa value.
     """
     assert ytrue.dim() == 2
     nb_samples, nb_classes = ytrue.shape

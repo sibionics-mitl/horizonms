@@ -7,31 +7,49 @@ import numbers
 import numpy as np
 from collections.abc import Sequence
 from .utils import cv_image_shift, _input_check_value_range_set, _input_get_value_range_set
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 from abc import ABC, abstractmethod
 from ..builder import TRANSFORMS
 
 
-__all__ = ("CVShearX", "CVShearY", "CVTranslateX", "CVTranslateY",
+__all__ = ["CVSpatialBase", "CVShearX", "CVShearY", "CVTranslateX", "CVTranslateY",
            "CVCropX", "CVCropY", "CVFliplr", "CVFlipud", "CVRotate", "CVScale",
            "CVResize", "CVResizeWidth", "CVRandomResizedCrop", "CVRandomCrop",
            "CVImagePadding",  "CVRandomShift", "CVRandomShearX", "CVRandomShearY",
            "CVRandomTranslateX", "CVRandomTranslateY", "CVRandomCropX",
            "CVRandomCropY", "CVRandomFliplr", "CVRandomFlipud", "CVRandomRotate",
-           "CVRandomScale")
+           "CVRandomScale"
+]
 
 
 class CVSpatialBase(ABC):
-
+    """Base for spatial operators implemented by OpenCV.
+    """
     @abstractmethod
     def calculate_image(self, image):
+        """conduct transformation for image.
+
+        Args:
+            image (np.array): image data with dimension HxWxC.
+        """
         pass
 
     @abstractmethod
     def calculate_target(self, target):
+        """conduct transformation for target.
+
+        Args:
+            target (Dict): target data in dictionary format.
+        """
         pass
 
     def __call__(self, image, target=None):
+        """implement transformation for image and/or target.
+
+        Args:
+            image (np.array): image data with dimension HxWxC.
+            target (Dict): target data in dictionary format. Default: `None`.
+        """
         image = self.calculate_image(image)
         if target is None:
             return image
@@ -168,19 +186,19 @@ def _shear_x_target(target, shear_degree, fill):
 
 @TRANSFORMS.register_module()
 class CVShearX(CVSpatialBase):
-    """Shear images along x-axis (width).
+    """Shear image along x-axis (width).
 
     Args:
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, shear_degree: float,
+    def __init__(self, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -203,20 +221,20 @@ class CVShearX(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomShearX(CVSpatialBase):
-    """Shear images along x-axis (width).
+    """Randomly shear image along x-axis (width) with a predefined probability.
 
     Args:
-        prob (float):probability of the image being sheared.
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being sheared.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob: float, shear_degree: Tuple[float] = None,
+    def __init__(self, prob: float, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -278,19 +296,19 @@ def _shear_y_target(target, shear_degree, fill):
 
 @TRANSFORMS.register_module()
 class CVShearY(CVSpatialBase):
-    """Shear images along y-axis (height).
+    """Shear image along y-axis (height).
 
     Args:
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, shear_degree: float,
+    def __init__(self, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -313,20 +331,20 @@ class CVShearY(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomShearY(CVSpatialBase):
-    """Shear images along y-axis (height).
+    """Randomly shear image along y-axis (height) with a predefined probability.
 
     Args:
-        prob (float):Probability of the image being sheared.
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being sheared.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob: float, shear_degree=None,
+    def __init__(self, prob: float, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         self.prob = prob
@@ -400,21 +418,22 @@ def _translate_x_target(target, translate_ratio, image_width):
 
 @TRANSFORMS.register_module()
 class CVTranslateX(CVSpatialBase):
-    """Translate images along x-axis (width), images size = (h, w).
+    """Translate image along x-axis (width).
 
     Args:
-        translate_ratio (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
-
-        When translate_ratio is positve, the image moves to the right.
-        When translate_ratio is negative, the image moves to the left.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
+    
+    When `translate_ratio` is positve, the image moves to the right.    
+    When `translate_ratio` is negative, the image moves to the left.
     """
-
-    def __init__(self, translate_ratio: float = 0.0,
+    def __init__(self, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(translate_ratio)
@@ -438,22 +457,23 @@ class CVTranslateX(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomTranslateX(CVSpatialBase):
-    """Translate images along x-axis (width), images size = (h, w).
+    """Randomly translate image along x-axis (width) with a predefined probability.
 
     Args:
-        prob (float): Probability of the image being translated.
-        translate_ratio (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being translated.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-        When translate_ratio is positve, the image moves to the right.
-        When translate_ratio is negative, the image moves to the left.
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
     """
-
-    def __init__(self, prob: float = 0.0, translate_ratio=None,
+    def __init__(self, prob: float, translate_ratio: Union[float, Tuple[float], List[float]],
                  interpolation=None,
                  fill: Optional[List[float]] = None):
         super().__init__()
@@ -527,22 +547,22 @@ def _translate_y_target(target, translate_ratio, image_height):
 
 @TRANSFORMS.register_module()
 class CVTranslateY(CVSpatialBase):
-    """Translate images along y-axis (height), images size = (h, w).
+    """Translate image along y-axis (height).
 
     Args:
-        prob (float): Probability of the image being translated
-        translate_ratio  (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional) - Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-        When translate_ratio is positve, the image moves down.
-        When translate_ratio is negative, the image moves up.
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
     """
-
-    def __init__(self, translate_ratio: float = 0.0,
+    def __init__(self, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(translate_ratio)
@@ -566,21 +586,23 @@ class CVTranslateY(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomTranslateY(CVSpatialBase):
-    """Translate images along y-axis (height), images size = (h, w).
+    """Randomly translate image along y-axis (height) with a predefined probability. 
 
     Args:
-        translate_ratio  (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional) - Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being translated.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value. 
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-        When translate_ratio is positve, the image moves down.
-        When translate_ratio is negative, the image moves up.
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
     """
-
-    def __init__(self, prob: float = 0.0, translate_ratio=None,
+    def __init__(self, prob: float, translate_ratio: Union[float, Tuple[float], List[float]],
 
                  fill: Optional[List[float]] = None):
         super().__init__()
@@ -658,22 +680,19 @@ def _crop_x_target(target, crop_ratio, image_width):
 
 @TRANSFORMS.register_module()
 class CVCropX(CVSpatialBase):
-    """Crop images along x-axis (width), images size = (h, w).
+    """Crop image along x-axis (width).
 
     Args:
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (h, crop_ratio*w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (h, ratio*w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-
-        When crop_ratio is positve, the left portion of the image is cropped out, and the right portion is kept.
-        When crop_ratio is negative, the left portion of the image is kept, and the right portion is cropped out.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the left portion of the image is cropped out, and the right portion is kept.
+    When `crop_ratio` is negative, the left portion of the image is kept, and the right portion is cropped out.
     """
-
-    def __init__(self, crop_ratio: float):
+    def __init__(self, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.crop_ratio = crop_ratio
@@ -694,23 +713,20 @@ class CVCropX(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomCropX(CVSpatialBase):
-    """Crop images along x-axis (width), images size = (h, w).
+    """Randomly crop image along x-axis (width). with a predefined probability.
 
     Args:
-        prob (float):Probability of the image being cropped.
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (h, crop_ratio*w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (h, ratio*w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-
-        When crop_ratio is positve, the left portion of the image is cropped out, and the right portion is kept.
-        When crop_ratio is negative, the left portion of the image is kept, and the right portion is cropped out.
+        prob (float): probability of the image being cropped.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the left portion of the image is cropped out, and the right portion is kept.
+    When `crop_ratio` is negative, the left portion of the image is kept, and the right portion is cropped out.
     """
-
-    def __init__(self, prob: float, crop_ratio=None):
+    def __init__(self, prob: float, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.prob = prob
@@ -784,22 +800,19 @@ def _crop_y_target(target, crop_ratio, image_height):
 
 @TRANSFORMS.register_module()
 class CVCropY(CVSpatialBase):
-    """Crop images along y-axis (height), images size = (h, w).
+    """Crop image along y-axis (height).
 
     Args:
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (crop_ratio*h, w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (ratio*h, w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-
-        When crop_ratio is positve, the upper portion of the image is cropped out, and the lower portion is kept.
-        When crop_ratio is negative, the upper portion of the image is kept, and the lower portion is cropped out.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the upper portion of the image is cropped out, and the lower portion is kept.
+    When `crop_ratio` is negative, the upper portion of the image is kept, and the lower portion is cropped out.
     """
-
-    def __init__(self, crop_ratio: float):
+    def __init__(self, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.crop_ratio = crop_ratio
@@ -820,23 +833,20 @@ class CVCropY(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomCropY(CVSpatialBase):
-    """Crop images along y-axis (height), images size = (h, w).
+    """Randomly crop image along y-axis (height). with a predefined probability.
 
     Args:
-        prob (float): Probability of the image being cropped.
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (crop_ratio*h, w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (ratio*h, w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-
-        When crop_ratio is positve, the upper portion of the image is cropped out, and the lower portion is kept.
-        When crop_ratio is negative, the upper portion of the image is kept, and the lower portion is cropped out.
+        crop_prob (float): probability of the image being cropped.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the upper portion of the image is cropped out, and the lower portion is kept.
+    When `crop_ratio` is negative, the upper portion of the image is kept, and the lower portion is cropped out.
     """
-
-    def __init__(self, prob: float, crop_ratio=None):
+    def __init__(self, prob: float, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         self.prob = prob
         self.crop_ratio = crop_ratio
@@ -893,7 +903,6 @@ def _fliplr_target(target, image_width):
 class CVFliplr(CVSpatialBase):
     """Flip image left-right.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -912,13 +921,12 @@ class CVFliplr(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomFliplr(CVSpatialBase):
-    """Flip image left-right.
+    """Randomly flip image left-right with a predefined probability.
 
     Args:
-        prob (float): Probability of flipping an image in the range of [0, 1].
+        prob (float): probability of flipping an image in the range of [0, 1].
     """
-
-    def __init__(self, prob=0.5):
+    def __init__(self, prob: float):
         self.prob = prob
 
     def calculate_image(self, image):
@@ -970,7 +978,6 @@ def _flipud_target(target, image_height):
 class CVFlipud(CVSpatialBase):
     """Flip image up-down.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -989,13 +996,12 @@ class CVFlipud(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomFlipud(CVSpatialBase):
-    """Flip image up-down.
+    """Randomly flip image up-down with a predefined probability.
 
     Args:
-        prob (float): Probability of flipping an image in the range of [0, 1].
+        prob (float): probability of flipping an image in the range of [0, 1].
     """
-
-    def __init__(self, prob: float = None):
+    def __init__(self, prob: float):
         super().__init__()
         self.prob = prob
 
@@ -1057,15 +1063,16 @@ class CVRotate(CVSpatialBase):
     """Rotate image.
 
     Args:
-        rotate_degree  (float  | tuple[float, float] |  list[float, float] ):
-            float: Rotation angle value in degrees, counter-clockwise.
-            tuple[float, float]: Range of rotation angle. Default is None.
-            list[float, ... , float] : list of the ratio of rotation angle to be randomly chosen.
+        rotate_degree (float | tuple[float, float] | list[float]): angle of rotation in degree, counter-clockwise.
+            There are three ways for angle of rotation as follows:
+                - If `rotate_degree` is `float`, then angle of rotation is the value.
+                - If `rotate_degree` is `tuple[float, float]` (i.e. a ratio range), then angle of rotation is randomly selected from the range.
+                - If `rotate_degree` is `list[float, ... , float]` (i.e. list of angles), then angle of rotation is randomly selected from the list.
         fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, rotate_degree: float,
+    def __init__(self, rotate_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(rotate_degree)
@@ -1088,19 +1095,20 @@ class CVRotate(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomRotate(CVSpatialBase):
-    """Rotate image.
+    """Randomly rotate image with a predefined probability.
 
     Args:
-        prob (float):Probability of the image being rotated.
-        rotate_degree  (float  | tuple[float, float] |  list[float, float] ):
-            float: Rotation angle value in degrees, counter-clockwise.
-            tuple[float, float]: Range of rotation angle. Default is None.
-            list[float, ... , float] : list of the ratio of rotation angle to be randomly chosen.
+        prob (float): probability of rotating an image in the range of [0, 1].
+        rotate_degree (float | tuple[float, float] | list[float]): angle of rotation in degree, counter-clockwise.
+            There are three ways for angle of rotation as follows:
+                - If `rotate_degree` is `float`, then angle of rotation is the value.
+                - If `rotate_degree` is `tuple[float, float]` (i.e. a ratio range), then angle of rotation is randomly selected from the range.
+                - If `rotate_degree` is `list[float, ... , float]` (i.e. list of angles), then angle of rotation is randomly selected from the list.
         fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob: float, rotate_degree=None,
+    def __init__(self, prob: float, rotate_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(rotate_degree)
@@ -1151,24 +1159,42 @@ def _resize_bboxes_cv(bboxes, original_size, new_size):
 
 @TRANSFORMS.register_module()
 class CVScale(CVSpatialBase):
-    def __init__(self, scale_range=(0.8, 1.2),
-                 scale_width=True, scale_height=False, scale_same=False,
+    """Scale image.
+
+    Args:
+        scale_factor (float | tuple[float, float] | list[float]): image scaling factor.
+            There are three ways for scaling factor as follows:
+                - If `scale_factor` is `float`, then scaling factor is the value.
+                - If `scale_factor` is `tuple[float, float]` (i.e. a ratio range), then scaling factor is randomly selected from the range.
+                - If `scale_factor` is `list[float, ... , float]` (i.e. list of angles), then scaling factor is randomly selected from the list.
+        flag_scale_width (bool): if True, the width of image is scaled by scaling ratio; otherwise, no scaling is done for image width.
+            Default: `True`.
+        flag_scale_height (bool): if True, the height of image is scaled by scaling ratio; otherwise, no scaling is done for image height.
+            Default: `False`.
+        flag_scale_same (bool): if True, scaling factors for width and height are same; otherwise, they are different.
+            Default: `False`.
+        interpolation (InterpolationMode): interpolation enum defined by torchvision.transforms.InterpolationMode.
+            Default: `InterpolationMode.BILINEAR`.
+    """
+    def __init__(self, scale_factor: Union[float, Tuple[float], List[float]],
+                 flag_scale_width: bool = True, flag_scale_height: bool = False, 
+                 flag_scale_same: bool = False,
                  interpolation='cv2.INTER_LINEAR'):
-        _input_check_value_range_set(scale_range)
-        self.scale_range = scale_range
-        self.scale_width = scale_width
-        self.scale_height = scale_height
-        self.scale_same = scale_same
+        _input_check_value_range_set(scale_factor)
+        self.scale_factor = scale_factor
+        self.flag_scale_width = flag_scale_width
+        self.flag_scale_height = flag_scale_height
+        self.flag_scale_same = flag_scale_same
         self.interpolation = eval(interpolation)
 
     def calculate_image(self, image):
-        scale1 = _input_get_value_range_set(self.scale_range)
-        if self.scale_same:
+        scale1 = _input_get_value_range_set(self.scale_factor)
+        if self.flag_scale_same:
             scale2 = scale1
         else:
-            scale2 = _input_get_value_range_set(self.scale_range)
-        width_factor = scale1 if self.scale_width else 1
-        height_factor = scale2 if self.scale_height else 1
+            scale2 = _input_get_value_range_set(self.scale_factor)
+        width_factor = scale1 if self.flag_scale_width else 1
+        height_factor = scale2 if self.flag_scale_height else 1
         self.factor = (height_factor, width_factor)
         h, w = image.shape[:2]
         image = cv2.resize(image, (int(w * width_factor), int(h * height_factor)), interpolation=self.interpolation)
@@ -1206,38 +1232,57 @@ class CVScale(CVSpatialBase):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += f'(scale_range={self.scale_range}, '
-        repr_str += f'(scale_width={self.scale_width}, '
-        repr_str += f'(scale_height={self.scale_height}, '
-        repr_str += f'(scale_same={self.scale_same})'
+        repr_str += f'(scale_factor={self.scale_factor}, '
+        repr_str += f'(flag_scale_width={self.flag_scale_width}, '
+        repr_str += f'(flag_scale_height={self.flag_scale_height}, '
+        repr_str += f'(flag_scale_same={self.flag_scale_same})'
         repr_str += f'interpolation={self.interpolation})'
         return repr_str
 
 
 @TRANSFORMS.register_module()
 class CVRandomScale(CVSpatialBase):
-    def __init__(self, prob=0.5, scale_range=(0.8, 1.2),
-                 scale_width=True, scale_height=False, scale_same=False,
+    """Randomly scale image with a predefined probability.
+
+    Args:
+        prob (float): probability of an image being scaled. 
+        scale_factor (float | tuple[float, float] | list[float]): image scaling factor.
+            There are three ways for scaling factor as follows:
+                - If `scale_factor` is `float`, then scaling factor is the value.
+                - If `scale_factor` is `tuple[float, float]` (i.e. a ratio range), then scaling factor is randomly selected from the range.
+                - If `scale_factor` is `list[float, ... , float]` (i.e. list of angles), then scaling factor is randomly selected from the list.
+        flag_scale_width (bool): if True, the width of image is scaled by scaling ratio; otherwise, no scaling is done for image width.
+            Default: `True`.
+        flag_scale_height (bool): if True, the height of image is scaled by scaling ratio; otherwise, no scaling is done for image height.
+            Default: `False`.
+        flag_scale_same (bool): if True, scaling factors for width and height are same; otherwise, they are different.
+            Default: `False`.
+        interpolation (InterpolationMode): Desired interpolation enum defined by torchvision.transforms.InterpolationMode.
+            Default: `InterpolationMode.BILINEAR`.
+    """
+    def __init__(self, prob: float, scale_factor: Union[float, Tuple[float], List[float]],
+                 flag_scale_width: bool = True, flag_scale_height: bool = False, 
+                 flag_scale_same: bool = False,
                  interpolation='cv2.INTER_LINEAR'):
-        _input_check_value_range_set(scale_range)
+        _input_check_value_range_set(scale_factor)
         self.prob = prob
-        self.scale_range = scale_range
-        self.scale_width = scale_width
-        self.scale_height = scale_height
-        self.scale_same = scale_same
+        self.scale_factor = scale_factor
+        self.flag_scale_width = flag_scale_width
+        self.flag_scale_height = flag_scale_height
+        self.flag_scale_same = flag_scale_same
         self.interpolation = eval(interpolation)
 
     def calculate_image(self, image):
         self.randomness = False
         if random.random() < self.prob:
             self.randomness =  True
-            scale1 = _input_get_value_range_set(self.scale_range)
-            if self.scale_same:
+            scale1 = _input_get_value_range_set(self.scale_factor)
+            if self.flag_scale_same:
                 scale2 = scale1
             else:
-                scale2 = _input_get_value_range_set(self.scale_range)
-            width_factor = scale1 if self.scale_width else 1
-            height_factor = scale2 if self.scale_height else 1
+                scale2 = _input_get_value_range_set(self.scale_factor)
+            width_factor = scale1 if self.flag_scale_width else 1
+            height_factor = scale2 if self.flag_scale_height else 1
             self.factor = (height_factor, width_factor)
             h, w = image.shape[:2]
             image = cv2.resize(image, (int(w * width_factor), int(h * height_factor)),
@@ -1278,10 +1323,10 @@ class CVRandomScale(CVSpatialBase):
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(prob={self.prob}, '
-        repr_str += f'(scale_range={self.scale_range}, '
-        repr_str += f'(scale_width={self.scale_width}, '
-        repr_str += f'(scale_height={self.scale_height}, '
-        repr_str += f'(scale_same={self.scale_same})'
+        repr_str += f'(scale_factor={self.scale_factor}, '
+        repr_str += f'(flag_scale_width={self.flag_scale_width}, '
+        repr_str += f'(flag_scale_height={self.flag_scale_height}, '
+        repr_str += f'(flag_scale_same={self.flag_scale_same})'
         repr_str += f'interpolation={self.interpolation})'
         return repr_str
 
@@ -1341,42 +1386,31 @@ class CVResize(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVResizeWidth(CVSpatialBase):
-    """Resize images.
+    """Resize image such that its width is a target value.
 
     When `width` is not None, it resizes the image to have width of `width`.
     When `width` is None, it resizes an image such that its shorter edge is `min_size_list[k]`,
     where `k` is randomly selected when the corresponding longer edge of the resized image is
     less than `max_size`; otherwise, it resizes an image such that the longer edge of the
     resized image is `max_size`.
-    Images scales for resizing (h, w).
 
     Args:
-        width (int): The width of the resized image.
-                When width is not None, it resizes an image to (width*h/w, width).
-                When width is None, it resizes an image according to min_size_list and max_size.
-        min_size_list (list[int]): List of widths considered for resizing image. Default is None.
-        max_size (int): The maximum allowed for the longer edge of the resized image.
-                Default is None.
-                When neither min_size_list and max_size are not None, it resizes an image such that its
-                shorter edge is min_size_list[k] when the long edge is less than max_size, where k is
-                picked randomly; otherwise its long edge is max_size.
-        size (int | tuple | list):
-                When size is int, the default behavior is to resize an image
-                to (size, size). When size is tuple/list and the second value is -1,
-                the short edge of an image is resized to its first value.
-                For example, when size is 224, the image is resized to 224x224.
-                When size is (224, -1), the short side is resized to 224 and the
-                other side is computed based on the short side, maintaining the
-                aspect ratio.
-        interpolation (str): Default is 'cv2.INTER_LINEAR'.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        width (int): width of the resized image.
+            When width is not None, it resizes an image to (width*h/w, width).
+            When width is None, it resizes an image according to min_size_list and max_size.
+        min_size_list (list[int]): list of widths considered for resizing image. Default: `None`.
+        max_size (int):  maximum allowed for the longer edge of the resized image.
+            Default: `None`.
+            When neither min_size_list and max_size are not None, it resizes an image such that its
+            shorter edge is min_size_list[k] when the long edge is less than max_size, where k is
+            picked randomly; otherwise its long edge is max_size.
+        training (bool): if True, width is randomly selected from `min_size_list`; otherwise, width is set as `min_size_list[-1]`.
+            Default: `None`.
+        interpolation (InterpolationMode): interpolation enum defined by
+            torchvision.transforms.InterpolationMode. Default: `InterpolationMode.BILINEAR`.
     """
-
     def __init__(self, width: int = None, min_size_list: List[int] = None, max_size: int = None,
-                 training: bool = False,
-                 interpolation='cv2.INTER_LINEAR',
-                 antialias: Optional[bool] = None):
+                 training: bool = False, interpolation: str = 'cv2.INTER_LINEAR'):
         super().__init__()
         self.width = width
         self.min_size_list = min_size_list
@@ -1386,7 +1420,6 @@ class CVResizeWidth(CVSpatialBase):
         else:
             assert self.width is not None, "width has to be given when min_size_list or max_size is None."
         self.interpolation = eval(interpolation)
-        self.antialias = antialias
         self.training = training
 
     def calculate_image(self, image):
@@ -1469,9 +1502,6 @@ def _resized_crop_cv(img, top, left, height, width, size, interpolation):
 class CVRandomResizedCrop(CVSpatialBase):
     """Crop a random portion of image and resize it to a given size.
 
-    If the image is torch Tensor, it is expected
-    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions
-
     A crop of the original image is made: the crop has a random area (H * W)
     and a random aspect ratio. This crop is finally resized to the given
     size. This is popularly used to train the Inception networks.
@@ -1480,13 +1510,13 @@ class CVRandomResizedCrop(CVSpatialBase):
         size (int | tule[int, int]): expected output size of the crop, for each edge. If size is an
             int instead of sequence like (h, w), a square output size ``(size, size)`` is
             made. If provided a sequence of length 1, it will be interpreted as (size[0], size[0]).
-        scale (tuple[float, float]): Specifies the lower and upper bounds for the random area of the crop,
+        scale (tuple[float, float]): lower and upper bounds for the random area of the crop,
             before resizing. The scale is defined with respect to the area of the original image.
+            Default: `(0.08, 1.0)`.
         ratio (tuple[float, float]): lower and upper bounds for the random aspect ratio of the crop, before
-            resizing.
-        interpolation (str): Default is 'cv2.INTER_LINEAR'.
+            resizing. Default: `(3. / 4., 4. / 3.)`.
+        interpolation (str): Default: 'cv2.INTER_LINEAR'.
     """
-
     def __init__(self, size, scale=(0.08, 1.0), ratio=(3. / 4., 4. / 3.), interpolation='cv2.INTER_LINEAR'):
         super().__init__()
         self.size = _setup_size(size, error_msg="Please provide only two dimensions (h, w) for size.")
@@ -1569,7 +1599,7 @@ class CVRandomResizedCrop(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomCrop(CVSpatialBase):
-    def __init__(self, prob=0.5, crop_ratio=0.6):
+    def __init__(self, prob: float = 0.5, crop_ratio: float = 0.6):
         self.prob = prob
         self.crop_ratio = crop_ratio
 
@@ -1628,10 +1658,8 @@ class CVRandomCrop(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVImagePadding(CVSpatialBase):
-    """Pad image.
-    It pads the shorter edge of an image to get a square padded image.
+    """Pad the shorter edge of an image such that width and height are equal.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -1694,7 +1722,14 @@ class CVImagePadding(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVRandomShift(CVSpatialBase):
-    def __init__(self, prob=0.5, shift_limit=0.2):
+    """Randomly shift image along x-axis and y-axis with a predefined probability.
+
+    Args:
+        prob (float): probability of image shifting.
+        shift_limit (float): maximum shift ratio along x-axis and y-axis.
+            Default: `0.2`.
+    """
+    def __init__(self, prob: float, shift_limit: float = 0.2):
         self.prob = prob
         self.shift_limit = shift_limit
 

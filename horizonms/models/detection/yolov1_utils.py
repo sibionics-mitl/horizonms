@@ -5,7 +5,7 @@ import math
 from ...builder import BACKBONES, NECKS, HEADS
 
 
-__all__ = ("DefaultDarknet", "DefaultYolov1Head", "DetNeckBlock", "BottlenetNeck", "Yolov1Head")
+__all__ = ["DefaultDarknet", "DefaultYolov1Head", "DetNeckBlock", "BottlenetNeck", "Yolov1Head"]
 
 
 class LeakyConvBlock(nn.Module):

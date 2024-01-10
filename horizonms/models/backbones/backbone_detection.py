@@ -5,12 +5,12 @@ from .backbone_vgg_cfg import vgg_cfg_backbone_v1, vgg_cfg_backbone_v2
 from ...builder import BACKBONES, build_backbone
 
 
-__all__ = ("vgg_fpn_det_v1", "vgg_fpn_det_v2")
+__all__ = ["vgg_fpn_det_v1", "vgg_fpn_det_v2"]
 
 
 @BACKBONES.register_module()
 class DefaultRetinaNetBackbone(nn.Module):
-    r"""It extracts the default backbone with FPN for RetinaNet.
+    r"""Extract the default backbone with FPN for RetinaNet.
     
     Args:
         backbone (nn.Module):

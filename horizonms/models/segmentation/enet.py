@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from ...builder import NETS
 
 
-__all__ = ("ENet")
+__all__ = ["ENet"]
 
 
 def conv_block_1(in_dim, out_dim):

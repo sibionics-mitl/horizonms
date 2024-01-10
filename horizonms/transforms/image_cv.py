@@ -1,4 +1,3 @@
-from re import RegexFlag
 import cv2
 import random
 import numpy as np
@@ -9,14 +8,14 @@ from .utils import _input_check_value_range_set, _input_get_value_range_set, \
 from ..builder import TRANSFORMS
 
 
-__all__ = ("CVImageBase", "CVUint8ToFloat", "CVIdentity", "CVCvtColor", "CVNormalizer",
+__all__ = ["CVImageBase", "CVUint8ToFloat", "CVIdentity", "CVCvtColor", "CVNormalizer",
            "CVBrightness", "CVContrast", "CVSaturation", "CVHue", "CVSharpness",
            "CVPosterize", "CVSolarize", "CVAutoContrast", "CVEqualize", "CVInvert",
            "CVGaussianBlur", "CVGaussianNoise", "CVLighting",
            "CVRandomBrightness", "CVRandomContrast", "CVRandomSaturation", "CVRandomHue", "CVRandomSharpness",
            "CVRandomPosterize", "CVRandomSolarize", "CVRandomAutoContrast", "CVRandomEqualize", "CVRandomInvert",
            "CVRandomGaussianBlur", "CVRandomGaussianNoise", "CVRandomLighting", "CVRandomBlur",
-           )
+]
 
 
 IMG_ROW_AXIS = 0
@@ -86,9 +85,15 @@ def _rgb_to_grayscale_cv(img):
 
 
 class CVImageBase(ABC):
-
+    """Base for image operators implemented by OpenCV.
+    """
     @abstractmethod
     def calculate(self, image):
+        """conduct transformation for image.
+
+        Args:
+            image (np.array): image data with dimension HxWxC.
+        """
         pass
 
     def __call__(self, image, target=None):
@@ -101,12 +106,16 @@ class CVImageBase(ABC):
 
 @TRANSFORMS.register_module()
 class CVUint8ToFloat(CVImageBase):
+    """Convert data type from uint8 to float in the range of [0, 1].
+    """
     def calculate(self, image):
         return image.astype(float) / 255.0
 
 
 @TRANSFORMS.register_module()
 class CVIdentity(CVImageBase):
+    """Return the same image value.
+    """
     def __init__(self):
         super().__init__()
 
@@ -116,6 +125,11 @@ class CVIdentity(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVCvtColor(CVImageBase):
+    """Image color space conversion.
+
+    Args:
+        code (str): color space code defined in OpenCV.
+    """
     def __init__(self, code):
         self.code = eval(code)
 
@@ -126,6 +140,20 @@ class CVCvtColor(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVNormalizer(CVImageBase):
+    """Image normalization.
+
+    Args:
+        mode (str): image normalization method. It can be `'zscore'`, `'zero-one'`, `'negative-positive-one'`, or `'customize'`.
+            Default: `'zscore'`.
+        shift (float | list | tuple): shift value in normalization. This value is required when `mode='customize'`.
+            Default: `None`.
+        scale (float | list | tuple): normalizer value in normalization. This value is required when `mode='customize'`.
+            Default: `None`.
+        image_base (bool): if True, the normalization is conducted for all channels; otherwise, the normalization is conducted for each channel.
+            Default: `True`.
+        epsilon (float): a small number for calculation stability.
+            Default: `1e-10`.
+    """
     def __init__(self, mode='zscore', shift=None, scale=None, image_base=True, epsilon=1e-10):
         super().__init__()
         assert mode in ['zscore', 'zero-one', 'negative-positive-one', 'customize'], \
@@ -182,17 +210,16 @@ class CVNormalizer(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVBrightness(CVImageBase):
-    """Adjust brightness of an image
+    """Adjust brightness of an image.
 
     Args:
-        brightness_factor (float | tuple[float, float] | list[float, float]):
-            - float: How much to adjust the brightness.
-                Can be any non-negative number. 0 gives a black image, 1 gives
-                the original image while 2 increases the brightness by a factor of 2.
-            - tuple[float, float]: Range of the ratio of brightness.
-            - list[float, ... , float]: List of the ratio of brightness to be randomly chosen.
+        brightness_factor (float | tuple[float, float] | list[float, float]): how much to adjust the brightness.
+            It can be any non-negative number. 0 gives a black image, 1 gives the original image while 2 increases the brightness by a factor of 2.
+            There are three ways for brightness factor as follows:
+                - If `brightness_factor` is `float`, then brightness factor is the value.
+                - If `brightness_factor` is `tuple[float, float]` (i.e. a ratio range), then brightness factor is randomly selected from the range.
+                - If `brightness_factor` is `list[float, ... , float]` (i.e. list of angles), then brightness factor is randomly selected from the list.
     """
-
     def __init__(self, brightness_factor):
         super().__init__()
         _input_check_value_range_set(brightness_factor)
@@ -211,19 +238,18 @@ class CVBrightness(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomBrightness(CVImageBase):
-    """Adjust brightness of an image
+    """Randomly adjust brightness of an image with a predefined probability.
 
     Args:
-        prob (float): Probability of image adjusting brightness.
-        brightness_factor (float  | tuple[float, float] |  list[float, float]):
-            - float : How much to adjust the brightness.
-                Can be any non-negative number. 0 gives a black image, 1 gives
-                the original image while 2 increases the brightness by a factor of 2.
-            - tuple[float, float]: Range of the ratio of brightness .
-            - list[float, ... , float] : list of the ratio of brightness to be randomly chosen.
+        prob (float): probability of brightness adjustment for an image.
+        brightness_factor (float | tuple[float, float] | list[float, float]): how much to adjust the brightness.
+            It can be any non-negative number. 0 gives a black image, 1 gives the original image while 2 increases the brightness by a factor of 2.
+            There are three ways for brightness factor as follows:
+                - If `brightness_factor` is `float`, then brightness factor is the value.
+                - If `brightness_factor` is `tuple[float, float]` (i.e. a ratio range), then brightness factor is randomly selected from the range.
+                - If `brightness_factor` is `list[float, ... , float]` (i.e. list of angles), then brightness factor is randomly selected from the list.
     """
-
-    def __init__(self, prob, brightness_factor=None):
+    def __init__(self, prob, brightness_factor):
         super().__init__()
         _input_check_value_range_set(brightness_factor)
         self.prob = prob
@@ -260,14 +286,14 @@ class CVContrast(CVImageBase):
     """Adjust contrast of an image.
 
     Args:
-        contrast_factor (float  | tuple[float, float] |  list[float, float] ):
-            - float : How much to adjust the contrast. Can be any
-                    non-negative number. 0 gives a solid gray image, 1 gives the
-                    original image while 2 increases the contrast by a factor of 2.
-            - tuple[float, float]:  Range of the ratio of contrast.
-            - list[float, ... , float] : list of the ratio of contrast to be randomly chosen.
+        contrast_factor (float | tuple[float, float] | list[float, float]): 
+            how much to adjust the contrast. It can be any non-negative number.
+            0 gives a solid gray image, 1 gives the original image while 2 increases the contrast by a factor of 2.
+            There are three ways for contrast factor as follows:
+                - If `contrast_factor` is `float`, then contrast factor is the value.
+                - If `contrast_factor` is `tuple[float, float]` (i.e. a ratio range), then contrast factor is randomly selected from the range.
+                - If `contrast_factor` is `list[float, ... , float]` (i.e. list of angles), then contrast factor is randomly selected from the list.
     """
-
     def __init__(self, contrast_factor):
         super().__init__()
         _input_check_value_range_set(contrast_factor)
@@ -285,18 +311,18 @@ class CVContrast(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomContrast(CVImageBase):
-    """Adjust contrast of an image.
+    """Randomly adjust contrast of an image with a predefined probability.
 
     Args:
-        prob (float): Probability of image adjusting contrast.
-        contrast_factor (float  | tuple[float, float] |  list[float, float] ):
-            - float : How much to adjust the contrast. Can be any
-                    non-negative number. 0 gives a solid gray image, 1 gives the
-                    original image while 2 increases the contrast by a factor of 2.
-            - tuple[float, float]:  Range of the ratio of contrast.
-            - list[float, ... , float] : list of the ratio of contrast to be randomly chosen.
+        prob (float): probability of contrast adjustment for an image.
+        contrast_factor (float | tuple[float, float] | list[float, float]): 
+            how much to adjust the contrast. It can be any non-negative number.
+            0 gives a solid gray image, 1 gives the original image while 2 increases the contrast by a factor of 2.
+            There are three ways for contrast factor as follows:
+                - If `contrast_factor` is `float`, then contrast factor is the value.
+                - If `contrast_factor` is `tuple[float, float]` (i.e. a ratio range), then contrast factor is randomly selected from the range.
+                - If `contrast_factor` is `list[float, ... , float]` (i.e. list of angles), then contrast factor is randomly selected from the list.
     """
-
     def __init__(self, prob, contrast_factor=None):
         super().__init__()
         _input_check_value_range_set(contrast_factor)
@@ -321,14 +347,14 @@ class CVSaturation(CVImageBase):
     """Adjust color saturation of an image.
 
     Args:
-        saturation_factor (float  | tuple[float, float] |  list[float, float] ):
-            - float:  How much to adjust the saturation. 0 will
-                    give a black and white image, 1 will give the original image while
-                    2 will enhance the saturation by a factor of 2.
-            - tuple[float, float]: Range of the ratio of saturation.
-            - list[float, ... , float] : list of the ratio of saturation to be randomly chosen.
+        saturation_factor (float | tuple[float, float] | list[float, float]): 
+            how much to adjust the saturation. 0 will give a black and white image, 
+            1 will give the original image, while 2 will enhance the saturation by a factor of 2.
+            There are three ways for saturation factor as follows:
+                - If `saturation_factor` is `float`, then saturation factor is the value.
+                - If `saturation_factor` is `tuple[float, float]` (i.e. a ratio range), then saturation factor is randomly selected from the range.
+                - If `saturation_factor` is `list[float, ... , float]` (i.e. list of angles), then saturation factor is randomly selected from the list.
     """
-
     def __init__(self, saturation_factor):
         super().__init__()
         _input_check_value_range_set(saturation_factor)
@@ -347,18 +373,18 @@ class CVSaturation(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomSaturation(CVImageBase):
-    """Adjust color saturation of an image.
+    """Randomly adjust color saturation of an image with a predefined probability.
 
     Args:
-        prob (float):Probability of image adjusting sharpness.
-        saturation_factor (float  | tuple[float, float] |  list[float, float] ):
-            - float:  How much to adjust the saturation. 0 will
-                    give a black and white image, 1 will give the original image while
-                    2 will enhance the saturation by a factor of 2.
-            - tuple[float, float]: Range of the ratio of saturation.
-            - list[float, ... , float] : list of the ratio of saturation to be randomly chosen.
+        prob (float): probability of saturation adjustment for an image.
+        saturation_factor (float | tuple[float, float] | list[float, float]): 
+            how much to adjust the saturation. 0 will give a black and white image, 
+            1 will give the original image, while 2 will enhance the saturation by a factor of 2.
+            There are three ways for saturation factor as follows:
+                - If `saturation_factor` is `float`, then saturation factor is the value.
+                - If `saturation_factor` is `tuple[float, float]` (i.e. a ratio range), then saturation factor is randomly selected from the range.
+                - If `saturation_factor` is `list[float, ... , float]` (i.e. list of angles), then saturation factor is randomly selected from the list.
     """
-
     def __init__(self, prob, saturation_factor):
         super().__init__()
         _input_check_value_range_set(saturation_factor)
@@ -467,6 +493,7 @@ def _hue(image, hue_factor):
 @TRANSFORMS.register_module()
 class CVHue(CVImageBase):
     """Adjust hue of an image.
+
     The image hue is adjusted by converting the image to HSV and
     cyclically shifting the intensities in the hue channel (H).
     The image is then converted back to original image mode.
@@ -479,16 +506,17 @@ class CVHue(CVImageBase):
     .. _Hue: https://en.wikipedia.org/wiki/Hue
 
     Args:
-        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5:
-            - float:  How much to shift the hue channel. Should be in
-                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in
-                    HSV space in positive and negative direction respectively.
-                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image
-                    with complementary colors while 0 gives the original image.
-            - tuple[float, float]: Range of the ratio of hue.
-            - list[float, ... , float] : list of the ratio of hue to be randomly chosen.
+        hue_factor (float | tuple[float, float] | list[float, float]): 
+            how much to shift the hue channel. It should be in [-0.5, 0.5]. 
+            0 means no shift, thus gives the original image. 
+            0.5 and -0.5 give complete reversal of hue channel in HSV space in positive 
+            and negative direction respectively, thus both -0.5 and 0.5 will give an image
+            with complementary colors.
+            There are three ways for hue factor as follows:
+                - If `hue_factor` is `float`, then hue factor is the value.
+                - If `hue_factor` is `tuple[float, float]` (i.e. a ratio range), then hue factor is randomly selected from the range.
+                - If `hue_factor` is `list[float, ... , float]` (i.e. list of angles), then hue factor is randomly selected from the list.
     """
-
     def __init__(self, hue_factor):
         ## 注意,pytorch的hue范围是[-0.5, 0.5],这里和pytorch保持一致
         _input_check_value_range_set(hue_factor)
@@ -507,7 +535,8 @@ class CVHue(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomHue(CVImageBase):
-    """Adjust hue of an image.
+    """Randomly adjust hue of an image with a predefined probability.
+
     The image hue is adjusted by converting the image to HSV and
     cyclically shifting the intensities in the hue channel (H).
     The image is then converted back to original image mode.
@@ -520,17 +549,18 @@ class CVRandomHue(CVImageBase):
     .. _Hue: https://en.wikipedia.org/wiki/Hue
 
     Args:
-        prob (float): Probability of image adjusting hue.
-        hue_factor  (float  | tuple[float, float] |  list[float, float] ) Range between -0.5 and 0.5:
-            - float:  How much to shift the hue channel. Should be in
-                    [-0.5, 0.5]. 0.5 and -0.5 give complete reversal of hue channel in
-                    HSV space in positive and negative direction respectively.
-                    0 means no shift. Therefore, both -0.5 and 0.5 will give an image
-                    with complementary colors while 0 gives the original image.
-            - tuple[float, float]: Range of the ratio of hue.
-            - list[float, ... , float] : list of the ratio of hue to be randomly chosen.
+        prob (float): probability of hue adjustment for an image.
+        hue_factor (float | tuple[float, float] | list[float, float]): 
+            how much to shift the hue channel. It should be in [-0.5, 0.5]. 
+            0 means no shift, thus gives the original image. 
+            0.5 and -0.5 give complete reversal of hue channel in HSV space in positive 
+            and negative direction respectively, thus both -0.5 and 0.5 will give an image
+            with complementary colors.
+            There are three ways for hue factor as follows:
+                - If `hue_factor` is `float`, then hue factor is the value.
+                - If `hue_factor` is `tuple[float, float]` (i.e. a ratio range), then hue factor is randomly selected from the range.
+                - If `hue_factor` is `list[float, ... , float]` (i.e. list of angles), then hue factor is randomly selected from the list.
     """
-
     def __init__(self, prob, hue_factor):
         ## 注意,pytorch的hue范围是[-0.5, 0.5],这里和pytorch保持一致
         _input_check_value_range_set(hue_factor)
@@ -555,14 +585,15 @@ class CVSharpness(CVImageBase):
     """Adjust the sharpness of an image.
 
     Args:
-        sharpness_factor (float  | tuple[float, float] |  list[float, float] ):
-            - float:  How much to adjust the sharpness. Can be
-                    any non-negative number. 0 gives a blurred image, 1 gives the
-                    original image while 2 increases the sharpness by a factor of 2.
-            - tuple[float, float]: Range of the ratio of sharpness.
-            - list[float, ... , float] : list of the ratio of sharpness to be randomly chosen.
+        sharpness_factor (float | tuple[float, float] | list[float, float]): 
+            how much to adjust the sharpness. It can be any non-negative number. 
+            0 gives a blurred image, 1 gives the original image while 2 increases 
+            the sharpness by a factor of 2.
+            There are three ways for sharpness factor as follows:
+                - If `sharpness_factor` is `float`, then sharpness factor is the value.
+                - If `sharpness_factor` is `tuple[float, float]` (i.e. a ratio range), then sharpness factor is randomly selected from the range.
+                - If `sharpness_factor` is `list[float, ... , float]` (i.e. list of angles), then sharpness factor is randomly selected from the list.
     """
-
     def __init__(self, sharpness_factor):
         super().__init__()
         _input_check_value_range_set(sharpness_factor)
@@ -633,12 +664,12 @@ class CVPosterize(CVImageBase):
     """Posterize an image by reducing the number of bits for each color channel.
 
     Args:
-        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8:
-            - int: The number of bits to keep for each channel (0-8).
-            - tuple[int, int]: Range of the number of bits.
-            - list[int, ... , int] : list of the number to be randomly chosen.
+        posterize_bins (float | tuple[float, float] | list[float, float]): number of bits to keep for each channel.
+        There are three ways for bins as follows:
+                - If `posterize_bins` is `float`, then bins are the value.
+                - If `posterize_bins` is `tuple[float, float]` (i.e. a ratio range), then bins are randomly selected from the range.
+                - If `posterize_bins` is `list[float, ... , float]` (i.e. list of angles), then bins are randomly selected from the list.
     """
-
     def __init__(self, posterize_bins):
         super().__init__()
         _input_check_value_range_set(posterize_bins, dtype='int')
@@ -662,17 +693,17 @@ class CVPosterize(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomPosterize(CVImageBase):
-    """Posterize an image by reducing the number of bits for each color channel.
+    """Randomly posterize an image by reducing the number of bits for each color channel.
 
     Args:
-        prob (float):  Probability of image adjusting posterize.
-        posterize_bins  (int  | tuple[int, int] |  list[int, int] ) Range between 0 and 8:
-            - int: The number of bits to keep for each channel (0-8).
-            - tuple[int, int]: Range of the number of bits.
-            - list[int, ... , int] : list of the number to be randomly chosen.
+        prob (float): probability of posterizing an image.
+        posterize_bins (float | tuple[float, float] | list[float, float]): number of bits to keep for each channel.
+        There are three ways for bins as follows:
+                - If `posterize_bins` is `float`, then bins are the value.
+                - If `posterize_bins` is `tuple[float, float]` (i.e. a ratio range), then bins are randomly selected from the range.
+                - If `posterize_bins` is `list[float, ... , float]` (i.e. list of angles), then bins are randomly selected from the list.
     """
-
-    def __init__(self, prob, posterize_bins=None):
+    def __init__(self, prob, posterize_bins):
         super().__init__()
         _input_check_value_range_set(posterize_bins, dtype='int')
         self.prob = prob
@@ -714,12 +745,13 @@ class CVSolarize(CVImageBase):
     """Solarize an RGB/grayscale image by inverting all pixel values above a threshold.
 
     Args:
-        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1:
-            - float: All pixels equal or above this value are inverted.
-            - tuple[float, float]: Range of values to be randomly chosen.
-            - list[float, ... , float] : list of values to be randomly chosen.
+        solarize_threshold (float | tuple[float, float] | list[float, float]): threshold for solarizing.
+            It is in range between 0 and 1. All pixels equal or above this value are inverted.
+            There are three ways for solarizing threshold as follows:
+                - If `solarize_threshold` is `float`, then solarizing threshold is the value.
+                - If `solarize_threshold` is `tuple[float, float]` (i.e. a ratio range), then solarizing threshold is randomly selected from the range.
+                - If `solarize_threshold` is `list[float, ... , float]` (i.e. list of angles), then solarizing threshold is randomly selected from the list.
     """
-
     def __init__(self, solarize_threshold):
         super().__init__()
         _input_check_value_range_set(solarize_threshold)
@@ -740,16 +772,17 @@ class CVSolarize(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomSolarize(CVImageBase):
-    """Solarize an RGB/grayscale image by inverting all pixel values above a threshold.
+    """Randomly solarize an RGB/grayscale image by inverting all pixel values above a threshold.
 
     Args:
-        prob (float):  Probability of image adjusting solarize.
-        solarize_threshold (float  | tuple[float, float] |  list[float, float] ) Range between 0 and 1:
-            - float: All pixels equal or above this value are inverted.
-            - tuple[float, float]: Range of values to be randomly chosen.
-            - list[float, ... , float] : list of values to be randomly chosen.
+        prob (float): probability of solarizing an image.
+        solarize_threshold (float | tuple[float, float] | list[float, float]): threshold for solarizing.
+            It is in range between 0 and 1. All pixels equal or above this value are inverted.
+            There are three ways for solarizing threshold as follows:
+                - If `solarize_threshold` is `float`, then solarizing threshold is the value.
+                - If `solarize_threshold` is `tuple[float, float]` (i.e. a ratio range), then solarizing threshold is randomly selected from the range.
+                - If `solarize_threshold` is `list[float, ... , float]` (i.e. list of angles), then solarizing threshold is randomly selected from the list.
     """
-
     def __init__(self, prob, solarize_threshold=None):
         super().__init__()
         _input_check_value_range_set(solarize_threshold)
@@ -791,7 +824,6 @@ class CVAutoContrast(CVImageBase):
     pixels per channel so that the lowest becomes black and the lightest
     becomes white.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -805,15 +837,13 @@ class CVAutoContrast(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomAutoContrast(CVImageBase):
-    """Maximize contrast of an image by remapping its
+    """Randomly maximize contrast of an image by remapping its
     pixels per channel so that the lowest becomes black and the lightest
     becomes white.
 
     Args:
-        prob  (float):  Probability of image adjusting contrast.
-
+        prob (float): robability of auto contrast adjustment for an image.
     """
-
     def __init__(self, prob):
         super().__init__()
         self.prob = prob
@@ -867,7 +897,6 @@ class CVEqualize(CVImageBase):
     a non-linear mapping to the input in order to create a uniform
     distribution of grayscale values in the output.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -887,14 +916,13 @@ class CVEqualize(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomEqualize(CVImageBase):
-    """Equalize the histogram of an image by applying
+    """Randomly equalize the histogram of an image by applying
     a non-linear mapping to the input in order to create a uniform
     distribution of grayscale values in the output.
 
     Args:
-        prob  (float):  Probability of image adjusting equalize.
+        prob (float): probability of equalization for an image.
     """
-
     def __init__(self, prob):
         super().__init__()
         self.prob = prob
@@ -928,7 +956,6 @@ def _invert(img):
 class CVInvert(CVImageBase):
     """Invert the colors of an RGB/grayscale image.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -943,12 +970,11 @@ class CVInvert(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomInvert(CVImageBase):
-    """Invert the colors of an RGB/grayscale image.
+    """Randomly invert the colors of an RGB/grayscale image with a predefined probability.
 
     Args:
-        prob (float):  Probability of image adjusting invert.
+        prob (float): probability of inverting for an image.
     """
-
     def __init__(self, prob):
         super().__init__()
         self.prob = prob
@@ -966,19 +992,20 @@ class CVRandomInvert(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVGaussianBlur(CVImageBase):
-    """Performs Gaussian blurring on the image by given kernel.
+    """Perform Gaussian blurring on the image by given kernel.
 
     Args:
-        sigma (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel standard deviation.
-            - tuple[float, float]: Range of the standard deviation.
-            - list[float, float]: list of the standard deviation to be randomly chosen.
-        kernel_size (int  | tuple[int, int] |  list[int, int] ):
-            - int: Gaussian kernel size.
-            - tuple[int, int]: Range of the Gaussian kernel size.
-            - list[int, int]: list of the  Gaussian kernel size to be randomly chosen.
+        sigma (float | tuple[float, float] | list[float, float]): standard deviation of Gaussian kernel.
+           There are three ways for standard deviation of Gaussian kernel as follows:
+                - If `sigma` is `float`, then standard deviation of Gaussian kernel is the value.
+                - If `sigma` is `tuple[float, float]` (i.e. a ratio range), then standard deviation of Gaussian kernel is randomly selected from the range.
+                - If `sigma` is `list[float, ... , float]` (i.e. list of angles), then standard deviation of Gaussian kernel is randomly selected from the list.
+        kernel_size (float | tuple[float, float] | list[float, float]): size of Gaussian kernel.
+            There are three ways for size of Gaussian kernel as follows:
+                - If `kernel_size` is `float`, then size of Gaussian kernel is the value.
+                - If `kernel_size` is `tuple[float, float]` (i.e. a ratio range), then size of Gaussian kernel is randomly selected from the range.
+                - If `kernel_size` is `list[float, ... , float]` (i.e. list of angles), then size of Gaussian kernel is randomly selected from the list.
     """
-
     def __init__(self, sigma, kernel_size):
         super().__init__()
         _input_check_value_range_set(sigma)
@@ -1003,20 +1030,21 @@ class CVGaussianBlur(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomGaussianBlur(CVImageBase):
-    """Performs Gaussian blurring on the image by given kernel.
+    """Randomly perform Gaussian blurring on the image by given kernel with a predefined probability.
 
     Args:
-        blur_prob (float):  Probability of image adjusting Gaussian blurring.
-        sigma (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel standard deviation.
-            - tuple[float, float]: Range of the standard deviation.
-            - list[float, float]: list of the standard deviation to be randomly chosen.
-        kernel_size (int  | tuple[int, int] |  list[int, int] ):
-            - int: Gaussian kernel size.
-            - tuple[int, int]: Range of the Gaussian kernel size.
-            - list[int, int]: list of the  Gaussian kernel size to be randomly chosen.
+        prob (float): probability of Gaussian blurring for an image.
+        sigma (float | tuple[float, float] | list[float, float]): standard deviation of Gaussian kernel.
+           There are three ways for standard deviation of Gaussian kernel as follows:
+                - If `sigma` is `float`, then standard deviation of Gaussian kernel is the value.
+                - If `sigma` is `tuple[float, float]` (i.e. a ratio range), then standard deviation of Gaussian kernel is randomly selected from the range.
+                - If `sigma` is `list[float, ... , float]` (i.e. list of angles), then standard deviation of Gaussian kernel is randomly selected from the list.
+        kernel_size (float | tuple[float, float] | list[float, float]): size of Gaussian kernel.
+            There are three ways for size of Gaussian kernel as follows:
+                - If `kernel_size` is `float`, then size of Gaussian kernel is the value.
+                - If `kernel_size` is `tuple[float, float]` (i.e. a ratio range), then size of Gaussian kernel is randomly selected from the range.
+                - If `kernel_size` is `list[float, ... , float]` (i.e. list of angles), then size of Gaussian kernel is randomly selected from the list.
     """
-
     def __init__(self, prob, sigma, kernel_size):
         super().__init__()
         _input_check_value_range_set(sigma)
@@ -1057,19 +1085,21 @@ def _gaussian_noise(image, std, mean):
 
 @TRANSFORMS.register_module()
 class CVGaussianNoise(CVImageBase):
-    """Performs Gaussian noise on the image by given std.
+    """Perform Gaussian noise on the image by given std.
 
     Args:
-        std (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel standard deviation.
-            - tuple[float, float]: Range of the standard deviation.
-            - list[float, float]: list of the standard deviation to be randomly chosen.
-        mean (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel mean.
-            - tuple[float, float]: Range of the Gaussian kernel mean.
-            - list[float, float]: list of the Gaussian kernel mean to be randomly chosen.
+        std (float | tuple[float, float] | list[float, float]): standard deviation of Gaussian kernel.
+            There are three ways for standard deviation of Gaussian kernel as follows:
+                - If `std` is `float`, then standard deviation of Gaussian kernel is the value.
+                - If `std` is `tuple[float, float]` (i.e. a ratio range), then standard deviation of Gaussian kernel is randomly selected from the range.
+                - If `std` is `list[float, ... , float]` (i.e. list of angles), then standard deviation of Gaussian kernel is randomly selected from the list.
+        mean (float | tuple[float, float] | list[float, float]): mean of Gaussian kernel.
+            There are three ways for mean of Gaussian kernel as follows:
+                - If `mean` is `float`, then mean of Gaussian kernel is the value.
+                - If `mean` is `tuple[float, float]` (i.e. a ratio range), then mean of Gaussian kernel is randomly selected from the range.
+                - If `mean` is `list[float, ... , float]` (i.e. list of angles), then mean of Gaussian kernel is randomly selected from the list.
+            Default: `0.0`.
     """
-
     def __init__(self, std, mean=0.0):
         super().__init__()
         _input_check_value_range_set(std)
@@ -1092,20 +1122,22 @@ class CVGaussianNoise(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomGaussianNoise(CVImageBase):
-    """Performs Gaussian noise on the image by given std.
+    """Randomly perform Gaussian noise on the image by given std with a predefined probability.
 
     Args:
-        prob ( float):  Probability of image adjusting Gaussian noise.
-        std (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel standard deviation.
-            - tuple[float, float]: Range of the standard deviation.
-            - list[float, float]: list of the standard deviation to be randomly chosen.
-        mean (float  | tuple[float, float] |  list[float, float] ):
-            - float: Gaussian kernel mean.
-            - tuple[float, float]: Range of the Gaussian kernel mean.
-            - list[float, float]: list of the Gaussian kernel mean to be randomly chosen.
+        prob ( float): probability of adding Gaussian noise for an image.
+        std (float | tuple[float, float] | list[float, float]): standard deviation of Gaussian kernel.
+            There are three ways for standard deviation of Gaussian kernel as follows:
+                - If `std` is `float`, then standard deviation of Gaussian kernel is the value.
+                - If `std` is `tuple[float, float]` (i.e. a ratio range), then standard deviation of Gaussian kernel is randomly selected from the range.
+                - If `std` is `list[float, ... , float]` (i.e. list of angles), then standard deviation of Gaussian kernel is randomly selected from the list.
+        mean (float | tuple[float, float] | list[float, float]): mean of Gaussian kernel.
+            There are three ways for mean of Gaussian kernel as follows:
+                - If `mean` is `float`, then mean of Gaussian kernel is the value.
+                - If `mean` is `tuple[float, float]` (i.e. a ratio range), then mean of Gaussian kernel is randomly selected from the range.
+                - If `mean` is `list[float, ... , float]` (i.e. list of angles), then mean of Gaussian kernel is randomly selected from the list.
+            Default: `0.0`.
     """
-
     def __init__(self, prob, std, mean=0.0):
         super().__init__()
         _input_check_value_range_set(std)
@@ -1134,19 +1166,15 @@ def _lighting(image, alphastd, eigvec, eigval):
         return image
     # alpha = np.array([0.4638, 0.2112, 0.1410])
     alpha = np.array([random.normalvariate(0, alphastd, ) for i in range(3)])  # 差异来自alpha的生成,torch的随机数和random的随机数不一致
-
     rgb = np.sum(eigvec * alpha * eigval, axis=1)
-
     image = image + rgb
-
     return image
 
 
 @TRANSFORMS.register_module()
 class CVLighting(CVImageBase):
-    """Lighting noise(AlexNet - style PCA - based noise)
+    """Lighting noise (AlexNet - style PCA - based noise)
     """
-
     def __init__(self, alphastd, eigval, eigvec):
         super().__init__()
         _input_check_value_range_set(alphastd)
@@ -1174,10 +1202,10 @@ class CVLighting(CVImageBase):
 
 @TRANSFORMS.register_module()
 class CVRandomLighting(CVImageBase):
-    """Lighting noise(AlexNet - style PCA - based noise)
+    """Lighting noise (AlexNet - style PCA - based noise)
 
     Args:
-        prob (float):  Probability of image adjusting Lighting noise.
+        prob (float): probability of image Lighting.
     """
 
     def __init__(self, prob):

@@ -6,7 +6,7 @@ from typing import List
 from ...builder import HEADS
 
 
-__all__ = ("ClassificationMultiHeads")
+__all__ = ["ClassificationMultiHeads"]
 
 
 @HEADS.register_module()

@@ -6,7 +6,7 @@ import numbers
 from ...builder import NETS
 
 
-__all__ = ("VGGLike", "vgg_like_v1", "vgg_like_v2", "vgg_like_v3")
+__all__ = ["VGGLike", "vgg_like_v1", "vgg_like_v2", "vgg_like_v3"]
 
 
 class ConvNormActivationDrop(nn.Module):

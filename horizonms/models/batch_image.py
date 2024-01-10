@@ -5,14 +5,15 @@ from torch.jit.annotations import List, Tuple, Dict, Optional
 from .. import transforms as T
 
 
-__all__ = ("BatchImage")
+__all__ = ["BatchImage"]
 
 
 class BatchImage(nn.Module):
     r"""Convert a list of (input, target) into batch format such that it can be used by network.
     
     Args:
-        size_divisible (int): the size of the input is converted to the ceil number which is divisible by size_divisible.
+        size_divisible (int): it determines the size of the batched input such that 
+            it is divisible by `size_divisible` and equal to or larger than the size of the input.
     """
 
     def __init__(self, size_divisible: int = 32):
@@ -60,7 +61,7 @@ class BatchImage(nn.Module):
                 targets_batch[key] = T.TargetStructure(type=key_type, value=value)
             return images, targets_batch
 
-    def max_by_axis(self, the_list):
+    def _max_by_axis(self, the_list):
         # type: (List[List[int]]) -> List[int]
         maxes = the_list[0]
         for sublist in the_list[1:]:
@@ -69,7 +70,14 @@ class BatchImage(nn.Module):
         return maxes
 
     def batch_images(self, images, size_divisible=32):
-        max_size = self.max_by_axis([list(img.shape) for img in images])
+        """Convert list of images into a batch.
+
+        Args:
+            image (List[Tensor]): list of images.
+            size_divisible (int): it determines the size of the batched input such that 
+                it is divisible by `size_divisible` and equal to or larger than the size of the input.
+        """
+        max_size = self._max_by_axis([list(img.shape) for img in images])
         stride = float(size_divisible)
         max_size = list(max_size)
         max_size[1] = int(math.ceil(float(max_size[1]) / stride) * stride)

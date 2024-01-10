@@ -2,8 +2,8 @@ from copy import deepcopy
 from .utils import Registry
 
 
-__all__ = ("build_net", "build_detector", "build_backbone", "build_neck",
-           "build_head", "build_loss", "build_metric", "build_transforms")
+__all__ = ["build_net", "build_detector", "build_backbone", "build_neck",
+           "build_head", "build_loss", "build_metric", "build_transforms"]
 
 
 MODELS = Registry('models')

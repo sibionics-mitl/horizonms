@@ -13,9 +13,9 @@ from . import metrics
 from . import transforms
 
 
-__all__ = ("MODELS", "NETS", "BACKBONES", 
+__all__ = ["MODELS", "NETS", "BACKBONES", 
            "NECKS", "HEADS", "LOSSES", "METRICS", "TRANSFORMS",
            "build_net", "build_backbone", "build_neck",
            "build_head", "build_loss", "build_metric",
            "build_losses_list", "build_metrics_list",
-           "build_transforms")
+           "build_transforms"]

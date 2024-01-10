@@ -7,7 +7,10 @@ from collections import OrderedDict
 import numpy as np
 
 
-def summary(model, input_size, batch_size=-1, device="cuda"):
+__all__ = ["model_summary"]
+
+
+def model_summary(model, input_size, batch_size=-1, device="cuda"):
 
     def register_hook(module):
 

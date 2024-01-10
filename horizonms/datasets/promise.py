@@ -7,7 +7,7 @@ import numpy as np
 from .base import BaseDataset
 
 
-__all__ = ("PromiseSegmentation")
+__all__ = ["PromiseSegmentation"]
 
 
 class PromiseSegmentation(BaseDataset):
@@ -51,12 +51,13 @@ class PromiseSegmentation(BaseDataset):
             self.random_margin = np.random.randint(0, self.margin+1, size=(len(self.images), 4))
         
     def load_images(self, folder: str, in_memory: bool, quiet: bool = False):
-        r"""load images from folder.
+        r"""Load images from folder.
 
         Args:
             folder (folder): name of the image folder.
             in_memory (bool): if True, all images are read to memory.
             quiet (bool): if True, do not print log info.
+
         Returns:
             List[str]: list of file names.
         """
@@ -73,10 +74,11 @@ class PromiseSegmentation(BaseDataset):
         return files
 
     def getitem(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
         
         Args:
             index (int): index of sample in the dataset.
+
         Returns:
             tuple: Tuple (image, target).
         """
@@ -142,6 +144,9 @@ class PromiseSegmentation(BaseDataset):
         return obj_seg, obj_coords, errs
 
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
+
+        Returns:
+            List[str]: list of image names.
         """
         return self.image_names

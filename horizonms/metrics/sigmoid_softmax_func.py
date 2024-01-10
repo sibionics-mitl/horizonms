@@ -1,7 +1,7 @@
 import torch
 
 
-__all__ = ("dice_coefficient", "iou_score")
+__all__ = ["dice_coefficient", "iou_score"]
 
 
 def dice_coefficient(ytrue, ypred, smooth=1e-6):
@@ -11,6 +11,9 @@ def dice_coefficient(ytrue, ypred, smooth=1e-6):
         ytrue (Tensor): ground truth.
         ypred (Tensor): prediction.
         epsilon (float): a small number for the stability of metric.
+
+    Returns:
+        Tensor: dice coefficient value.
     """
     if ytrue.dim() == 4:
         dims = (0, 2, 3)
@@ -30,6 +33,9 @@ def iou_score(ytrue, ypred, smooth=1e-6):
         ytrue (Tensor): ground truth.
         ypred (Tensor): prediction.
         epsilon (float): a small number for the stability of metric.
+
+    Returns:
+        Tensor: IoU value.
     """
     if ytrue.dim() == 4:
         dims = (0, 2, 3)

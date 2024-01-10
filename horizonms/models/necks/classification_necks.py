@@ -6,7 +6,7 @@ from typing import List
 from ...builder import NECKS
 
 
-__all__ = ("ClassificationPoolingNecks")
+__all__ = ["ClassificationPoolingNecks"]
 
 
 @NECKS.register_module()

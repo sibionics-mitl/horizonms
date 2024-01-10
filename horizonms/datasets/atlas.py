@@ -8,7 +8,7 @@ import numpy as np
 from skimage.morphology import remove_small_objects
 
 
-__all__ = ("AtlasSegmentation")
+__all__ = ["AtlasSegmentation"]
 
 
 class AtlasSegmentation(BaseDataset):
@@ -23,6 +23,11 @@ class AtlasSegmentation(BaseDataset):
         transforms_pt (callable, optional): a data augmentation object that is implemented by PyTorch.
         transforms_cv (callable, optional): a data augmentation object that is implemented by OpenCV.
         to_tensor (bool): if True, converts the samples into PyTorch Tensor.
+
+    Attributes:
+        image_names (List[str]): list of image names in the dataset.
+        margin (int): number of margin is added to the bounding boxes of the object.
+        random (bool): if True, the margin is fixed; otherwise, it is randomly generated.
     """
     def __init__(
             self,
@@ -52,14 +57,15 @@ class AtlasSegmentation(BaseDataset):
             self.random_margin = np.random.randint(0, self.margin+1, size=(len(self.image_names), 4))
             
     def load_images(self, folder: str, in_memory: bool, quiet: bool = False):
-        r"""loads images from folder.
+        r"""Load all images in the dataset from a folder.
 
         Args:
             folder (folder): name of the image folder.
             in_memory (bool): if True, all images are read to memory.
             quiet (bool): if True, do not print log info.
+
         Returns:
-            List[str]: list of file names.
+            List[str]: list of image file names.
         """
         def load(folder, filename):
             p = os.path.join(folder, filename)
@@ -75,10 +81,11 @@ class AtlasSegmentation(BaseDataset):
         return files
 
     def getitem(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
 
         Args:
             index (int): index of sample in the dataset.
+
         Returns:
             tuple: Tuple (image, target).
         """
@@ -149,6 +156,9 @@ class AtlasSegmentation(BaseDataset):
         return obj_seg, obj_coords, errs
 
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
+
+        Returns:
+            List[str]: a list of image names in the dataset.
         """
         return self.image_names

@@ -10,7 +10,7 @@ from ...builder import MODELS, build_net, build_losses_list, build_metrics_list
 import itertools
 
 
-__all__ = ("Detection")
+__all__ = ["Detection"]
 
 
 @MODELS.register_module()

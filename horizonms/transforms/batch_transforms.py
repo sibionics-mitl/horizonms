@@ -1,13 +1,12 @@
-from tkinter import W
 import torch
 from torch import Tensor
-from typing import Tuple
+from typing import Tuple, List
 import numpy as np
 import torch.nn.functional as F
 from ..builder import TRANSFORMS
 
 
-__all__ = ("ToOnehotLabels", "Mixup", "SoftmaxLabelSmoothing", "SigmoidLabelSmoothing")
+__all__ = ["ToOnehotLabels", "Mixup", "SoftmaxLabelSmoothing", "SigmoidLabelSmoothing"]
 
 
 @TRANSFORMS.register_module()
@@ -16,8 +15,9 @@ class ToOnehotLabels(torch.nn.Module):
 
     Args:
         num_classes (int): number of classes.
+        index (List[int]): index of target for one-hot encoding.
     """
-    def __init__(self, num_classes, index=None):
+    def __init__(self, num_classes: int, index: List[int] = None):
         super().__init__()
         self.num_classes = num_classes
         self.index = index
@@ -41,8 +41,9 @@ class SoftmaxLabelSmoothing(torch.nn.Module):
 
     Args:
         smoothing (float): smoothing value.
+        index (List[int]): index of target for one-hot encoding.
     """
-    def __init__(self, smoothing=0.1, index=None):
+    def __init__(self, smoothing:float = 0.1, index: List[int] = None):
         super().__init__()
         if isinstance(smoothing, list):
             assert len(smoothing) == len(index), "The length of smoothing and that of index have to be same."
@@ -76,8 +77,9 @@ class SigmoidLabelSmoothing(torch.nn.Module):
 
     Args:
         smoothing (float): smoothing value.
+        index (List[int]): index of target for one-hot encoding.
     """
-    def __init__(self, smoothing=0.1, index=None):
+    def __init__(self, smoothing: float = 0.1, index: List[int] = None):
         assert 0 < smoothing < 1.0
         if isinstance(smoothing, list):
             len(smoothing) == len(index)
@@ -109,8 +111,9 @@ class Mixup(torch.nn.Module):
 
     Args:
         alpha (float): mixup parameter.
+        index (List[int]): index of target for one-hot encoding.
     """
-    def __init__(self, alpha=0.2, index=None):
+    def __init__(self, alpha: float = 0.2, index: List[int] = None):
         super().__init__()
         self.alpha = alpha
         self.index = index

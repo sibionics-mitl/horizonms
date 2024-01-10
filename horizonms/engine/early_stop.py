@@ -1,8 +1,18 @@
 import math
 
 
+__all__ = ["EarlyStopping"]
+
+
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10, percentage=False):
+        """
+        Args:
+            mode (str): improvement definition. It has to be `'min'` or `'max'`.
+            min_delta (float): minimum change in the monitored quantity to qualify as an improvement, i.e. an absolute change of less than min_delta, will count as no improvement.
+            patience (int): number of epochs with no improvement after which training will be stopped.
+            percentage (bool): if True, relative improvement is considered.
+        """
         self.mode = mode
         self.min_delta = min_delta
         self.patience = patience

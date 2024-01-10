@@ -4,14 +4,14 @@ from .base import BackboneWithFPN
 from ...builder import BACKBONES
 
 
-__all__ = ("vgg_fpn_backbone", "resnet_fpn_backbone")
+__all__ = ["vgg_fpn_backbone", "resnet_fpn_backbone"]
 
 
 @BACKBONES.register_module()
 def vgg_fpn_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.',
                      pyramid_levels=[2, 3, 4, 5, 6, 7], 
                      trainable_stages=5, fpn_out_channels=256, **kwargs):
-    r"""It extracts a backbone from VGG network and adds FPN to the backbone.
+    r"""Extract backbone from VGG network and adds FPN to the backbone.
     
     Args:
         backbone_name (str): the name of backbone.
@@ -22,6 +22,9 @@ def vgg_fpn_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.'
         trainable_stages (int): number of trainable (not frozen) stages starting from final stage.
             Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.
         fpn_out_channels (int): the number of channels for the FPN output.
+
+    Returns:
+        nn.Module: extracted backbone.
     """  
     vgg_names = ['VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16',
                  'vgg16_bn', 'vgg19_bn', 'vgg19']
@@ -64,7 +67,7 @@ def vgg_fpn_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.'
 def resnet_fpn_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.',
                         pyramid_levels=[2, 3, 4, 5, 6, 7], 
                         trainable_stages=None, fpn_out_channels=256, **kwargs):
-    r"""It extracts a backbone from VGG network and adds FPN to the backbone.
+    r"""Extract backbone from VGG network and adds FPN to the backbone.
     
     Args:
         backbone_name (str): the name of backbone.
@@ -75,7 +78,10 @@ def resnet_fpn_backbone(backbone_name, input_dim=3, pretrained=False, model_dir=
         trainable_stages (int): number of trainable (not frozen) stages starting from final stage.
             Valid values are between 1 and 5, with 5 meaning all backbone layers are trainable.
         fpn_out_channels (int): the number of channels for the FPN output.
-    """   
+
+    Returns:
+        nn.Module: extracted backbone.
+    """ 
     resnet_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'resnext50_32x4d', 
                     'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2']
     if backbone_name not in resnet_names:

@@ -15,7 +15,7 @@ from torch.hub import load_state_dict_from_url
 from ...builder import NETS
 
 
-__all__ = ("ResnetRS", "resnetrs50", "resnetrs101", "resnetrs152", "resnetrs200")
+__all__ = ["ResnetRS", "resnetrs50", "resnetrs101", "resnetrs152", "resnetrs200"]
 
 
 model_urls = {

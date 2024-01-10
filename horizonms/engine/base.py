@@ -1,3 +1,6 @@
+__all__ = ["CheckpointMetric", "save_checkpoints_update"]
+
+
 class CheckpointMetric():
     r"""Update metric for checkpoint. Three modes can be set for each metric, that is, `'min'`, `'max'`, and `'all'`.
 
@@ -18,16 +21,24 @@ class CheckpointMetric():
             self.name = 'save_all'       
 
     def value_update(self, value):
-        r"""Metric value updates.
+        r"""Update metric value.
 
         Args:
-            value (float): the current value for updates.
+            value (float): current value for update.
         """
         self.value = value            
 
 
 def save_checkpoints_update(save_checkpoints, val_metric_logger):
-    r"""update metric for checkpoints
+    r"""Update metric for checkpoints.
+
+    Args:
+        save_checkpoints (List[CheckpointMetric]): list of optimal metrics for checkpoint.
+        val_metric_logger (MetricLogger): validation metric logger.
+
+    Returns:
+        List[str]: list of metric names for optimal metics at the current checkpoint.
+        List[CheckpointMetric]: list of optimal metrics for checkpoint.
     """
     checkpoint_keys = []
     for checkpoint in save_checkpoints:

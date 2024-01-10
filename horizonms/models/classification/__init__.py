@@ -2,9 +2,9 @@ from .classification_base import BaseClassification, ClassificationNetFromModule
 from .classification import Classification
 
 
-__all__ = ("BaseClassification", "ClassificationNetFromModules", "get_classification_net", 
+__all__ = ["BaseClassification", "ClassificationNetFromModules", "get_classification_net", 
            "Classification",
-           )
+]
 
 
 

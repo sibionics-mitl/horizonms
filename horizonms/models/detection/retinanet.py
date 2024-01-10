@@ -8,7 +8,7 @@ from ...builder import NETS, HEADS
 from ... import build_backbone, build_neck, build_head
 
 
-__all__ = ("Retinanet", "RetinanetHead")
+__all__ = ["Retinanet", "RetinanetHead"]
 
 
 @NETS.register_module()

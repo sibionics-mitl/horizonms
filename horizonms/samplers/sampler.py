@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from typing import Iterator, List, Union
 
 
-__all__ = ("BalancedSampler")
+__all__ = ["BalancedSampler"]
 
 
 class BalancedSampler(Sampler[int]):

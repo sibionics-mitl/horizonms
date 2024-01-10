@@ -5,20 +5,23 @@ from ..nets import resnet, vgg, densenet, mobilenetv2
 from ...builder import BACKBONES
 
 
-__all__ = ("vgg_unet_backbone", "resnet_unet_backbone", 
-           "densenet_unet_backbone", "mobilenetv2_unet_backbone")
+__all__ = ["vgg_unet_backbone", "resnet_unet_backbone", 
+           "densenet_unet_backbone", "mobilenetv2_unet_backbone"]
 
 
 @BACKBONES.register_module()
 def vgg_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.', trainable_layers=10):
-    r"""It extracts a VGG backbone for UNet.
+    r"""Extract VGG backbone for UNet.
     
     Args:
-        backbone_name (str): the name of backbone.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_layers (int): the number of trainable (not frozen) layers starting from the last layer.
+        model_dir (str): directory to save the pretrained weights.
+        trainable_layers (int): number of trainable (not frozen) layers starting from the last layer.
+    
+    Returns:
+        nn.Module: extracted backbone.
     """   
     backbone = vgg.__dict__[backbone_name](input_dim, pretrained=pretrained, model_dir=model_dir)
     backbone = backbone.features
@@ -53,15 +56,18 @@ def vgg_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.
 @BACKBONES.register_module()
 def resnet_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.',
                     norm_layer=misc_nn_ops.FrozenBatchNorm2d, trainable_layers=3):
-    r"""It extracts a ResNet backbone for UNet.
+    r"""Extract ResNet backbone for UNet.
     
     Args:
-        backbone_name (str): the name of backbone.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_layers (int): the number of trainable (not frozen) stages starting from the last stage.
-    """   
+        model_dir (str): directory to save the pretrained weights.
+        trainable_layers (int): number of trainable (not frozen) layers starting from the last layer.
+    
+    Returns:
+        nn.Module: extracted backbone.
+    """
     backbone = resnet.__dict__[backbone_name](input_dim, pretrained=pretrained, 
                                               model_dir=model_dir, norm_layer=norm_layer)
     # print(backbone)
@@ -84,15 +90,18 @@ def resnet_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir
 
 @BACKBONES.register_module()
 def densenet_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.', trainable_layers=3):
-    r"""It extracts a DenseNet backbone for UNet.
+    r"""Extract DenseNet backbone for UNet.
     
     Args:
-        backbone_name (str): the name of backbone.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_layers (int): the number of trainable (not frozen) stages starting from the last stage.
-    """  
+        model_dir (str): directory to save the pretrained weights.
+        trainable_layers (int): number of trainable (not frozen) layers starting from the last layer.
+    
+    Returns:
+        nn.Module: extracted backbone.
+    """
     backbone = densenet.__dict__[backbone_name](input_dim, pretrained=pretrained, model_dir=model_dir)
     backbone = backbone.features
 
@@ -118,15 +127,18 @@ def densenet_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_d
 
 @BACKBONES.register_module()
 def mobilenetv2_unet_backbone(backbone_name, input_dim=3, pretrained=False, model_dir='.', trainable_layers=3):
-    r"""It extracts a MobileNetv2 backbone for UNet.
+    r"""Extract MobilenetV2 backbone for UNet.
     
     Args:
-        backbone_name (str): the name of backbone.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_layers (int): the number of trainable (not frozen) stages starting from the last stage.
-    """  
+        model_dir (str): directory to save the pretrained weights.
+        trainable_layers (int): number of trainable (not frozen) layers starting from the last layer.
+    
+    Returns:
+        nn.Module: extracted backbone.
+    """
     in_channels_list = [16,24,32,96,320]
     if backbone_name=='mobilenetv2_1.0':
         width_mult=1.0

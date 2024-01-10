@@ -4,7 +4,7 @@ import torch.nn as nn
 from ...builder import NETS
 
 
-__all__ = ("ResidualUNet")
+__all__ = ["ResidualUNet"]
 
 
 def maxpool():

@@ -4,7 +4,7 @@ from ..model_base import BaseModel
 from ...builder import build_net, MODELS
 
 
-__all__ = ("BaseSegmentation", "get_segmentation_net")
+__all__ = ["BaseSegmentation", "get_segmentation_net"]
 
 
 MODELS.register_module()
@@ -30,6 +30,12 @@ class BaseSegmentation(BaseModel, ABC):
         self.batch_transforms = batch_transforms
 
     def preprocessing_input(self, images, targets=None):
+        """Preprocessing images and targets such that they can be used by the model.
+
+        Args:
+            images (List[Tensor]): list of images.
+            targets (Dict): list of targets. Default: `None`.
+        """
         if self.batch_image is not None:
             images, targets = self.batch_image(images, targets)
         if self.batch_transforms is not None:
@@ -80,32 +86,12 @@ class BaseSegmentation(BaseModel, ABC):
         return ypred
 
 
-# MODELS.register_module()
-# class SegmentationNetFromModules(torch.nn.Module):
-#     def __init__(self, cfg):
-#         super(SegmentationNetFromModules, self).__init__()
-#         self.keys = list(cfg.keys())
-#         assert "encoder" in self.keys, "'encoder' has to be in cfg!"
-#         self.backbone = build_backbone(cfg["backbone"])
-#         in_channels = self.backbone.out_channels
-#         if "neck" in self.keys:
-#             self.neck = build_neck(cfg["neck"])
-#             if hasattr(self.neck, "out_channels"):
-#                 in_channels = self.neck.out_channels
-#         if "deconder" in self.keys:
-#             cfg_head = cfg["head"]
-#             cfg_head.update(dict(input_dim=in_channels))
-#             self.head = build_head(cfg_head)
-
-#     def forward(self, x):
-#         x = self.backbone(x)
-#         if "neck" in self.keys:
-#             x = self.neck(x)
-#         x = self.head(x)
-#         return x
-
-
 def get_segmentation_net(cfg):
+    """Get segmentation network by its configuration.
+
+    Args: 
+        cfg (Dict): configuration of segmentation network.
+    """
     keys = list(cfg.keys())
     assert ("name" in keys)
     net = build_net(cfg)

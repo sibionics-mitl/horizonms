@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Union
 from torch import Tensor
 import numbers
 import numpy as np

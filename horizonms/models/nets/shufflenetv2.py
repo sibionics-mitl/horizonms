@@ -6,8 +6,8 @@ from typing import Callable, Any, List
 from ...builder import NETS
 
 
-__all__ = ("ShuffleNetV2", "shufflenet_v2_x0_5", "shufflenet_v2_x1_0",
-           "shufflenet_v2_x1_5", "shufflenet_v2_x2_0")
+__all__ = ["ShuffleNetV2", "shufflenet_v2_x0_5", "shufflenet_v2_x1_0",
+           "shufflenet_v2_x1_5", "shufflenet_v2_x2_0"]
 
 
 model_urls = {

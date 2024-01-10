@@ -1,4 +1,5 @@
 .vscode
+docs_preview
 
 __pycache__/
 **/__pycache__

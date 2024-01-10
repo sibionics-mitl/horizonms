@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from abc import ABC, abstractmethod
 
 
-__all__ = ("BaseModel")
+__all__ = ["BaseModel"]
 
 
 class BaseModel(nn.Module, ABC):
@@ -26,24 +26,53 @@ class BaseModel(nn.Module, ABC):
 
     @abstractmethod
     def calculate_losses(self, targets, ypred):
+        """Calculate losses for the model.
+
+        Args:
+            targets (Dict): targets of samples in a batch.
+            ypred (Tensor | Tuple[Tensor]): network predictions of samples in a batch.
+        """
         pass 
 
     @abstractmethod
     def calculate_metrics(self, targets, ypred):
+        """Calculate evaluation metrics for the model.
+
+        Args:
+            targets (Dict): targets of samples in a batch.
+            ypred (Tensor | Tuple[Tensor]): network predictions of samples in a batch.
+        """
         pass
 
     @abstractmethod
     def forward_train(self, images, targets):
+        """Train the model.
+
+        Args:
+            images (Tensor): values of samples in a batch.
+            targets (Dict): targets of samples in a batch.
+        """
         pass
 
     @abstractmethod
     @torch.no_grad()
     def test_one_batch(self, images, targets):
+        """Test samples in a batch.
+
+        Args:
+            images (Tensor): values of samples in a batch.
+            targets (Dict): targets of samples in a batch.
+        """
         pass
 
     @abstractmethod
     @torch.no_grad()
     def predict_one_batch(self, images):
+        """Predict samples in a batch.
+
+        Args:
+            images (Tensor): values of samples in a batch.
+        """
         pass
 
     def forward(self, images):
@@ -61,6 +90,12 @@ class BaseModel(nn.Module, ABC):
         return ypred
 
     def load_model(self, model_file, data_parallel=False):
+        """Load pretrained model.
+
+        Args:
+            model_file (str): name of pretrained model.
+            data_parallel (bool): if True, model parallel is used.
+        """
         if data_parallel: # the model is saved in data paralle mode
             self.net = torch.nn.DataParallel(self.net)
 

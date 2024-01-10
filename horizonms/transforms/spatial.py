@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, List, Optional, Sequence
+from typing import Tuple, List, Optional, Sequence, Union
 import torch
 from torch import Tensor
 from torchvision.transforms import functional as F, InterpolationMode
@@ -10,25 +10,43 @@ from .utils import setup_size, _input_check_value_range_set, _input_get_value_ra
 from ..builder import TRANSFORMS
 
 
-__all__ = ("SpatialBase", "ShearX", "ShearY", "TranslateX", "TranslateY",
+__all__ = ["SpatialBase", "ShearX", "ShearY", "TranslateX", "TranslateY",
            "CropX", "CropY", "Fliplr", "Flipud", "Rotate", "Scale",
-           "Resize", "ResizeWidth", "RandomResizedCrop", "RandomCrop",
+           "Resize", "ResizeWidth", "RandomResizedCrop", "RandomMaskCrop",
            "ImagePadding", "ImageHeightPaddingOrCrop",
            "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
-           "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate", "RandomScale")
+           "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate", "RandomScale"
+]
 
 
 class SpatialBase(ABC, torch.nn.Module):
-
+    """Base for spatial operators implemented by PyTorch.
+    """
     @abstractmethod
     def calculate_image(self, image):
+        """conduct transformation for image.
+
+        Args:
+            image (Tensor): image data with dimension CxHxW.
+        """
         pass
 
     @abstractmethod
     def calculate_target(self, target):
+        """conduct transformation for target.
+
+        Args:
+            target (Dict): target data in dictionary format.
+        """
         pass
 
     def forward(self, image, target=None):
+        """implement transformation for image and/or target.
+
+        Args:
+            image (Tensor): image data with dimension CxHxW.
+            target (Dict): target data in dictionary format. Default: `None`.
+        """
         image = self.calculate_image(image)
         if target is None:
             return image
@@ -80,19 +98,19 @@ def _shear_x_target(target, shear_degree):
 
 @TRANSFORMS.register_module()
 class ShearX(SpatialBase):
-    """Shear images along x-axis (width).
+    """Shear image along x-axis (width).
 
     Args:
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, shear_degree: float,
+    def __init__(self, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -115,20 +133,20 @@ class ShearX(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomShearX(SpatialBase):
-    """Shear images along x-axis (width).
+    """Randomly shear image along x-axis (width) with a predefined probability.
 
     Args:
-        prob (float):probability of the image being sheared.
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being sheared.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob: float, shear_degree: Tuple[float] = None,
+    def __init__(self, prob: float, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -192,19 +210,19 @@ def _shear_y_target(target, shear_degree):
 
 @TRANSFORMS.register_module()
 class ShearY(SpatialBase):
-    """Shear images along y-axis (height).
+    """Shear image along y-axis (height).
 
     Args:
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, shear_degree,
+    def __init__(self, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -227,19 +245,20 @@ class ShearY(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomShearY(SpatialBase):
-    """Shear images along y-axis (height).
+    """Randomly shear image along y-axis (height) with a predefined probability.
 
     Args:
-        shear_degree (float  | tuple[float, float] |  list[float, float] ):
-                float: Shear angle in degree between -180 and 180, clockwise direction.
-                        When shear_degree is not None, it is used for image shearing.
-                tuple[float, float]: Range of shear angle in degree.
-                list[float, ... , float] : list of the ratio of shear angle to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        prob (float): probability of the image being sheared.
+        shear_degree (float | tuple[float, float] | list[float]): shear angle in degree between -180 and 180, clockwise direction.
+            There are three ways for shear angle as follows:
+                - If `shear_degree` is `float`, then share angle is the value.
+                - If `shear_degree` is `tuple[float, float]` (i.e. an angle range), then shear angle is randomly selected from the range.
+                - If `shear_degree` is `list[float, ... , float]` (i.e. list of angles), then shear angle is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob, shear_degree: Tuple[float] = None,
+    def __init__(self, prob, shear_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(shear_degree)
@@ -314,20 +333,22 @@ def _translate_x_target(target, translate_ratio, image_width):
 
 @TRANSFORMS.register_module()
 class TranslateX(SpatialBase):
-    """Translate images along x-axis (width), images size = (h, w).
+    """Translate image along x-axis (width).
 
     Args:
-        translate_ratio (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
-        When translate_ratio is positve, the image moves to the right.
-        When translate_ratio is negative, the image moves to the left.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
+    
+    When `translate_ratio` is positve, the image moves to the right.    
+    When `translate_ratio` is negative, the image moves to the left.
     """
-
-    def __init__(self, translate_ratio: float = 0.0,
+    def __init__(self, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(translate_ratio)
@@ -351,20 +372,23 @@ class TranslateX(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomTranslateX(SpatialBase):
-    """Translate images along x-axis (width), images size = (h, w).
+    """Randomly translate image along x-axis (width) with a predefined probability.
 
     Args:
-        translate_ratio (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
-        When translate_ratio is positve, the image moves to the right.
-        When translate_ratio is negative, the image moves to the left.
-    """
+        prob (float): probability of the image being translated.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-    def __init__(self, prob: float = 0.0, translate_ratio=None,
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
+    """
+    def __init__(self, prob: float, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(translate_ratio)
@@ -440,20 +464,22 @@ def _translate_y_target(target, translate_ratio, image_height):
 
 @TRANSFORMS.register_module()
 class TranslateY(SpatialBase):
-    """Translate images along y-axis (height), images size = (h, w).
+    """Translate image along y-axis (height).
 
     Args:
-        translate_ratio  (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional) - Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
-        When translate_ratio is positve, the image moves down.
-        When translate_ratio is negative, the image moves up.
-    """
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value.
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-    def __init__(self, translate_ratio,
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
+    """
+    def __init__(self, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
 
@@ -478,21 +504,23 @@ class TranslateY(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomTranslateY(SpatialBase):
-    """Translate images along y-axis (height), images size = (h, w).
+    """Randomly translate image along y-axis (height) with a predefined probability. 
 
     Args:
-        translate_prob (float): Probability of the image being translated.
-        translate_ratio  (float  | tuple[float, float] |  list[float, float] ):
-                float: Ratio of translation in the range of [0, 1].
-                tuple[float, float]: Range of the ratio of translation.
-                list[float, ... , float] : list of the ratio of translation to be randomly chosen.
-        fill (sequence or number, optional) - Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
-        When translate_ratio is positve, the image moves down.
-        When translate_ratio is negative, the image moves up.
-    """
+        prob (float): probability of the image being translated.
+        translate_ratio (float | tuple[float, float] | list[float]): ratio of translation in range between 0 and 1.
+            There are three ways for translation ratio as follows:
+                - If `translate_ratio` is `float`, then ratio of translation is the value. 
+                - If `translate_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of translation is randomly selected from the range.
+                - If `translate_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of translation is randomly selected from the list.
+        fill (sequence or number, optional): pixel fill value for the area outside the
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
 
-    def __init__(self, prob, translate_ratio=None,
+    When `translate_ratio` is positve, the image moves to the right.
+    When `translate_ratio` is negative, the image moves to the left.
+    """
+    def __init__(self, prob: float, translate_ratio: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(translate_ratio)
@@ -574,21 +602,20 @@ def _crop_x_target(target, crop_ratio, image_width):
 
 @TRANSFORMS.register_module()
 class CropX(SpatialBase):
-    """Crop images along x-axis (width), images size = (h, w).
+    """Crop image along x-axis (width).
 
     Args:
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                   When crop_ratio is not None, it crops an image to (h, crop_ratio*w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (h, ratio*w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-        When crop_ratio is positve, the left portion of the image is cropped out, and the right portion is kept.
-        When crop_ratio is negative, the left portion of the image is kept, and the right portion is cropped out.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When crop_ratio is positve, the left portion of the image is cropped out, and the right portion is kept.
+    When crop_ratio is negative, the left portion of the image is kept, and the right portion is cropped out.
     """
 
-    def __init__(self, crop_ratio: float):
+    def __init__(self, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.crop_ratio = crop_ratio
@@ -609,22 +636,20 @@ class CropX(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomCropX(SpatialBase):
-    """Crop images along x-axis (width), images size = (h, w).
+    """Randomly crop image along x-axis (width). with a predefined probability.
 
     Args:
-        crop_prob (float):Probability of the image being cropped.
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (h, crop_ratio*w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (h, ratio*w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-        When crop_ratio is positve, the left portion of the image is cropped out, and the right portion is kept.
-        When crop_ratio is negative, the left portion of the image is kept, and the right portion is cropped out.
+        prob (float): probability of the image being cropped.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the left portion of the image is cropped out, and the right portion is kept.
+    When `crop_ratio` is negative, the left portion of the image is kept, and the right portion is cropped out.
     """
-
-    def __init__(self, prob: float, crop_ratio=None):
+    def __init__(self, prob: float, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.prob = prob
@@ -700,21 +725,19 @@ def _crop_y_target(target, crop_ratio, image_height):
 
 @TRANSFORMS.register_module()
 class CropY(SpatialBase):
-    """Crop images along y-axis (height), images size = (h, w).
+    """Crop image along y-axis (height).
 
     Args:
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (crop_ratio*h, w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (ratio*h, w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-        When crop_ratio is positve, the upper portion of the image is cropped out, and the lower portion is kept.
-        When crop_ratio is negative, the upper portion of the image is kept, and the lower portion is cropped out.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the upper portion of the image is cropped out, and the lower portion is kept.
+    When `crop_ratio` is negative, the upper portion of the image is kept, and the lower portion is cropped out.
     """
-
-    def __init__(self, crop_ratio):
+    def __init__(self, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_check_value_range_set(crop_ratio)
         self.crop_ratio = crop_ratio
@@ -735,22 +758,20 @@ class CropY(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomCropY(SpatialBase):
-    """Crop images along y-axis (height), images size = (h, w).
+    """Randomly crop image along y-axis (height). with a predefined probability.
 
     Args:
-        crop_prob (float): Probability of the image being cropped.
-        crop_ratio  (float  | tuple[float, float] |  list[float, float] ):
-            float: Ratio of cropping in the range of [0, 1].
-                    When crop_ratio is not None, it crops an image to (crop_ratio*h, w).
-            tuple[float, float]: Range of the ratio of cropping. Default is None.
-                    When crop_ratio=[min_ratio, max_ratio] is None, it crops
-                    an image to (ratio*h, w), in which ratio is randomly selected from [min_ratio, max_ratio].
-            list[float, ... , float] : list of the ratio of cropping to be randomly chosen.
-        When crop_ratio is positve, the upper portion of the image is cropped out, and the lower portion is kept.
-        When crop_ratio is negative, the upper portion of the image is kept, and the lower portion is cropped out.
+        crop_prob (float): probability of the image being cropped.
+        crop_ratio (float | tuple[float, float] | list[float]): ratio of cropping in range between 0 and 1.
+            There are three ways for ratio of cropping as follows:
+                - If `crop_ratio` is `float`, then ratio of cropping is the value.
+                - If `crop_ratio` is `tuple[float, float]` (i.e. a ratio range), then ratio of cropping is randomly selected from the range.
+                - If `crop_ratio` is `list[float, ... , float]` (i.e. list of angles), then ratio of cropping is randomly selected from the list.
+        
+    When `crop_ratio` is positve, the upper portion of the image is cropped out, and the lower portion is kept.
+    When `crop_ratio` is negative, the upper portion of the image is kept, and the lower portion is cropped out.
     """
-
-    def __init__(self, prob, crop_ratio=None):
+    def __init__(self, prob: float, crop_ratio: Union[float, Tuple[float], List[float]]):
         super().__init__()
         _input_get_value_range_set(crop_ratio)
         self.prob = prob
@@ -824,14 +845,12 @@ class Fliplr(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomFliplr(SpatialBase):
-    """Flip image left-right.
+    """Randomly flip image left-right with a predefined probability.
 
     Args:
-        prob (float): Probability of flipping an image in the range of [0, 1].
-                Default is None.
+        prob (float): probability of flipping an image in the range of [0, 1].
     """
-
-    def __init__(self, prob: float = None):
+    def __init__(self, prob: float):
         super().__init__()
         self.prob = prob
 
@@ -883,7 +902,6 @@ def _flipud_target(target, image_height):
 class Flipud(SpatialBase):
     """Flip image up-down.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -902,13 +920,12 @@ class Flipud(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomFlipud(SpatialBase):
-    """Flip image up-down.
+    """Randomly flip image up-down with a predefined probability.
 
     Args:
-        prob (float): Probability of flipping an image in the range of [0, 1].
+        prob (float): probability of flipping an image in the range of [0, 1].
     """
-
-    def __init__(self, prob: float = None):
+    def __init__(self, prob: float):
         super().__init__()
         self.prob = prob
 
@@ -958,14 +975,16 @@ class Rotate(SpatialBase):
     """Rotate image.
 
     Args:
-        rotate_degree  (float  | tuple[float, float] |  list[float, float] ):
-            float: Rotation angle value in degrees, counter-clockwise.
-            tuple[float, float]: Range of rotation angle. Default is None.
-            list[float, ... , float] : list of the ratio of rotation angle to be randomly chosen.
+        rotate_degree (float | tuple[float, float] | list[float]): angle of rotation in degree, counter-clockwise.
+            There are three ways for angle of rotation as follows:
+                - If `rotate_degree` is `float`, then angle of rotation is the value.
+                - If `rotate_degree` is `tuple[float, float]` (i.e. a ratio range), then angle of rotation is randomly selected from the range.
+                - If `rotate_degree` is `list[float, ... , float]` (i.e. list of angles), then angle of rotation is randomly selected from the list.
         fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-    def __init__(self, rotate_degree: float,
+    def __init__(self, rotate_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(rotate_degree)
@@ -988,18 +1007,20 @@ class Rotate(SpatialBase):
 
 @TRANSFORMS.register_module()
 class RandomRotate(SpatialBase):
-    """Rotate image.
+    """Randomly rotate image with a predefined probability.
 
     Args:
-        rotate_degree  (float  | tuple[float, float] |  list[float, float] ):
-            float: Rotation angle value in degrees, counter-clockwise.
-            tuple[float, float]: Range of rotation angle. Default is None.
-            list[float, ... , float] : list of the ratio of rotation angle to be randomly chosen.
+        prob (float): probability of rotating an image in the range of [0, 1].
+        rotate_degree (float | tuple[float, float] | list[float]): angle of rotation in degree, counter-clockwise.
+            There are three ways for angle of rotation as follows:
+                - If `rotate_degree` is `float`, then angle of rotation is the value.
+                - If `rotate_degree` is `tuple[float, float]` (i.e. a ratio range), then angle of rotation is randomly selected from the range.
+                - If `rotate_degree` is `list[float, ... , float]` (i.e. list of angles), then angle of rotation is randomly selected from the list.
         fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+            transformed image. If given a number, the value is used for all bands respectively.
+            Default: `None`.
     """
-
-    def __init__(self, prob: float, rotate_degree=None,
+    def __init__(self, prob: float, rotate_degree: Union[float, Tuple[float], List[float]],
                  fill: Optional[List[float]] = None):
         super().__init__()
         _input_check_value_range_set(rotate_degree)
@@ -1030,38 +1051,43 @@ class RandomRotate(SpatialBase):
 
 @TRANSFORMS.register_module()
 class Scale(SpatialBase):
-    """Scale image according to scale_range.
+    """Scale image.
 
     Args:
-        scale_range (float | tuple[float, float]): expected image size scaling factor.
-        scale_width (boolean): If scale_width=True, the width of image will be scaled to width * scale_width_factor
-        scale_height (boolean): If scale_height=True, the height of image will be scaled to height * scale_height_factor
-        scale_same (boolean): If scale_same=True, scaled factors will be generated by ``random.uniform`` according to
-                                the scale_range separately. Otherwise, one factor will be generated and two factors
-                                share the same value.
-        interpolation (InterpolationMode): Desired interpolation enum defined by torchvision.transforms.InterpolationMode.
-                                            Default is InterpolationMode.BILINEAR.
+        scale_factor (float | tuple[float, float] | list[float]): image scaling factor.
+            There are three ways for scaling factor as follows:
+                - If `scale_factor` is `float`, then scaling factor is the value.
+                - If `scale_factor` is `tuple[float, float]` (i.e. a ratio range), then scaling factor is randomly selected from the range.
+                - If `scale_factor` is `list[float, ... , float]` (i.e. list of angles), then scaling factor is randomly selected from the list.
+        flag_scale_width (bool): if True, the width of image is scaled by scaling ratio; otherwise, no scaling is done for image width.
+            Default: `True`.
+        flag_scale_height (bool): if True, the height of image is scaled by scaling ratio; otherwise, no scaling is done for image height.
+            Default: `False`.
+        flag_scale_same (bool): if True, scaling factors for width and height are same; otherwise, they are different.
+            Default: `False`.
+        interpolation (InterpolationMode): interpolation enum defined by torchvision.transforms.InterpolationMode.
+            Default: `InterpolationMode.BILINEAR`.
     """
-
-    def __init__(self, scale_range=(0.8, 1.2),
-                 scale_width=True, scale_height=False, scale_same=False,
-                 interpolation: InterpolationMode = InterpolationMode.BILINEAR):
+    def __init__(self, scale_factor: Union[float, Tuple[float], List[float]],
+                 flag_scale_width: bool = True, flag_scale_height: bool = False, 
+                 flag_scale_same: bool = False,
+                 interpolation=InterpolationMode.BILINEAR):
         super().__init__()
-        _input_check_value_range_set(scale_range)
-        self.scale_range = scale_range
-        self.scale_width = scale_width
-        self.scale_height = scale_height
-        self.scale_same = scale_same
+        _input_check_value_range_set(scale_factor)
+        self.scale_factor = scale_factor
+        self.flag_scale_width = flag_scale_width
+        self.flag_scale_height = flag_scale_height
+        self.flag_scale_same = flag_scale_same
         self.interpolation = interpolation
 
     def calculate_image(self, image):
-        scale1 = _input_get_value_range_set(self.scale_range)
-        if self.scale_same:
+        scale1 = _input_get_value_range_set(self.scale_factor)
+        if self.flag_scale_same:
             scale2 = scale1
         else:
-            scale2 = _input_get_value_range_set(self.scale_range)
-        width_factor = scale1 if self.scale_width else 1
-        height_factor = scale2 if self.scale_height else 1
+            scale2 = _input_get_value_range_set(self.scale_factor)
+        width_factor = scale1 if self.flag_scale_width else 1
+        height_factor = scale2 if self.flag_scale_height else 1
         self.factor = (height_factor, width_factor)
         h, w = image.shape[1], image.shape[2]
         image = F.resize(image, (int(h * height_factor), int(w * width_factor)), interpolation=self.interpolation)
@@ -1093,52 +1119,58 @@ class Scale(SpatialBase):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
-        repr_str += f'(scale_range={self.scale_range}, '
-        repr_str += f'(scale_width={self.scale_width}, '
-        repr_str += f'(scale_height={self.scale_height}, '
-        repr_str += f'(scale_same={self.scale_same})'
+        repr_str += f'(scale_factor={self.scale_factor}, '
+        repr_str += f'(flag_scale_width={self.flag_scale_width}, '
+        repr_str += f'(flag_scale_height={self.flag_scale_height}, '
+        repr_str += f'(flag_scale_same={self.flag_scale_same})'
         repr_str += f'interpolation={self.interpolation})'
         return repr_str
 
 
 @TRANSFORMS.register_module()
 class RandomScale(SpatialBase):
-    """Randomly scale image according to scale_range.
+    """Randomly scale image with a predefined probability.
 
     Args:
-        prob (float): Probability of applying this operation. Default is 0.5.
-        scale_range (float | tuple[float, float]): expected image size scaling factor.
-        scale_width (boolean): If scale_width=True, the width of image will be scaled to width * scale_width_factor
-        scale_height (boolean): If scale_height=True, the height of image will be scaled to height * scale_height_factor
-        scale_same (boolean): If scale_same=True, scaled factors will be generated by ``random.uniform`` according to
-                                the scale_range separately. Otherwise, one factor will be generated and two factors
-                                share the same value.
+        prob (float): probability of an image being scaled. 
+        scale_factor (float | tuple[float, float] | list[float]): image scaling factor.
+            There are three ways for scaling factor as follows:
+                - If `scale_factor` is `float`, then scaling factor is the value.
+                - If `scale_factor` is `tuple[float, float]` (i.e. a ratio range), then scaling factor is randomly selected from the range.
+                - If `scale_factor` is `list[float, ... , float]` (i.e. list of angles), then scaling factor is randomly selected from the list.
+        flag_scale_width (bool): if True, the width of image is scaled by scaling ratio; otherwise, no scaling is done for image width.
+            Default: `True`.
+        flag_scale_height (bool): if True, the height of image is scaled by scaling ratio; otherwise, no scaling is done for image height.
+            Default: `False`.
+        flag_scale_same (bool): if True, scaling factors for width and height are same; otherwise, they are different.
+            Default: `False`.
         interpolation (InterpolationMode): Desired interpolation enum defined by torchvision.transforms.InterpolationMode.
-                                            Default is InterpolationMode.BILINEAR.
+            Default: `InterpolationMode.BILINEAR`.
     """
-    def __init__(self, prob=0.5, scale_range=(0.8, 1.2),
-                 scale_width=True, scale_height=False, scale_same=False,
+    def __init__(self, prob: float, scale_factor: Union[float, Tuple[float], List[float]],
+                 flag_scale_width: bool = True, flag_scale_height: bool = False, 
+                 flag_scale_same: bool = False,
                  interpolation: InterpolationMode = InterpolationMode.BILINEAR):
         super().__init__()
-        _input_check_value_range_set(scale_range)
+        _input_check_value_range_set(scale_factor)
         self.prob = prob
-        self.scale_range = scale_range
-        self.scale_width = scale_width
-        self.scale_height = scale_height
-        self.scale_same = scale_same
+        self.scale_factor = scale_factor
+        self.flag_scale_width = flag_scale_width
+        self.flag_scale_height = flag_scale_height
+        self.flag_scale_same = flag_scale_same
         self.interpolation = interpolation
 
     def calculate_image(self, image):
         self.randomness = False
         if random.random() < self.prob:
             self.randomness =  True
-            scale1 = _input_get_value_range_set(self.scale_range)
-            if self.scale_same:
+            scale1 = _input_get_value_range_set(self.scale_factor)
+            if self.flag_scale_same:
                 scale2 = scale1
             else:
-                scale2 = _input_get_value_range_set(self.scale_range)
-            width_factor = scale1 if self.scale_width else 1
-            height_factor = scale2 if self.scale_height else 1
+                scale2 = _input_get_value_range_set(self.scale_factor)
+            width_factor = scale1 if self.flag_scale_width else 1
+            height_factor = scale2 if self.flag_scale_height else 1
             self.factor = (height_factor, width_factor)
             h, w = image.shape[1], image.shape[2]
             image = F.resize(image, (int(h * height_factor), int(w * width_factor)),
@@ -1175,10 +1207,10 @@ class RandomScale(SpatialBase):
     def __repr__(self):
         repr_str = self.__class__.__name__
         repr_str += f'(prob={self.prob}, '
-        repr_str += f'(scale_range={self.scale_range}, '
-        repr_str += f'(scale_width={self.scale_width}, '
-        repr_str += f'(scale_height={self.scale_height}, '
-        repr_str += f'(scale_same={self.scale_same})'
+        repr_str += f'(scale_factor={self.scale_factor}, '
+        repr_str += f'(flag_scale_width={self.flag_scale_width}, '
+        repr_str += f'(flag_scale_height={self.flag_scale_height}, '
+        repr_str += f'(flag_scale_same={self.flag_scale_same})'
         repr_str += f'interpolation={self.interpolation})'
         return repr_str
 
@@ -1213,13 +1245,12 @@ def _resize_bboxes(bboxes, original_size, new_size):
 
 @TRANSFORMS.register_module()
 class Resize(SpatialBase):
-    """Resize images.
+    """Resize image.
 
     When `size` is int, it resizes an image to (size, size).
     When `size` is tuple/list and its second value is -1, it resizes an image
     such that the short edge of the resized image is equal to first value of `size`.
-    Images scales for resizing (h, w).
-
+    
     Args:
         size (int | tuple | list):
                 When size is int, it resizes an image to (size, size).
@@ -1231,14 +1262,12 @@ class Resize(SpatialBase):
                 other side is computed based on the short side, maintaining the
                 aspect ratio.
         interpolation (InterpolationMode): Desired interpolation enum defined by
-                torchvision.transforms.InterpolationMode. Default is InterpolationMode.BILINEAR.
+                torchvision.transforms.InterpolationMode. Default: `InterpolationMode.BILINEAR`.
         max_size (int, optional): The maximum allowed for the longer edge of the resized image.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+                Default: `None`.
     """
-
     def __init__(self, size: List[int], interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-                 max_size: Optional[int] = None, antialias: Optional[bool] = None):
+                 max_size: Optional[int] = None):
         super().__init__()
         assert isinstance(size, int) or (isinstance(size, tuple) and len(size) == 2) or (
                 isinstance(size, list) and len(size) == 2)
@@ -1254,7 +1283,6 @@ class Resize(SpatialBase):
         self.size = size
         self.interpolation = interpolation
         self.max_size = max_size
-        self.antialias = antialias
         self.ignore_resize = False
 
     def calculate_image(self, image):        
@@ -1275,7 +1303,7 @@ class Resize(SpatialBase):
             height, width = self.size
         self.size_sel = (height, width)
         if not self.ignore_resize:
-            image = F.resize(image, (height, width), self.interpolation, self.max_size, self.antialias)
+            image = F.resize(image, (height, width), self.interpolation, self.max_size)
         self.image_size_resize = image.shape[-2:]
         return image
 
@@ -1308,43 +1336,31 @@ class Resize(SpatialBase):
 
 @TRANSFORMS.register_module()
 class ResizeWidth(SpatialBase):
-    """Resize images.
+    """Resize image such that its width is a target value.
 
     When `width` is not None, it resizes the image to have width of `width`.
     When `width` is None, it resizes an image such that its shorter edge is `min_size_list[k]`,
     where `k` is randomly selected when the corresponding longer edge of the resized image is
     less than `max_size`; otherwise, it resizes an image such that the longer edge of the
     resized image is `max_size`.
-    Images scales for resizing (h, w).
 
     Args:
-        width (int): The width of the resized image.
-                When width is not None, it resizes an image to (width*h/w, width).
-                When width is None, it resizes an image according to min_size_list and max_size.
-        min_size_list (list[int]): List of widths considered for resizing image. Default is None.
-        max_size (int): The maximum allowed for the longer edge of the resized image.
-                Default is None.
-                When neither min_size_list and max_size are not None, it resizes an image such that its
-                shorter edge is min_size_list[k] when the long edge is less than max_size, where k is
-                picked randomly; otherwise its long edge is max_size.
-        size (int | tuple | list):
-                When size is int, the default behavior is to resize an image
-                to (size, size). When size is tuple/list and the second value is -1,
-                the short edge of an image is resized to its first value.
-                For example, when size is 224, the image is resized to 224x224.
-                When size is (224, -1), the short side is resized to 224 and the
-                other side is computed based on the short side, maintaining the
-                aspect ratio.
-        interpolation (InterpolationMode): Desired interpolation enum defined by
-                torchvision.transforms.InterpolationMode. Default is InterpolationMode.BILINEAR.
-        fill (sequence or number, optional): Pixel fill value for the area outside the
-                transformed image. If given a number, the value is used for all bands respectively.
+        width (int): width of the resized image.
+            When width is not None, it resizes an image to (width*h/w, width).
+            When width is None, it resizes an image according to min_size_list and max_size.
+        min_size_list (list[int]): list of widths considered for resizing image. Default: `None`.
+        max_size (int):  maximum allowed for the longer edge of the resized image.
+            Default: `None`.
+            When neither min_size_list and max_size are not None, it resizes an image such that its
+            shorter edge is min_size_list[k] when the long edge is less than max_size, where k is
+            picked randomly; otherwise its long edge is max_size.
+        training (bool): if True, width is randomly selected from `min_size_list`; otherwise, width is set as `min_size_list[-1]`.
+            Default: `None`.
+        interpolation (InterpolationMode): interpolation enum defined by
+            torchvision.transforms.InterpolationMode. Default: `InterpolationMode.BILINEAR`.
     """
-
     def __init__(self, width: int = None, min_size_list: List[int] = None, max_size: int = None,
-                 training: bool = False,
-                 interpolation: InterpolationMode = InterpolationMode.BILINEAR,
-                 antialias: Optional[bool] = None):
+                 training: bool = False, interpolation: InterpolationMode = InterpolationMode.BILINEAR):
         super().__init__()
         self.width = width
         self.min_size_list = min_size_list
@@ -1354,7 +1370,6 @@ class ResizeWidth(SpatialBase):
         else:
             assert self.width is not None, "width has to be given when min_size_list or max_size is None."
         self.interpolation = interpolation
-        self.antialias = antialias
         self.training = training
 
     def calculate_image(self, image):
@@ -1362,7 +1377,7 @@ class ResizeWidth(SpatialBase):
         self.image_size_org = (h, w)
         if self.width is None:
             if self.training:
-                self_min_size = float(self.torch_choice(self.min_size_list))
+                self_min_size = float(self._torch_choice(self.min_size_list))
             else:
                 self_min_size = float(self.min_size_list[-1])
             self_max_size = float(self.max_size)
@@ -1375,7 +1390,7 @@ class ResizeWidth(SpatialBase):
         else:
             scale_factor = self.width / w
         self.size_sel = (int(scale_factor * h), int(scale_factor * w))
-        image = F.resize(image, self.size_sel, self.interpolation, self.antialias)
+        image = F.resize(image, self.size_sel, self.interpolation)
         self.image_size_resize = image.shape[-2:]
         return image
 
@@ -1396,7 +1411,7 @@ class ResizeWidth(SpatialBase):
             target[key] = value
         return target
 
-    def torch_choice(self, k):
+    def _torch_choice(self, k):
         index = int(torch.empty(1).uniform_(0., float(len(k))).item())
         return k[index]
 
@@ -1413,9 +1428,6 @@ class ResizeWidth(SpatialBase):
 class RandomResizedCrop(SpatialBase):
     """Crop a random portion of image and resize it to a given size.
 
-    If the image is torch Tensor, it is expected
-    to have [..., H, W] shape, where ... means an arbitrary number of leading dimensions
-
     A crop of the original image is made: the crop has a random area (H * W)
     and a random aspect ratio. This crop is finally resized to the given
     size. This is popularly used to train the Inception networks.
@@ -1424,14 +1436,14 @@ class RandomResizedCrop(SpatialBase):
         size (int | tule[int, int]): expected output size of the crop, for each edge. If size is an
             int instead of sequence like (h, w), a square output size ``(size, size)`` is
             made. If provided a sequence of length 1, it will be interpreted as (size[0], size[0]).
-        scale (tuple[float, float]): Specifies the lower and upper bounds for the random area of the crop,
+        scale (tuple[float, float]): lower and upper bounds for the random area of the crop,
             before resizing. The scale is defined with respect to the area of the original image.
+            Default: `(0.08, 1.0)`.
         ratio (tuple[float, float]): lower and upper bounds for the random aspect ratio of the crop, before
-            resizing.
-        interpolation (InterpolationMode): interpolation (InterpolationMode): Desired interpolation enum defined by
-                torchvision.transforms.InterpolationMode. Default is InterpolationMode.BILINEAR.
+            resizing. Default: `(3. / 4., 4. / 3.)`.
+        interpolation (InterpolationMode): interpolation enum defined by
+                torchvision.transforms.InterpolationMode. Default: `InterpolationMode.BILINEAR`.
     """
-
     def __init__(self, size, scale=(0.08, 1.0), ratio=(3. / 4., 4. / 3.), interpolation=InterpolationMode.BILINEAR):
         super().__init__()
         self.size = setup_size(size, error_msg="Please provide only two dimensions (h, w) for size.")
@@ -1516,22 +1528,23 @@ class RandomResizedCrop(SpatialBase):
 
 
 @TRANSFORMS.register_module()
-class RandomCrop(torch.nn.Module):
+class RandomMaskCrop(torch.nn.Module):
     """Randomly crop image.
 
     Args:
         crop_size (tule[int, int]): expected output size of the crop, for each edge. If size is an
             int instead of sequence like (h, w), a square output size ``(size, size)`` is
             made. If provided a sequence of length 1, it will be interpreted as (size[0], size[0]).
-        prob (float): The probability of cropping from the foreground.
-        mask_type (str): The type of mask. It has to be in None, 'bboxes', or 'masks'. Default is None.
-                When mask_type=None, it randomly crops from the image region.
-                When mask_type='bboxes', it randomly crops from the foreground of the mask with probability=prob,
-                and from the background of the mask with probability=1-prob. The mask is generated by bboxes of target.
-                When mask_type='masks', it randomly crops from the foreground of the mask with probability=prob,
-                and from the background of the mask with probability=1-prob. The mask is generated by masks of target.
-        obj_labels (list): Foreground index in masks. It is only valid when mask_type='masks'.
-                Default is None.
+        prob (float): probability of cropping from the foreground.
+        mask_type (str): type of mask. It has to be in None, 'bboxes', or 'masks'. Default is None.
+            When `mask_type=None`, it randomly crops from the image region.
+            When `mask_type='bboxes'`, it randomly crops from the foreground of the mask with probability=prob,
+            and from the background of the mask with probability=1-prob. The mask is generated by bboxes of target.
+            When `mask_type='masks'`, it randomly crops from the foreground of the mask with probability=prob,
+            and from the background of the mask with probability=1-prob. The mask is generated by masks of target.
+            Default: `None`.
+        obj_labels (list): foreground index in masks. It is only valid when mask_type='masks'.
+                Default: `None`.
     """
 
     def __init__(self, crop_size: Tuple[int, int], prob: float,
@@ -1561,7 +1574,7 @@ class RandomCrop(torch.nn.Module):
                     break
         else:
             mask = torch.ones(image.shape[-2:], device=image.device, dtype=image.dtype)
-        crop_loc = self.crop_region(mask > 0.5)
+        crop_loc = self._crop_region(mask > 0.5)
         image = image[:, crop_loc[0]:crop_loc[1], crop_loc[2]:crop_loc[3]]
 
         for key, value in target.items():
@@ -1589,7 +1602,7 @@ class RandomCrop(torch.nn.Module):
             target[key] = value
         return image, target
 
-    def crop_region(self, mask):
+    def _crop_region(self, mask):
         bw = mask
         if (self.mask_type is not None) & (random.random() >= self.prob):
             bw = mask == False  ## crop from background
@@ -1625,11 +1638,8 @@ class RandomCrop(torch.nn.Module):
 
 @TRANSFORMS.register_module()
 class ImagePadding(SpatialBase):
-    """Pad image.
-
-    It pads the shorter edge of an image to get a square padded image.
+    """Pad the shorter edge of an image such that width and height are equal.
     """
-
     def __init__(self):
         super().__init__()
 
@@ -1707,11 +1717,8 @@ class ImagePadding(SpatialBase):
 
 @TRANSFORMS.register_module()
 class ImageHeightPaddingOrCrop(SpatialBase):
-    """Pad or crop image along y-axis (height).
-
-    It pads the y-axis of an image to get a square padded image, the x-axis is unchanged.
+    """Pad or crop image along y-axis (height) such that height and width are same.
     """
-
     def __init__(self):
         super().__init__()
 

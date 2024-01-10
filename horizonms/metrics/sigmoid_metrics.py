@@ -2,7 +2,7 @@ from .sigmoid_metrics_func import sigmoid_accuracy
 from .. import METRICS
 
 
-__all__ = ("SigmoidAccuracy")
+__all__ = ["SigmoidAccuracy"]
 
 
 @METRICS.register_module()
@@ -18,4 +18,13 @@ class SigmoidAccuracy():
         self.return_average = return_average
 
     def __call__(self, ytrue, ypred):
+        r"""Calculate accuracy.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: accuracy value. 
+        """
         return sigmoid_accuracy(ytrue, ypred, self.threshold, self.return_average)

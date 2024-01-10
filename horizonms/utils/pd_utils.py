@@ -6,26 +6,25 @@ from openpyxl import load_workbook
 def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
                        truncate_sheet=False, 
                        **to_excel_kwargs):
-    """
-    Append a DataFrame [df] to existing Excel file [filename]
-    into [sheet_name] Sheet.
+    """Append a DataFrame [df] to existing Excel file [filename] into [sheet_name] Sheet.
     If [filename] doesn't exist, then this function will create it.
 
-    Parameters:
-      filename : File path or existing ExcelWriter
-                 (Example: '/path/to/file.xlsx')
-      df : dataframe to save to workbook
-      sheet_name : Name of sheet which will contain DataFrame.
-                   (default: 'Sheet1')
-      startrow : upper left cell row to dump data frame.
-                 Per default (startrow=None) calculate the last row
-                 in the existing DF and write to the next row...
-      truncate_sheet : truncate (remove and recreate) [sheet_name]
-                       before writing DataFrame to Excel file
-      to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
-                        [can be dictionary]
+    Args:
+        filename : File path or existing ExcelWriter
+                    (Example: '/path/to/file.xlsx')
+        df : dataframe to save to workbook
+        sheet_name : Name of sheet which will contain DataFrame.
+                    (default: 'Sheet1')
+        startrow : upper left cell row to dump data frame.
+                    Per default (startrow=None) calculate the last row
+                    in the existing DF and write to the next row...
+        truncate_sheet : truncate (remove and recreate) [sheet_name]
+                        before writing DataFrame to Excel file
+        to_excel_kwargs : arguments which will be passed to `DataFrame.to_excel()`
+                            [can be dictionary]
 
-    Returns: None
+    Returns: 
+        None
 
     (c) [MaxU](https://stackoverflow.com/users/5741205/maxu?tab=profile)
     codes: https://stackoverflow.com/questions/20219254/how-to-write-to-an-existing-excel-file-without-overwriting-data-using-pandas

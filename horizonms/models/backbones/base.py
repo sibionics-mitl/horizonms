@@ -4,13 +4,12 @@ from ..necks.feature_pyramid_network import FeaturePyramidNetwork
 from ...builder import BACKBONES
 
 
-__all__ = ("IntermediateLayerGetter", "Backbone", "BackboneWithFPN")
+__all__ = ["IntermediateLayerGetter", "Backbone", "BackboneWithFPN"]
 
 
 @BACKBONES.register_module()
 class IntermediateLayerGetter(nn.ModuleDict):
-    """
-    Module wrapper that returns intermediate layers from a model.
+    r"""Module wrapper that returns intermediate layers from a model.
 
     It has a strong assumption that the modules have been registered
     into the model in the same order as they are used.
@@ -23,7 +22,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
     Args:
         model (nn.Module): model on which we will extract the features.
-        return_layers (List): the returned layers.
+        return_layers (List): returned layers.
     """
     def __init__(self, model, return_layers):
         if not set(return_layers).issubset([name for name, _ in model.named_children()]):
@@ -42,7 +41,6 @@ class IntermediateLayerGetter(nn.ModuleDict):
         self.return_layers = orig_return_layers
 
     def forward(self, x):
-        # out = OrderedDict()
         out = []
         for name, module in self.items():
             x = module(x)
@@ -57,14 +55,15 @@ class IntermediateLayerGetter(nn.ModuleDict):
 
 @BACKBONES.register_module()
 class Backbone(nn.Module):
-    r"""It extracts a submodel that returns the feature maps specified in return_layers.
+    r"""Extract submodel that returns the feature maps specified in return_layers.
     
     Args:
-        backbone (nn.Module):
-        return_layers (List): the returned layers.
+        backbone (nn.Module): model on which we will extract the backbone.
+        return_layers (List): returned layers.
         in_channels_list (List[int]): number of channels for each feature map that is returned.
+    
     Attributes:
-        out_channels (int): the number of channels in the returned layers.
+        out_channels (int): number of channels in the returned layers.
     """
     def __init__(self, backbone, return_layers, in_channels_list):
         super(Backbone, self).__init__()
@@ -81,15 +80,18 @@ class Backbone(nn.Module):
 
 @BACKBONES.register_module()
 class BackboneWithFPN(nn.Module):
-    r"""It extracts a submodel that returns the feature maps specified in return_layers
+    r"""Extract submodel that returns the feature maps specified in return_layers
     and adds a FPN on top of the submodel.
     
     Args:
-        backbone (nn.Module):
-        return_layers (List): the returned layers.
-        in_channels_list (List[int]): the number of channels for each feature map that is returned.
-        out_channels (int): the number of channels in the returned layers.
-        pyramid_levels (int): the number of the levels of feature pyramids.
+        backbone (nn.Module): model on which we will extract the backbone.
+        return_layers (List): returned layers.
+        in_channels_list (List[int]): number of channels for each feature map that is returned.
+        out_channels (int): number of channels in the returned layers.
+        pyramid_levels (int): number of the levels of feature pyramids.
+
+    Attributes:
+        out_channels (int): number of channels in the returned layers.
     """    
     def __init__(self, backbone, return_layers, in_channels_list, out_channels, pyramid_levels):
         super(BackboneWithFPN, self).__init__()

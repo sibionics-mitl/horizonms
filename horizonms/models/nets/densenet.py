@@ -10,7 +10,7 @@ from torch.jit.annotations import List
 from ...builder import NETS
 
 
-__all__ = ("DenseNet", "densenet121", "densenet169", "densenet201", "densenet161")
+__all__ = ["DenseNet", "densenet121", "densenet169", "densenet201", "densenet161"]
 
 
 model_urls = {

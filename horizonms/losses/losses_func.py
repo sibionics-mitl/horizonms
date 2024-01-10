@@ -3,15 +3,16 @@ import torch.nn.functional as F
 
 
 def smooth_l1_loss(target, preds, weight, sigma: float = 3, size_average: bool = True):
-    """ Compute the smooth L1 loss of y_pred w.r.t. y_true.
+    r"""Compute the smooth L1 loss of y_pred w.r.t. y_true.
 
     Args:
-        y_true: Tensor from the generator of shape (N, 4). 
-        y_pred: Tensor from the network of shape (N, 4).
-        sigma: This argument defines the point where the loss changes from L2 to L1.
+        y_true (Tensor): grouth truth with shape (N, M). 
+        y_pred (Tensor): network prediction with shape (N, M).
+        sigma (float): point where the loss changes from L2 to L1.
+        size_average (bool): if True, the average losses of all samples are calculated.
 
     Returns:
-        The smooth L1 loss of y_pred w.r.t. y_true.
+        Tensor: loss values with shape (M,).
     """
     assert target.shape[-1]==preds.shape[-1]
     sigma_squared = sigma ** 2
@@ -125,9 +126,9 @@ def weak_bce_sigmoid_loss(ypred, gt_boxes, threshold=0.5, epsilon=1e-6):
 
 
 def bbox_overlaps(bboxes1, bboxes2, mode='iou', is_aligned=False, eps=1e-6):
-    """Calculate overlap between two set of bboxes.
+    r"""Calculate overlap between two set of bboxes.
 
-    If ``is_aligned `` is ``False``, then calculate the overlaps between each
+    If `is_aligned = False`, then calculate the overlaps between each
     bbox of bboxes1 and bboxes2, otherwise the overlaps between each aligned
     pair of bboxes1 and bboxes2.
 
@@ -135,40 +136,17 @@ def bbox_overlaps(bboxes1, bboxes2, mode='iou', is_aligned=False, eps=1e-6):
         bboxes1 (Tensor): shape (B, m, 4) in <x1, y1, x2, y2> format or empty.
         bboxes2 (Tensor): shape (B, n, 4) in <x1, y1, x2, y2> format or empty.
             B indicates the batch dim, in shape (B1, B2, ..., Bn).
-            If ``is_aligned `` is ``True``, then m and n must be equal.
+            If `is_aligned = True`, then m and n must be equal.
         mode (str): "iou" (intersection over union), "iof" (intersection over
             foreground) or "giou" (generalized intersection over union).
-            Default "iou".
+            Default: `"iou"`.
         is_aligned (bool, optional): If True, then m and n must be equal.
-            Default False.
+            Default: `False`.
         eps (float, optional): A value added to the denominator for numerical
-            stability. Default 1e-6.
+            stability. Default: `1e-6`.
 
     Returns:
-        Tensor: shape (m, n) if ``is_aligned `` is False else shape (m,)
-
-    Example:
-        >>> bboxes1 = torch.FloatTensor([
-        >>>     [0, 0, 10, 10],
-        >>>     [10, 10, 20, 20],
-        >>>     [32, 32, 38, 42],
-        >>> ])
-        >>> bboxes2 = torch.FloatTensor([
-        >>>     [0, 0, 10, 20],
-        >>>     [0, 10, 10, 19],
-        >>>     [10, 10, 20, 20],
-        >>> ])
-        >>> overlaps = bbox_overlaps(bboxes1, bboxes2)
-        >>> assert overlaps.shape == (3, 3)
-        >>> overlaps = bbox_overlaps(bboxes1, bboxes2, is_aligned=True)
-        >>> assert overlaps.shape == (3, )
-
-    Example:
-        >>> empty = torch.empty(0, 4)
-        >>> nonempty = torch.FloatTensor([[0, 0, 10, 9]])
-        >>> assert tuple(bbox_overlaps(empty, nonempty).shape) == (0, 1)
-        >>> assert tuple(bbox_overlaps(nonempty, empty).shape) == (1, 0)
-        >>> assert tuple(bbox_overlaps(empty, empty).shape) == (0, 0)
+        Tensor: shape (m, n) if `is_aligned=False`, else shape (m,).   
     """
 
     assert mode in ['iou', 'iof', 'giou'], f'Unsupported mode {mode}'

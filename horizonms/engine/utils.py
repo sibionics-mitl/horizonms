@@ -73,13 +73,13 @@ class SmoothedValue(object):
 
 
 def all_gather(data):
-    """
-    Run all_gather on arbitrary picklable data (not necessarily tensors)
+    """Run all_gather on arbitrary picklable data (not necessarily tensors).
     
     Args:
-        data: any picklable object
+        data: any picklable object.
+
     Returns:
-        list[data]: list of data gathered from each rank
+        list[data]: list of data gathered from each rank.
     """
     world_size = get_world_size()
     if world_size == 1:
@@ -117,13 +117,15 @@ def all_gather(data):
 
 
 def reduce_dict(input_dict, average=True):
-    """
+    """Reduce the values in the dictionary from all processes so that all processes
+    have the averaged results. 
+
     Args:
-        input_dict (dict): all the values will be reduced
-        average (bool): whether to do average or sum
-    Reduce the values in the dictionary from all processes so that all processes
-    have the averaged results. Returns a dict with the same fields as
-    input_dict, after reduction.
+        input_dict (dict): all the values will be reduced.
+        average (bool): whether to do average or sum.
+        
+    Returns:
+        Dict: a dict with the same fields as input_dict.
     """
     world_size = get_world_size()
     if world_size < 2:
@@ -262,8 +264,7 @@ def mkdir(path):
 
 
 def setup_for_distributed(is_master):
-    """
-    This function disables printing when not in master process
+    """Disable printing when not in master process
     """
     import builtins as __builtin__
     builtin_print = __builtin__.print
@@ -321,18 +322,6 @@ def init_distributed_mode(args):
     args.distributed = True
 
     torch.cuda.set_device(args.gpu)
-    args.dist_backend = 'nccl'
-    print('| distributed init (rank {}): {}'.format(
-        args.rank, args.dist_url), flush=True)
-    torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                         world_size=args.world_size, rank=args.rank)
-    torch.distributed.barrier()
-    setup_for_distributed(args.rank == 0)
-
-
-def init_distributed_mode_wj(args):
-    args.distributed = True
-    torch.cuda.set_device(args.rank)
     args.dist_backend = 'nccl'
     print('| distributed init (rank {}): {}'.format(
         args.rank, args.dist_url), flush=True)

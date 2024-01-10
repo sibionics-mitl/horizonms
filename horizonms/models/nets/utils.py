@@ -5,6 +5,7 @@ try:
 except ImportError:
     from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
+
 def _make_divisible(v: float, divisor: int, min_value: Optional[int] = None) -> int:
     """
     This function is taken from the original tf repo.

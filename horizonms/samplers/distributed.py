@@ -6,7 +6,7 @@ from torch.utils.data import Dataset
 from typing import List, Union
 
 
-__all__ = ("DistributedWeightedSampler", "DistributedBalancedSampler")
+__all__ = ["DistributedWeightedSampler", "DistributedBalancedSampler"]
 
 
 class DistributedWeightedSampler(torch.utils.data.distributed.DistributedSampler):

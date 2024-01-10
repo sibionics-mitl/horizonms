@@ -6,7 +6,7 @@ from .decoder import UnetSimpleDecoder
 from ...builder import NETS, build_backbone
 
 
-__all__ = ("UNet_V1", "UNet_V2")
+__all__ = ["UNet_V1", "UNet_V2"]
 
 
 @NETS.register_module()

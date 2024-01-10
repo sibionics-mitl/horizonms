@@ -4,7 +4,7 @@ from .base import SoftmaxBaseLoss
 from .. import LOSSES
 
 
-__all__ = ("SoftmaxCohenKappaLoss", "SoftmaxFocalLoss", "SoftmaxMixFocalLoss", "SoftmaxCrossEntropyLoss")
+__all__ = ["SoftmaxCohenKappaLoss", "SoftmaxFocalLoss", "SoftmaxMixFocalLoss", "SoftmaxCrossEntropyLoss"]
 
 
 @LOSSES.register_module()
@@ -12,13 +12,22 @@ class SoftmaxCohenKappaLoss(SoftmaxBaseLoss):
     r"""Cohen's kappa loss for softmax output.
 
     Args:
-        weights (str): the type of Cohen's kappa.
+        weights (str): the type of Cohen's kappa. Default: `'quadratic'`.
     """
     def __init__(self, weights="quadratic", *argv, **kwargs):
         super(SoftmaxCohenKappaLoss, self).__init__(*argv, **kwargs)
         self.weights = weights
 
     def calculate_loss(self, ytrue, ypred):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: loss value. 
+        """
         kappa = softmax_cohen_kappa_score(ytrue, ypred, weights=self.weights, category=False)
         return 1 - kappa
 
@@ -28,11 +37,12 @@ class SoftmaxFocalLoss(SoftmaxBaseLoss):
     r"""Focal loss for softmax output.
 
     Args:
-        mode (str): the mode of focal loss. It is 'all' or 'foreground'. Default: ``'all'``.
+        mode (str): the mode of focal loss. It is 'all' or 'foreground'. 
             These two modes are different in how to get focal loss from individual samples.
             'all' uses the average loss of all samples.
             'foreground' is similar as the original focal loss which only considers the foreground in the denominator.
-        gamma (float): Exponent of the modulating factor to balance easy vs hard examples. Default: ``2.0``.
+            Default: `'all'`.
+        gamma (float): Exponent of the modulating factor to balance easy vs hard examples. Default: `2.0`.
     """
     def __init__(self, mode='all', gamma=2.0, *argv, **kwargs):
         super(SoftmaxFocalLoss, self).__init__(*argv, **kwargs)
@@ -40,6 +50,16 @@ class SoftmaxFocalLoss(SoftmaxBaseLoss):
         self.gamma = gamma
 
     def calculate_loss(self, ytrue, ypred, weights=None):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            weights (Tensor): sample weights with shape (M, 1).
+            
+        Returns:
+            Tensor: loss value. 
+        """
         ypred = torch.clamp(ypred, self.epsilon, 1-self.epsilon)
         losses = -ytrue*(1-ypred).pow(self.gamma)*torch.log(ypred)
         if weights is not None:
@@ -64,6 +84,16 @@ class SoftmaxMixFocalLoss(SoftmaxBaseLoss):
         self.gamma = gamma
 
     def calculate_loss(self, ytrue, ypred, weights=None):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            weights (Tensor): sample weights with shape (M, 1).
+            
+        Returns:
+            Tensor: loss value. 
+        """
         ypred = torch.clamp(ypred, self.epsilon, 1-self.epsilon)
         losses = -ytrue * torch.log(ypred)  # CE on foreground class
         losses_bkg = losses[:, 0] * (1 - ypred[:, 0]).pow(self.gamma) # FL on background class
@@ -97,6 +127,15 @@ class SoftmaxCrossEntropyLoss(SoftmaxBaseLoss):
         self.mode = mode
 
     def calculate_loss(self, ytrue, ypred):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: loss value. 
+        """
         ypred = torch.clamp(ypred, self.epsilon, 1-self.epsilon)
         losses = -ytrue * torch.log(ypred)
         if self.mode=='all':

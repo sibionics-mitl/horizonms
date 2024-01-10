@@ -18,12 +18,12 @@ from .image_cv import (CVImageBase, CVUint8ToFloat, CVIdentity, CVCvtColor, CVNo
            )
 from .spatial import (SpatialBase, ShearX, ShearY, TranslateX, TranslateY, \
            CropX, CropY, Fliplr, Flipud, Rotate, Scale, \
-           Resize, ResizeWidth, RandomResizedCrop, RandomCrop, \
+           Resize, ResizeWidth, RandomResizedCrop, RandomMaskCrop, \
            ImagePadding, ImageHeightPaddingOrCrop, \
            RandomShearX, RandomShearY, RandomTranslateX, RandomTranslateY, \
            RandomCropX, RandomCropY, RandomFliplr, RandomFlipud, RandomRotate, RandomScale
            )
-from .spatial_cv import (CVShearX, CVShearY, CVTranslateX, CVTranslateY,\
+from .spatial_cv import (CVSpatialBase, CVShearX, CVShearY, CVTranslateX, CVTranslateY,\
            CVCropX, CVCropY, CVFliplr, CVFlipud, CVRotate, CVScale, \
            CVResize, CVResizeWidth, CVRandomResizedCrop, CVRandomCrop, \
            CVImagePadding, CVRandomShift, CVRandomShearX, CVRandomShearY,\
@@ -33,7 +33,7 @@ from .spatial_cv import (CVShearX, CVShearY, CVTranslateX, CVTranslateY,\
 from .batch_transforms import ToOnehotLabels, Mixup, SoftmaxLabelSmoothing, SigmoidLabelSmoothing
 
 
-__all__ = (# trivalaugment
+__all__ = [# trivalaugment
            "CustomizedTrivialAugment", "HorizonmsTrivialAugment", "SequentialAugment",
            # base
            "TargetStructure", "Compose", "ToTensor",
@@ -56,13 +56,13 @@ __all__ = (# trivalaugment
            # spatial
            "SpatialBase", "ShearX", "ShearY", "TranslateX", "TranslateY", 
            "CropX", "CropY", "Fliplr", "Flipud", "Rotate", 
-           "Resize", "ResizeWidth", "RandomResizedCrop", "RandomCrop",
+           "Resize", "ResizeWidth", "RandomResizedCrop", "RandomMaskCrop",
            "ImagePadding", "ImageHeightPaddingOrCrop",          
            "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
            "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate",
            'Scale', 'RandomScale',
            # spatial_cv
-           "CVShearX", "CVShearY", "CVTranslateX", "CVTranslateY", 
+           "CVSpatialBase", "CVShearX", "CVShearY", "CVTranslateX", "CVTranslateY", 
            "CVCropX", "CVCropY", "CVFliplr", "CVFlipud", "CVRotate",
            "CVResize", "CVResizeWidth", "CVRandomResizedCrop", "CVRandomCrop", 
            "CVImagePadding","CVRandomShift",
@@ -71,4 +71,4 @@ __all__ = (# trivalaugment
            "CVScale", "CVRandomScale",
            # batch_transform
            "ToOnehotLabels", "Mixup", "SoftmaxLabelSmoothing", "SigmoidLabelSmoothing",
-           )
+]

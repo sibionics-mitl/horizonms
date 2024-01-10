@@ -11,7 +11,7 @@ from .base import Compose
 from ..builder import TRANSFORMS
 
 
-__all__ = ("CustomizedTrivialAugment", "HorizonmsTrivialAugment", "SequentialAugment")
+__all__ = ["CustomizedTrivialAugment", "HorizonmsTrivialAugment", "SequentialAugment"]
 
 
 SUPPORT_OPERATORS = [
@@ -56,7 +56,7 @@ SUPPORT_OPERATORS_EXTRA = [
     "CVRandomPosterize", "CVRandomSolarize", "CVRandomAutoContrast", "CVRandomEqualize", "CVRandomInvert",
     "CVRandomGaussianBlur", "CVRandomGaussianNoise", "CVRandomLighting", 
     # spatial
-    "RandomResizedCrop", "RandomCrop",        
+    "RandomResizedCrop", "RandomMaskCrop",        
     "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
     "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate",
     "RandomScale",
@@ -76,10 +76,7 @@ SUPPORT_OPERATORS_EXTRA = [
 class CustomizedTrivialAugment(torch.nn.Module):
     r"""Dataset-independent data-augmentation with TrivialAugment using customized augmentation operators, as described in
     `"TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation" <https://arxiv.org/abs/2103.10158>`.
-    If the image is torch Tensor, it should be of type `torch.uint8`, and it is expected
-    to have [..., 1 or 3, H, W] shape, where ... means an arbitrary number of leading dimensions.
-    If img is PIL Image, it is expected to be in mode "L" or "RGB".
-
+    
     Args:
         augment_operators (List[dict]): augmentation operators and their parameters.
         num_magnitude_bins (int): number of magnitude.
@@ -127,10 +124,7 @@ class CustomizedTrivialAugment(torch.nn.Module):
 @TRANSFORMS.register_module()
 class HorizonmsTrivialAugment(torch.nn.Module):
     r"""Dataset-independent data-augmentation with modified TrivialAugment using customized augmentation operators, as described in
-    `"TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation" <https://arxiv.org/abs/2103.10158>`.
-    If the image is torch Tensor, it should be of type `torch.uint8`, and it is expected
-    to have [..., 1 or 3, H, W] shape, where ... means an arbitrary number of leading dimensions.
-    If img is PIL Image, it is expected to be in mode "L" or "RGB".
+    `"TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation" <https://arxiv.org/abs/2103.10158>`.   
 
     The modification is done such that 1) it supports more than one random number for any operator, and
     2) the random number is not divided into bins.
@@ -168,10 +162,7 @@ class HorizonmsTrivialAugment(torch.nn.Module):
 @TRANSFORMS.register_module()
 class SequentialAugment(torch.nn.Module):
     r"""Sequential augmentation using customized augmentation operators.
-    If the image is torch Tensor, it should be of type `torch.uint8`, and it is expected
-    to have [..., 1 or 3, H, W] shape, where ... means an arbitrary number of leading dimensions.
-    If img is PIL Image, it is expected to be in mode "L" or "RGB".
-
+    
     Args:
         augment_operators (List[dict]): augmentation operators and their parameters.
     """

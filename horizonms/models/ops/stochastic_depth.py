@@ -2,7 +2,7 @@ import torch
 from torch import nn, Tensor
 
 
-__all__ = ("StochasticDepth")
+__all__ = ["StochasticDepth"]
 
 
 def stochastic_depth(input: Tensor, p: float, mode: str, training: bool = True) -> Tensor:

@@ -5,21 +5,24 @@ from .base import Backbone
 from ...builder import BACKBONES
 
 
-__all__ = ("vgg_backbone", "resnet_backbone", "efficientnet_backbone")
+__all__ = ["vgg_backbone", "resnet_backbone", "efficientnet_backbone"]
 
 
 @BACKBONES.register_module()
 def vgg_backbone(backbone_name, return_stages=5, input_dim=3, pretrained=False, 
                  model_dir='.', trainable_stages=None, **kwargs):
-    r"""It extracts a backbone from VGG network.
+    r"""Extract backbone from VGG network.
     
     Args:
-        backbone_name (str): the name of backbone.
-        return_stages (int): the number of stages to be extracted.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        return_stages (int): number of stages to be extracted.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_stages (int): the number of trainable (not frozen) stages starting from final stage.
+        model_dir (str): directory to save the pretrained weights.
+        trainable_stages (int): number of trainable (not frozen) stages starting from final stage.
+
+    Returns:
+        nn.Module: extracted backbone.
     """   
     vgg_names = ['vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16',
                  'vgg16_bn', 'vgg19_bn', 'vgg19']
@@ -63,15 +66,18 @@ def vgg_backbone(backbone_name, return_stages=5, input_dim=3, pretrained=False,
 @BACKBONES.register_module()
 def resnet_backbone(backbone_name, return_stages=4, input_dim=3, pretrained=False,
                     model_dir='.', trainable_stages=None, **kwargs):
-    r"""It extracts a backbone from ResNet network.
+    r"""Extract backbone from ResNet network.
     
     Args:
-        backbone_name (str): the name of backbone.
-        return_stages (int): the number of stages to be extracted.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        return_stages (int): number of stages to be extracted.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_stages (int): the number of trainable (not frozen) stages starting from final stage.
+        model_dir (str): directory to save the pretrained weights.
+        trainable_stages (int): number of trainable (not frozen) stages starting from final stage.
+
+    Returns:
+        nn.Module: extracted backbone.
     """   
     resnet_names = ['resnet18', 'resnet34', 'resnet50', 'resnet101', 'resnet152', 'resnext50_32x4d', 
                     'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2']
@@ -107,16 +113,19 @@ def resnet_backbone(backbone_name, return_stages=4, input_dim=3, pretrained=Fals
 @BACKBONES.register_module()
 def efficientnet_backbone(backbone_name, return_stages=9, input_dim=3, pretrained=False, 
                  model_dir='.', trainable_stages=None, **kwargs):
-    r"""It extracts a backbone from EfficientNet network.
+    r"""Extract backbone from EfficientNet network.
     
     Args:
-        backbone_name (str): the name of backbone.
-        return_stages (int): the number of stages to be extracted.
-        input_dim (int): the dimension of input.
+        backbone_name (str): name of backbone.
+        return_stages (int): number of stages to be extracted.
+        input_dim (int): dimension of input.
         pretrained (bool): whether to use pretrained weights when extracting.
-        model_dir (str): the directory to save the pretrained weights.
-        trainable_stages (int): the number of trainable (not frozen) stages starting from final stage.
-    """  
+        model_dir (str): directory to save the pretrained weights.
+        trainable_stages (int): number of trainable (not frozen) stages starting from final stage.
+
+    Returns:
+        nn.Module: extracted backbone.
+    """   
     efficientnet_names = ["efficientnet_b0", "efficientnet_b1", "efficientnet_b2",
         "efficientnet_b3", "efficientnet_b4", "efficientnet_b5", "efficientnet_b6",
         "efficientnet_b7", "efficientnet_b8", "efficientnet_l2"]

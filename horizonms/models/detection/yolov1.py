@@ -8,7 +8,7 @@ from ... import NETS, LOSSES, METRICS
 from ... import build_backbone, build_head, build_neck
 
 
-__all__ = ("YOLOv1", "YOLOv1Losses", "YOLOv1Metrics")
+__all__ = ["YOLOv1", "YOLOv1Losses", "YOLOv1Metrics"]
 
 
 @NETS.register_module()

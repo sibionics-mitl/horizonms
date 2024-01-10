@@ -1,3 +1,5 @@
+# Codes modified from https://github.com/pytorch/vision/blob/main/torchvision/datasets/voc.py
+
 import collections
 import os
 import cv2
@@ -13,7 +15,7 @@ from .base import BaseDataset
 import numpy as np
 
 
-__all__ = ("VOCBase", "VOCSegmentation", "VOCDetection")
+__all__ = ["VOCBase", "VOCSegmentation", "VOCDetection"]
 
 
 DATASET_YEAR_DICT = {
@@ -149,7 +151,10 @@ class VOCBase(BaseDataset):
         self.category2label = dict(zip(self.voc_classes, range(len(self.voc_classes))))
     
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
+
+        Returns:
+            List[str]: list of image names.
         """
         return self.images
 
@@ -172,9 +177,11 @@ class VOCSegmentation(VOCBase):
     _TARGET_FILE_EXT = ".png"
 
     def getitem(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
+
         Args:
             index (int): index of sample in the dataset.
+
         Returns:
             tuple: Tuple (image, target).
         """
@@ -204,9 +211,11 @@ class VOCDetection(VOCBase):
     _TARGET_FILE_EXT = ".xml"
 
     def getitem(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
+
         Args:
             index (int): index of sample in the dataset.
+            
         Returns:
             tuple: Tuple (image, target).
         """

@@ -3,6 +3,8 @@ import torch
 from typing import Iterable
 
 
+__all__ = ["EMA"]
+
 class EMA:
     """
     Implementation of Exponential Moving Averages(EMA) for model parameters.
@@ -13,11 +15,9 @@ class EMA:
     Codes from https://github.com/nachiket273/pytorch_resnet_rs
 
     Args:
-        parameters: model parameters.
-                    Iterable(torch.nn.Parameter)
-        decay_rate: decay rate for moving average.
-                    Value is between 0. and 1.0
-        num_updates: Number of updates to adjust decay_rate.
+        parameters (torch.nn.Parameter): model parameters. Iterable(torch.nn.Parameter).
+        decay_rate (float): decay rate for moving average. Value is between 0. and 1.0
+        num_updates (int): number of updates to adjust decay_rate.
     """
     def __init__(self, parameters: Iterable[torch.nn.Parameter],
                  decay_rate: float,
@@ -32,8 +32,7 @@ class EMA:
         self.saved_params = parameters
 
     def update(self, parameters: Iterable[torch.nn.Parameter]) -> None:
-        """
-        Update the EMA of parametes with current decay rate.
+        """Update the EMA of parametes with current decay rate.
         """
         self.num_updates += 1
         if self.num_updates is not None:
@@ -50,8 +49,7 @@ class EMA:
                 shadow.sub_(tmp)
 
     def store(self, parameters: Iterable[torch.nn.Parameter]) -> None:
-        """
-        Save the model parameters.
+        """Save the model parameters.
         """
         parameters = list(parameters)
         self.saved_params = [p.clone().detach()
@@ -59,8 +57,7 @@ class EMA:
                              if p.requires_grad]
 
     def copy(self, parameters: Iterable[torch.nn.Parameter]) -> None:
-        """
-        Copy the EMA parmeters to model parameters.
+        """Copy the EMA parmeters to model parameters.
         """
         parameters = list(parameters)
         if len(parameters) != len(self.shadow_params):
@@ -73,8 +70,7 @@ class EMA:
                 param.data.copy_(shadow.data)
 
     def copy_back(self, parameters: Iterable[torch.nn.Parameter]) -> None:
-        """
-        Copy the saved parameters to model parameters.
+        """Copy the saved parameters to model parameters.
         """
         parameters = list(parameters)
         if self.saved_params is None:

@@ -6,8 +6,8 @@ from torch.jit.annotations import List, Optional, Dict, Tuple
 import math
 
 
-__all__ = ("AnchorGenerator", "bbox_transform", "bbox_transform_batch", "bbox_transform_inv_batch",
-           "BBoxCoder", "clip_boxes", "anchor_targets_bbox", "compute_gt_annotations")
+__all__ = ["AnchorGenerator", "bbox_transform", "bbox_transform_batch", "bbox_transform_inv_batch",
+           "BBoxCoder", "clip_boxes", "anchor_targets_bbox", "compute_gt_annotations"]
 
 
 class AnchorGenerator(nn.Module):
@@ -63,7 +63,6 @@ class AnchorGenerator(nn.Module):
     # (scales, aspect_ratios) are usually an element of zip(self.scales, self.aspect_ratios)
     # This method assumes aspect ratio = height / width for an anchor.
     def generate_anchors(self, base_size, aspect_ratios, scales, dtype=torch.float32, device="cpu"):
-        # type: (List[int], List[float], int, Device) -> Tensor  # noqa: F821
         base_size = torch.as_tensor(base_size, dtype=dtype, device=device)
         scales = torch.as_tensor(scales, dtype=dtype, device=device)
         aspect_ratios = torch.as_tensor(aspect_ratios, dtype=dtype, device=device)
@@ -77,7 +76,6 @@ class AnchorGenerator(nn.Module):
         return base_anchors
 
     def set_cell_anchors(self, dtype, device):
-        # type: (int, Device) -> None  # noqa: F821
         if self.cell_anchors is not None:
             cell_anchors = self.cell_anchors
             assert cell_anchors is not None
@@ -104,7 +102,6 @@ class AnchorGenerator(nn.Module):
     # For every combination of (a, (g, s), i) in (self.cell_anchors, zip(grid_sizes, strides), 0:2),
     # output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.
     def grid_anchors(self, grid_sizes, strides):
-        # type: (List[List[int]], List[List[Tensor]]) -> List[Tensor]
         anchors = []
         cell_anchors = self.cell_anchors
         assert cell_anchors is not None
@@ -140,7 +137,6 @@ class AnchorGenerator(nn.Module):
         return anchors
 
     def cached_grid_anchors(self, grid_sizes, strides):
-        # type: (List[List[int]], List[List[Tensor]]) -> List[Tensor]
         key = str(grid_sizes) + str(strides)
         if key in self._cache:
             return self._cache[key]
@@ -417,77 +413,3 @@ def compute_gt_annotations(
     ignore_indices = (max_overlaps > negative_overlap) & ~positive_indices
 
     return positive_indices, ignore_indices, argmax_overlaps_inds
-
-
-
-# if __name__=='__main__':
-    # import numpy as np
-    # from ref_anchors import generate_anchors, anchors_for_shape, shift
-    # sizes=((64,),(32,),(16,),(8,),(4,))
-    # aspect_ratios=((0.5, 1.0, 2.0),)
-    # scales=((2**0,2**(1/3),2**(2/3)),)
-    # generator = AnchorGenerator(sizes=sizes,
-    #     aspect_ratios=aspect_ratios*len(sizes),
-    #     scales=scales*len(sizes)
-    #     )
-    
-    # anchors = generator.generate_anchors(base_size=((16),),
-    #                                      scales=((2**0,2**(1/3),2**(2/3)),),
-    #                                      aspect_ratios=((0.5, 1.0, 2.0)),)
-    
-    # ref = generate_anchors(base_size=16, ratios=(0.5, 1.0, 2.0), scales=(2**0,2**(1/3),2**(2/3)))
-    # np.testing.assert_almost_equal(anchors.numpy(),ref.numpy())
-    # ratios=(0.5, 1.0, 2.0)
-    # ref_scales=(2**0,2**(1/3),2**(2/3))
-    # sizes = (64,32,16,8,4)
-    # ref_anchors = []
-    # for s in sizes:
-    #     ref = generate_anchors(base_size=s, ratios=ratios, scales=ref_scales)
-    #     ref_anchors.append(ref)
-        
-    # generator.set_cell_anchors(torch.float32,'cpu')
-    # for a1,a2 in zip(ref_anchors,generator.cell_anchors):
-    #     print(a1.shape,a2.shape)
-    #     np.testing.assert_almost_equal(a1.numpy(),a2.numpy())
-
-
-    # sizes=((32,))
-    # generator = AnchorGenerator(sizes=sizes,
-    #     aspect_ratios=aspect_ratios*len(sizes),
-    #     scales=scales*len(sizes)
-    #     )
-    # grid_sizes  = ((8,12),)
-    # strides = ((64,64),)
-    # anchors = generate_anchors(base_size=32, ratios=ratios, scales=ref_scales)
-    # shifted_anchors = shift(grid_sizes[0], strides[0][0], anchors)    
-    # generator.set_cell_anchors(torch.float32,'cpu')
-    # np.testing.assert_almost_equal(anchors.numpy(),generator.cell_anchors[0].numpy())
-    # anchors_all = generator.cached_grid_anchors(grid_sizes, strides)
-    # np.testing.assert_almost_equal(shifted_anchors.numpy(),anchors_all[0].numpy())
-    
-    
-    # sizes=((32,),(64,),(128,),(256,),(512,))
-    # generator = AnchorGenerator(sizes=sizes,
-    #     aspect_ratios=aspect_ratios*len(sizes),
-    #     scales=scales*len(sizes)
-    #     )
-    # image_shape = (512,512)
-    # grid_sizes  = ((64,64),(32,32),(16,16),(8,8),(4,4))
-    # strides = ((8,8), (16,16), (32,32), (64,64), (128,128))
-    # ref_all = anchors_for_shape(image_shape)
-    # generator.set_cell_anchors(torch.float32,'cpu')
-    # anchors_all = generator.cached_grid_anchors(grid_sizes, strides)
-    # for a1,a2 in zip(ref_all,anchors_all):
-    #     print(a1.shape,a2.shape)
-    #     d = torch.abs(a1 - a2)
-    #     print(d.max(),d.min())
-    #     np.testing.assert_almost_equal(a1.numpy(),a2.numpy(),decimal=4)
-    
-    # shift_x = torch.arange(0, 5) 
-    # shift_y = torch.arange(0, 2) 
-    # shift_x1, shift_y1 = torch.meshgrid([shift_x, shift_y])
-    # shift_y2, shift_x2 = torch.meshgrid([shift_y, shift_x])
-    # shift_y3, shift_x3 = torch.meshgrid(shift_y, shift_x)
-    # v1 = torch.stack((shift_x1.reshape(-1), shift_y1.reshape(-1)), dim=1)
-    # v2 = torch.stack((shift_x2.reshape(-1), shift_y2.reshape(-1)), dim=1)
-    # v3 = torch.stack((shift_x3.reshape(-1), shift_y3.reshape(-1)), dim=1)

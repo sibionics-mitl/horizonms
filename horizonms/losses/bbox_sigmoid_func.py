@@ -8,16 +8,22 @@ from .polar_transform import polar_transform
 
 def mil_unary_baseline_sigmoid_loss(ypred, mask, gt_boxes_xxyy,
         loss_mode='ce_all', focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil baseline unary loss. 
+    r"""Compute the MIL baseline unary loss.  
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'ce_all'`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -76,16 +82,24 @@ def mil_unary_baseline_sigmoid_loss(ypred, mask, gt_boxes_xxyy,
 def mil_approx_unary_baseline_sigmoid_loss(ypred, mask, gt_boxes_xxyy, 
         loss_mode='ce_all', approx_method='softmax', approx_alpha=4, 
         focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil baseline unary loss while applying smooth maximum function. 
+    r"""Compute the MIL baseline unary loss while applying smooth maximum function. 
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'ce_all'`.
+        approx_method (str): name of smooth maximum function. It is `'softmax'` or `'quasimax'`. Default: `'softmax'`.
+        approx_alpha (float): parameter of smooth maximum function. Default: `4`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -158,16 +172,22 @@ def mil_approx_unary_baseline_sigmoid_loss(ypred, mask, gt_boxes_xxyy,
 
 def mil_unary_baseline_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes_xxyy, 
         loss_mode='ce_all', focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil baseline unary loss, in which the generalized negative bag is used.
+    r"""Compute the MIL baseline unary loss, in which the generalized negative bag is used.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'ce_all'`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -226,17 +246,25 @@ def mil_unary_baseline_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes_xx
 def mil_approx_unary_baseline_pos_generalized_neg_sigmoid_loss(ypred, mask,
         gt_boxes_xxyy, loss_mode='ce_all', approx_method='softmax', approx_alpha=4, 
         focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil baseline unary loss while applying smooth maximum function,
-        in which the generalized negative bag is used.
+    r"""Compute the MIL baseline unary loss while applying smooth maximum function,
+    in which the generalized negative bag is used.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'ce_all'`.
+        approx_method (str): name of smooth maximum function. It is `'softmax'` or `'quasimax'`. Default: `'softmax'`.
+        approx_alpha (float): parameter of smooth maximum function. Default: `4`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -304,22 +332,31 @@ def mil_unary_parallel_sigmoid_loss(ypred, mask, gt_boxes_cr,
         loss_mode='ce_all', angle_params=(60,-61,30), 
         focal_params={'alpha':0.25, 'gamma':2.0, 'sampling_prob':1.0}, 
         epsilon=1e-6):
-    """ Compute the mil generalized unary loss while no smooth maximum function is applied.
+    r"""Compute parallel transformation based MIL unary loss while no smooth maximum function is applied.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_cr: Tensor of boxes with (N, 5), where N is the number of bouding boxes in the batch,
-                    the 5 elements of each row are [nb_img, class, center_x, center_r, radius]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_cr (Tensor): boxes with (N, 5), where N is the number of bouding boxes in the batch,
+            the 5 elements of each row are `[nb_img, class, center_x, center_y, radius]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[center_x, center_y, radius]` are locations and radius of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'ce_all'`.
+        angle_params (tuple): degree of parallel crossing lines in the format of (start, stop, step). Default: `(-60,61,30)`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
         for weakly supervised image segmentation. In International Conference on 
         Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). 
         Springer, Cham.
+        Wang, J. and Xia, B., 2023. Weakly Supervised Image Segmentation Beyond Tight Bounding Box Annotations. 
+        arXiv preprint arXiv:2301.12053.
     """
     assert loss_mode in ['ce_all', 'ce_balance', 'focal']
     ypred = torch.clamp(ypred, epsilon, 1-epsilon)
@@ -403,22 +440,33 @@ def mil_approx_unary_parallel_sigmoid_loss(ypred, mask, gt_boxes_cr,
         loss_mode='focal', angle_params=(60,-61,30),
         approx_method='softmax', approx_alpha=4, 
         focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil generalized unary loss.
+    r"""Compute the mil generalized unary loss.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_cr: Tensor of boxes with (N, 5), where N is the number of bouding boxes in the batch,
-                    the 5 elements of each row are [nb_img, class, center_x, center_r, radius]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_cr (Tensor): boxes with (N, 5), where N is the number of bouding boxes in the batch,
+            the 5 elements of each row are `[nb_img, class, center_x, center_y, radius]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[center_x, center_y, radius]` are locations and radius of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'focal'`.
+        angle_params (tuple): degree of parallel crossing lines in the format of (start, stop, step). Default: `(-60,61,30)`.
+        approx_method (str): name of smooth maximum function. It is `'softmax'` or `'quasimax'`. Default: `'softmax'`.
+        approx_alpha (float): parameter of smooth maximum function. Default: `4`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
         for weakly supervised image segmentation. In International Conference on 
         Medical Image Computing and Computer-Assisted Intervention (pp. 526-536). 
         Springer, Cham.
+        Wang, J. and Xia, B., 2023. Weakly Supervised Image Segmentation Beyond Tight Bounding Box Annotations. 
+        arXiv preprint arXiv:2301.12053.
     """
     assert loss_mode in ['ce_all', 'ce_balance', 'focal']
     assert approx_method in ['softmax', 'quasimax']
@@ -518,21 +566,32 @@ def mil_approx_polar_sigmoid_loss(ypred, mask, gt_boxes_cr,
         pt_params={"output_shape": [90, 30], "scaling": "linear"}, 
         focal_params={'alpha':0.25, 'gamma':2.0}, 
         epsilon=1e-6):
-    """ Compute the mil unary loss based on polar transformation.
+    r"""Compute polar transformation based MIL unary loss.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_cr: Tensor of boxes with (N, 5), where N is the number of bouding boxes in the batch,
-                    the 5 elements of each row are [nb_img, class, center_x, center_r, radius]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_cr (Tensor): boxes with (N, 5), where N is the number of bouding boxes in the batch,
+            the 5 elements of each row are `[nb_img, class, center_x, center_y, radius]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[center_x, center_y, radius]` are locations and radius of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'focal'`.
+        weight_min (float): minimum weight of the samples in a polar line. Default: `0.5`.
+        center_mode (str): center of the polar transformation. It is `'fixed'` or `'estimated'`. Default: `'fixed'`.
+        approx_method (str): name of smooth maximum function. It is `'softmax'` or `'quasimax'`. Default: `'softmax'`.
+        approx_alpha (float): parameter of smooth maximum function. Default: `4`.
+        pt_params (Dict): parameters of polar transformation. Keys in the dictionary are `'output_shape'` and `'scaling'`.
+            Default: `{"output_shape": [90, 30], "scaling": "linear"}`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        loss values with shape (C,) for each category.
 
     Reference:
-        Wang, J. and Xia, B., 2022. Polar Transformation Based Multiple Instance 
-        Learning Assisting Weakly Supervised Image Segmentation With Loose 
-        Bounding Box Annotations. arXiv preprint arXiv:2203.06000.
+        Wang, J. and Xia, B., 2023. Weakly Supervised Image Segmentation Beyond Tight Bounding Box Annotations. 
+        arXiv preprint arXiv:2301.12053.
     """
     assert loss_mode in ['ce_all', 'ce_balance', 'focal']
     assert approx_method in ['softmax', 'quasimax']
@@ -630,17 +689,22 @@ def mil_approx_polar_sigmoid_loss(ypred, mask, gt_boxes_cr,
 
 def mil_unary_bbox_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes_xxyy,
         loss_mode='focal', focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil unary loss. A positive bag is defined as all pixels in a bounding box;
-        generalized negative bag is used.
+    r"""Compute MIL unary loss. A positive bag is defined as all pixels in a bounding box; generalized negative bag is used.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'focal'`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -698,17 +762,24 @@ def mil_unary_bbox_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes_xxyy,
 def mil_approx_unary_bbox_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes_xxyy, 
         loss_mode='focal', approx_method='softmax', approx_alpha=4, 
         focal_params={'alpha':0.25, 'gamma':2.0}, epsilon=1e-6):
-    """ Compute the mil unary loss. A positive bag is defined as all pixels in a bounding box;
-        generalized negative bag is used.
+    r"""Compute MIL unary loss. A positive bag is defined as all pixels in a bounding box; generalized negative bag is used.
 
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-        gt_boxes_xxyy: Tensor of boxes with (N, 6), where N is the number of bouding boxes in the batch,
-                    the 6 elements of each row are [nb_img, class, x1, y1, x2, y2]
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        gt_boxes_xxyy (Tensor): boxes with shape (N, 6), where N is the number of bouding boxes in the batch,
+            the 6 elements of each row are `[nb_img, class, x1, y1, x2, y2]`, where `nb_img` is the index of image in the batch,
+            `class` is the category of the object, `[x1, y1, x2, y2]` are left, up, right, down locations of bounding box.
+        loss_mode (str): type of loss. It is `'ce_all'` for cross entropy loss for all samples, 
+            `'ce_balance'` for cross entropy loss for positive and negative classes , or `'focal'` for focal loss.
+            Default: `'focal'`.
+        approx_method (str): name of smooth maximum function. It is `'softmax'` or `'quasimax'`. Default: `'softmax'`.
+        approx_alpha (float): parameter of smooth maximum function. Default: `4`.
+        focal_params (Dict): parameters for focal loss. Default: `{'alpha':0.25, 'gamma':2.0}`.
+        epsilon (float): a small number for the stability of the loss calcualtion. Default: `1e-6`.
 
     Returns:
-        losses with shape (C,) for each category
+        Tensor: loss values with shape (C,) for each category.
 
     Reference:
         Wang, J. and Xia, B., 2021, September. Bounding box tightness prior
@@ -771,15 +842,17 @@ def mil_approx_unary_bbox_pos_generalized_neg_sigmoid_loss(ypred, mask, gt_boxes
 
 
 def mil_pairwise_loss(ypred, mask, softmax=True, exp_coef=-1):
-    """ Compute the pair-wise loss.
-        As defined in Weakly Supervised Instance Segmentation using the Bounding Box Tightness Prior
-        
+    r"""Compute pair-wise loss, defined in "Weakly Supervised Instance Segmentation using the Bounding Box Tightness Prior".
+                
     Args:
-        ypred: Tensor of predicted data from the network with shape (B, C, W, H).
-        mask:  Tensor of mask with shape (B, C, W, H), bounding box regions with value 1 and 0 otherwise.
-
+        ypred (Tensor): network prediction with shape (B, C, W, H).
+        mask (Tensor): binary mask with shape (B, C, W, H), in which bounding box regions have value 1, and 0 otherwise.
+        softmax (bool): If True, the network outputs softmax probability. Default: `True`.
+        exp_coef (float): coefficient of exponential function applied to network output. It should be positive. 
+            -1 denotes coefficient of exponential function is not applied. Default: `-1`.
+        
     Returns:
-        pair-wise loss for each category (C,)
+        Tensor: loss values with shape (C,) for each category.
     """
     device = ypred.device
     center_weight = torch.tensor([[0., 0., 0.], [0., 1., 0.], [0., 0., 0.]])

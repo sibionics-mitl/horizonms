@@ -4,7 +4,7 @@ from ..model_base import BaseModel
 from ...builder import MODELS
 
 
-__all__ = ("BaseDetection")
+__all__ = ["BaseDetection"]
 
 
 @MODELS.register_module()
@@ -13,9 +13,9 @@ class BaseDetection(BaseModel, ABC):
 
     Args:
         net (nn.Module): Deep learning network.
-        batch_image: class used to convert a list of (input, target) into batch format used in network training and testing.
-        divisible: it determines the size of the batched input such that it is divisible by `divisible` and larger than the size of the input.
-        batch_transforms: batch transformation for network training.
+        batch_image (Callable): class used to convert a list of (input, target) into batch format used in network training and testing.
+        divisible (int): it determines the size of the batched input such that it is divisible by `divisible` and larger than the size of the input.
+        batch_transforms (Callable, optional): batch transformation for network training.
     """
     def __init__(self, net, batch_image, divisible=1, batch_transforms=None):
         super(BaseDetection, self).__init__(net, None)

@@ -2,7 +2,7 @@ from .sigmoid_softmax_func import dice_coefficient, iou_score
 from .. import METRICS
 
 
-__all__ = ("DiceCoefficient", "IouScore")
+__all__ = ["DiceCoefficient", "IouScore"]
 
 
 @METRICS.register_module()
@@ -17,6 +17,15 @@ class DiceCoefficient():
         self.epsilon = epsilon
 
     def __call__(self, ytrue, ypred):
+        r"""Calculate dice coefficient.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: dice coefficient value. 
+        """
         return dice_coefficient(ytrue, ypred, self.epsilon)
 
 
@@ -32,4 +41,13 @@ class IouScore():
         self.epsilon = epsilon
 
     def __call__(self, ytrue, ypred):
+        r"""Calculate IoU.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: IoU value. 
+        """
         return iou_score(ytrue, ypred, self.epsilon)

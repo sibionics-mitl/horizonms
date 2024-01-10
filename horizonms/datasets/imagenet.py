@@ -1,3 +1,5 @@
+# Codes are modified from https://github.com/pytorch/vision/blob/main/torchvision/datasets/imagenet.py
+
 from contextlib import contextmanager
 import os
 import shutil
@@ -10,7 +12,7 @@ from .base import BaseDataset
 from typing import Any, Dict, List, Iterator, Optional, Tuple, Callable
 
 
-__all__ = ("ImageNetClassification")
+__all__ = ["ImageNetClassification"]
 
 
 ARCHIVE_META = {
@@ -98,15 +100,19 @@ class ImageNetClassification(BaseDataset):
         return os.path.join(self.root, self.mode)
 
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
+
+        Returns:
+            List[str]: list of image names.
         """
         return self.image_names
 
     def getitem(self, index):
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
         
         Args:
             index (int): index of sample in the dataset.
+
         Returns:
             tuple: Tuple (image, target).
         """

@@ -5,6 +5,8 @@ from collections import OrderedDict
 from ...builder import NECKS
 
 
+__all__ = ["FeaturePyramidNetwork"]
+
 @NECKS.register_module()
 class FeaturePyramidNetwork(nn.Module):
     r"""Feature pyramid network (FPN).

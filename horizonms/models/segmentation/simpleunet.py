@@ -4,7 +4,7 @@ from .decoder import UnetSimpleDecoder
 from ...builder import NETS
 
 
-__all__ = ("SimpleUNet")
+__all__ = ["SimpleUNet"]
 
 
 class SimpleEnconderModule(nn.Module):

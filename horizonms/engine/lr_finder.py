@@ -27,7 +27,7 @@ class LRFinder(object):
     information on how well the network can be trained over a range of learning rates
     and what is the optimal learning rate.
 
-    codes from: https://github.com/davidtvs/pytorch-lr-finder
+    Codes from: https://github.com/davidtvs/pytorch-lr-finder
 
     Arguments:
         model (torch.nn.Module): wrapped model.
@@ -111,7 +111,7 @@ class LRFinder(object):
     ):
         """Performs the learning rate range test.
 
-        Arguments:
+        Args:
             train_loader (`torch.utils.data.DataLoader`
                 or child of `TrainDataLoaderIter`, optional):
                 the training set data loader.

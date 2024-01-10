@@ -8,7 +8,7 @@ from .base import BaseDataset
 from typing import Callable, Optional
 
 
-__all__ = ("EyePACSClassification", "EyePACSClassificationPng", "eyepacs_preprocessing")
+__all__ = ["EyePACSClassification", "EyePACSClassificationPng", "eyepacs_preprocessing"]
     
 
 class EyePACSClassification(BaseDataset):
@@ -66,7 +66,7 @@ class EyePACSClassification(BaseDataset):
         print("samples in classes: ", [(self.csv['level']==k).sum() for k in range(5)])
 
     def test_valid_split(self):
-        r"""splits the original testing subset into testing and validation subsets.
+        r"""Split the original testing subset into testing and validation subsets.
         """
         np.random.seed(self.valid_seed)
         data = pd.read_csv(os.path.join(self.root, 'csv', 'retinopathy_solution.csv'))
@@ -87,10 +87,11 @@ class EyePACSClassification(BaseDataset):
         data_test.to_csv(os.path.join(self.root, 'csv', f'test_test_{self.suffix}.csv'), index=False)
 
     def getitem(self, index):
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
 
         Args:
             index (int): index of sample in the dataset.
+
         Returns:
             tuple: Tuple (image, target).
         """
@@ -115,13 +116,16 @@ class EyePACSClassification(BaseDataset):
         return img, target
 
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
+
+        Returns:
+            List[str]: list of image names.
         """
         return self.images
        
 
 def image_processing(img_id, csv, img_dir, save_dir):
-    r"""image preprocessing for a single image in Eye PACS dataset.
+    r"""Image preprocessing for a single image in Eye PACS dataset.
     """
     image_name = csv['image'].iloc[img_id]
     fn_save = os.path.join(save_dir, f'{image_name}.png')
@@ -143,7 +147,11 @@ def image_processing(img_id, csv, img_dir, save_dir):
 
 
 def eyepacs_preprocessing(root, mode, num_workers=12):
-    r"""image preprocessing for Eye PACS dataset.
+    r"""Image preprocessing for Eye PACS dataset.
+
+    Args:
+        mode: dataset subset indicator. It has to be `'train'` or `'test'`.
+        num_workers: maximum number of workers for processes.
     """
     from concurrent.futures import ProcessPoolExecutor
     from functools import partial
@@ -197,10 +205,11 @@ class EyePACSClassificationPng(EyePACSClassification):
             self.folder = f"train_preprocessing"
 
     def getitem(self, index):
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
         
         Args:
             index (int): index of sample in the dataset.
+            
         Returns:
             tuple: Tuple (image, target).
         """

@@ -7,7 +7,7 @@ from .backbone_unet import vgg_unet_backbone, resnet_unet_backbone, densenet_une
 from .backbone_detection import vgg_fpn_det_v1, vgg_fpn_det_v2
 
 
-__all__ = (# base
+__all__ = [# base
            "IntermediateLayerGetter", "Backbone", "BackboneWithFPN",
            # backbone
            "vgg_backbone", "resnet_backbone", "efficientnet_backbone",
@@ -20,4 +20,4 @@ __all__ = (# base
            "densenet_unet_backbone", "mobilenetv2_unet_backbone",
            # backbone_detection
            "vgg_fpn_det_v1", "vgg_fpn_det_v2",
-           )
+]

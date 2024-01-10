@@ -10,7 +10,7 @@ from .utils import _make_divisible, load_state_dict_from_url
 from ...builder import NETS
 
 
-__all__ = (
+__all__ = [
     "EfficientNet",
     "efficientnet_b0",
     "efficientnet_b1",
@@ -22,7 +22,7 @@ __all__ = (
     "efficientnet_b7",
     "efficientnet_b8",
     "efficientnet_l2",
-)
+]
 
 
 model_urls = {

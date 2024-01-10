@@ -4,7 +4,7 @@ from ..ops.misc import SqueezeExcitation
 from ...builder import NETS
 
 
-__all__ = ("VGG_SE")
+__all__ = ["VGG_SE"]
 
 
 cfgs = {

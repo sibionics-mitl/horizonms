@@ -1,4 +1,4 @@
-"""Codes are borrowed from torchvision"""
+#Codes are modified from torchvision
 
 import warnings
 from typing import Optional, Dict, Tuple

@@ -57,25 +57,21 @@ def _stackcopy(a, b):
 
 
 def _linear_polar_mapping(output_coords, k_angle, k_radius, center):
-    """Inverse mapping function to convert from cartesian to polar coordinates
+    r"""Inverse mapping function to convert from cartesian to polar coordinates
     Parameters
-    ----------
-    output_coords : ndarray
-        `(M, 2)` array of `(col, row)` coordinates in the output image
-    k_angle : float
-        Scaling factor that relates the intended number of rows in the output
-        image to angle: ``k_angle = nrows / (2 * np.pi)``
-    k_radius : float
-        Scaling factor that relates the radius of the circle bounding the
-        area to be transformed to the intended number of columns in the output
-        image: ``k_radius = ncols / radius``
-    center : tuple (row, col)
-        Coordinates that represent the center of the circle that bounds the
-        area to be transformed in an input image.
-    Returns
-    -------
-    coords : ndarray
-        `(M, 2)` array of `(col, row)` coordinates in the input image that
+    
+    Args:
+        output_coords (Tensor): `(M, 2)` array of `(col, row)` coordinates in the output image
+        k_angle (float): Scaling factor that relates the intended number of rows in the output
+            image to angle: ``k_angle = nrows / (2 * np.pi)``
+        k_radius (float): Scaling factor that relates the radius of the circle bounding the
+            area to be transformed to the intended number of columns in the output
+            image: ``k_radius = ncols / radius``
+        center (tuple[row, col]): Coordinates that represent the center of the circle that bounds the
+            area to be transformed in an input image.
+    
+    Returns:
+        Tensor: `(M, 2)` array of `(col, row)` coordinates in the input image that
         correspond to the `output_coords` given as input.
     """
     angle = output_coords[:, 1] / k_angle
@@ -86,26 +82,22 @@ def _linear_polar_mapping(output_coords, k_angle, k_radius, center):
 
 
 def _log_polar_mapping(output_coords, k_angle, k_radius, center):
-    """Inverse mapping function to convert from cartesian to polar coordinates
+    r"""Inverse mapping function to convert from cartesian to polar coordinates
     Parameters
-    ----------
-    output_coords : ndarray
-        `(M, 2)` array of `(col, row)` coordinates in the output image
-    k_angle : float
-        Scaling factor that relates the intended number of rows in the output
-        image to angle: ``k_angle = nrows / (2 * np.pi)``
-    k_radius : float
-        Scaling factor that relates the radius of the circle bounding the
-        area to be transformed to the intended number of columns in the output
-        image: ``k_radius = width / np.log(radius)``
-    center : tuple (row, col)
-        Coordinates that represent the center of the circle that bounds the
-        area to be transformed in an input image.
-    Returns
-    -------
-    coords : ndarray
-        `(M, 2)` array of `(col, row)` coordinates in the input image that
-        correspond to the `output_coords` given as input.
+    
+    Args:
+        output_coords (Tensor): `(M, 2)` array of `(col, row)` coordinates in the output image
+        k_angle (float): Scaling factor that relates the intended number of rows in the output
+            image to angle: ``k_angle = nrows / (2 * np.pi)``
+        k_radius (float): Scaling factor that relates the radius of the circle bounding the
+            area to be transformed to the intended number of columns in the output
+            image: ``k_radius = width / np.log(radius)``
+        center (tuple[row, col]): Coordinates that represent the center of the circle that bounds the
+            area to be transformed in an input image.
+    
+    Returns:
+        Tensor: `(M, 2)` array of `(col, row)` coordinates in the input image that
+            correspond to the `output_coords` given as input.
     """
     angle = output_coords[:, 1] / k_angle
     rr = ((torch.exp(output_coords[:, 0] / k_radius)) * torch.sin(angle)) + center[1]
@@ -126,6 +118,9 @@ def polar_transform(image, center=None, radius=None, output_shape=None,
         output_shape (tuple[int]): `output_shape = (height, width)`, dimension of output of polar transformation.
         height (int): height of output of polar transformation.
         scaling (str): rule of polar coordinate.
+
+    Returns:
+        Tensor: image in polar coordinate system.
     """
     device = image.device
     dtype  = image.dtype

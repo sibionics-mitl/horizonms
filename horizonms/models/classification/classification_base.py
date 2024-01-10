@@ -5,7 +5,7 @@ from ..model_base import BaseModel
 from ...builder import build_net, build_backbone, build_neck, build_head, MODELS, NETS
 
 
-__all__ = ("BaseClassification", "ClassificationNetFromModules", "get_classification_net")
+__all__ = ["BaseClassification", "ClassificationNetFromModules", "get_classification_net"]
 
 
 @MODELS.register_module()
@@ -34,6 +34,12 @@ class BaseClassification(BaseModel, ABC):
         self.batch_transforms = batch_transforms
 
     def preprocessing_input(self, images, targets=None):
+        """Preprocessing images and targets such that they can be used by the model.
+
+        Args:
+            images (List[Tensor]): list of images.
+            targets (Dict): list of targets. Default: `None`.
+        """
         if self.batch_image is not None:
             images, targets = self.batch_image(images, targets)
         if self.batch_transforms is not None:
@@ -84,7 +90,7 @@ class BaseClassification(BaseModel, ABC):
 
 @NETS.register_module()
 class ClassificationNetFromModules(nn.Module):
-    r"""It constructs network by providing 'backbone', 'neck', and 'head'.
+    r"""Construct network by providing 'backbone', 'neck', and 'head'.
 
     Args:
         cfg (Dict): the configuration of the network.
@@ -113,6 +119,14 @@ class ClassificationNetFromModules(nn.Module):
 
 
 def get_classification_net(cfg):
+    r"""Get classification network using configuration.
+
+    Args:
+        cfg (Dict): network configuration.
+
+    Returns:
+        nn.Module: network model.
+    """
     keys = list(cfg.keys())
     assert ("name" in keys) | ("backbone" in keys), "'name' or 'backbone' has to be provided."
     if "name" in keys:

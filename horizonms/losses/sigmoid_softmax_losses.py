@@ -2,7 +2,7 @@ import torch
 from .. import LOSSES
 
 
-__all__ = ("DiceLoss")
+__all__ = ["DiceLoss"]
 
 
 @LOSSES.register_module()
@@ -10,7 +10,7 @@ class DiceLoss():
     r"""Dice loss for network output.
 
     Args:
-        epsilon (float): a small number for the stability of loss.
+        epsilon (float): a small number for the stability of loss. Default: `1e-6`.
     """
     def __init__(self, epsilon=1e-6):
         super(DiceLoss, self).__init__()

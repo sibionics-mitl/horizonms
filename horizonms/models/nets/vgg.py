@@ -4,8 +4,8 @@ from .utils import load_state_dict_from_url
 from ...builder import NETS
 
 
-__all__ = ("VGG", "vgg11", "vgg11_bn", "vgg13", "vgg13_bn", "vgg13_bn_narrow", 
-           "vgg16", "vgg16_bn", "vgg19", "vgg19_bn")
+__all__ = ["VGG", "vgg11", "vgg11_bn", "vgg13", "vgg13_bn", "vgg13_bn_narrow", 
+           "vgg16", "vgg16_bn", "vgg19", "vgg19_bn"]
 
 
 model_urls = {

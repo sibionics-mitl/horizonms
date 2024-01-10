@@ -12,7 +12,7 @@ from ... import build_net, build_loss, build_metric
 from ...builder import MODELS
 
 
-__all__ = ("YOLODetection")
+__all__ = ["YOLODetection"]
 
 
 @MODELS.register_module()

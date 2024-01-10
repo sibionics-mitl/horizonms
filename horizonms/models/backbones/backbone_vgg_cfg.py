@@ -3,7 +3,7 @@ from .base import IntermediateLayerGetter
 from ...builder import BACKBONES
 
 
-__all__ = ("VGGCfg", "BackboneVGGCfg", "vgg_cfg_backbone_v1", "vgg_cfg_backbone_v2")
+__all__ = ["VGGCfg", "BackboneVGGCfg", "vgg_cfg_backbone_v1", "vgg_cfg_backbone_v2"]
 
 
 CFG_A = [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 

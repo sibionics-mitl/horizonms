@@ -3,7 +3,7 @@ from .base import SigmoidBaseLoss
 from .. import LOSSES
 
 
-__all__ = ("SigmoidCrossEntropyLoss", "SigmoidFocalLoss")
+__all__ = ["SigmoidCrossEntropyLoss", "SigmoidFocalLoss"]
 
 
 @LOSSES.register_module()
@@ -11,16 +11,27 @@ class SigmoidCrossEntropyLoss(SigmoidBaseLoss):
     r"""Cross entropy loss for sigmoid output.
 
     Args:
-        mode (str): the mode of cross entropy loss. It is 'all' or 'balance'. Default: ``'all'``.
+        mode (str): mode of cross entropy loss. It is 'all' or 'balance'. Default: ``'all'``.
             These two modes are different in how to get focal loss from individual samples.
             'all' returns an average for all samples.
             'balance' returns an average for all class, each class also returns an average for all of its samples.
+            Default: `'all'`.
     """
     def __init__(self, mode='all', *argv, **kwargs):
         super(SigmoidCrossEntropyLoss, self).__init__(*argv, **kwargs)
         self.mode = mode
 
     def calculate_loss(self, ytrue, ypred, flag=None):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            flag (Tensor): binary flag with value False for missing value, and True othewise.
+            
+        Returns:
+            Tensor: loss value. 
+        """
         ypred = torch.clamp(ypred, self.epsilon, 1-self.epsilon)
         if flag is not None:
             ytrue_pos = ytrue * flag
@@ -48,9 +59,9 @@ class SigmoidFocalLoss(SigmoidBaseLoss):
     r"""Focal loss for sigmoid output.
 
     Args:
-        alpha (float): Weighting factor in range (0,1) to balance positive vs negative examples or -1 for ignore. Default: ``0.25``.
-        gamma (float): Exponent of the modulating factor to balance easy vs hard examples. Default: ``2.0``.
-        cutoff (float): the threshold to determine positive and negative classes in ground truth. Default: ``0.5``.
+        alpha (float): weighting factor in range (0,1) to balance positive vs negative examples or -1 for ignore. Default: `0.25`.
+        gamma (float): exponent of the modulating factor to balance easy vs hard examples. Default: `2.0`.
+        cutoff (float): threshold to determine positive and negative classes in ground truth. Default: `0.5`.
     """
     def __init__(self, alpha=0.25, gamma=2.0, cutoff=0.5, *argv, **kwargs):
         super(SigmoidFocalLoss, self).__init__(*argv, **kwargs)
@@ -59,6 +70,16 @@ class SigmoidFocalLoss(SigmoidBaseLoss):
         self.cutoff = cutoff
         
     def calculate_loss(self, ytrue, ypred, flag=None):
+        r"""Calculate cross entropy loss.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            flag (Tensor): binary flag with value False for missing value, and True othewise.
+            
+        Returns:
+            Tensor: loss value. 
+        """
         ypred = torch.clamp(ypred, self.epsilon, 1-self.epsilon)
 
         # compute the focal loss

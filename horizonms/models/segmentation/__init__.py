@@ -7,7 +7,7 @@ from .residualunet import ResidualUNet
 from .unet import UNet_V1, UNet_V2
 
 
-__all__ = (# segmentation_base
+__all__ = [# segmentation_base
            "BaseSegmentation", "get_segmentation_net",
            # segmentation
            "Segmentation",
@@ -21,4 +21,4 @@ __all__ = (# segmentation_base
            "ResidualUNet",
            # unet
            "UNet_V1", "UNet_V2", 
-           )
+]

@@ -3,7 +3,7 @@ from .losses_func import smooth_l1_loss, weak_cross_entropy
 from .. import LOSSES
 
 
-__all__ = ("WeakCrossEntropyLoss", "CDRSmoothL1Loss", "PseudoCrossEntropyLoss", "PseudoPositiveCrossEntropyLoss")
+__all__ = ["WeakCrossEntropyLoss", "CDRSmoothL1Loss", "PseudoCrossEntropyLoss", "PseudoPositiveCrossEntropyLoss"]
 
 
 @LOSSES.register_module()

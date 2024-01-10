@@ -6,7 +6,7 @@ from typing import Callable, Any, Optional, List
 from ...builder import NETS
 
 
-__all__ = ("MobileNetV2", "mobilenet_v2")
+__all__ = ["MobileNetV2", "mobilenet_v2"]
 
 
 model_urls = {

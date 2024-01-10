@@ -6,7 +6,8 @@ from torch.utils.data import Dataset
 from .. import transforms as T
 from ..builder import build_transforms
 
-__all__ = ("BaseDataset")
+
+__all__ = ["BaseDataset"]
 
 
 class BaseDataset(Dataset, ABC):
@@ -34,25 +35,31 @@ class BaseDataset(Dataset, ABC):
         self.to_tensor = to_tensor
 
     def __len__(self) -> int:
-        r"""get the number of samples in the dataset.
+        r"""Get the number of samples in the dataset.
+
+        Returns:
+            int: the number of samples in the dataset.
         """
         return len(self.get_images())
 
     @abstractmethod
     def get_images(self):
-        r"""gets image names in the dataset.
+        r"""Get image names in the dataset.
         """
         pass
 
     @property
     def len(self) -> int:
-        r"""the number of samples in the dataset.
+        r"""The number of samples in the dataset.
+
+        Returns: 
+            int: the number of samples in the dataset.
         """
         return len(self.get_images())
 
     @abstractmethod
     def getitem(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample.
+        r"""Get image and target for a single sample.
 
         Args:
             index (int): index of the sample in the dataset.
@@ -60,12 +67,28 @@ class BaseDataset(Dataset, ABC):
         pass
 
     def get_target_single_item(self, key: str, value: Any, type: str = None):
-        r"""formats single item in target as a predefined dictionary.
+        r"""Format a single item in target as a predefined dictionary.
+
+        Args:
+            key (str): key of the item in target.
+            value: value of the item in target.
+            type: type of the item in target. It is `'bboxes'`, `'points'`, `'masks'`, `'labels'`, or `None`.
+        
+        Returns:
+            dict: dictionary of an item in target with the format of 
         """
+        assert type in [None, 'bboxes', 'points', 'masks', 'labels'], \
+            "type has to be in 'bboxes', 'points', 'masks', 'labels', or None."
         return {key: dict(type=type, value=value)}
 
     def format_target(self, target: Dict[str, Dict[str, Any]]) -> Dict[str, T.TargetStructure]:
-        r"""formats target by `T.TargetStructure`.
+        r"""Format target by `horizonms.transforms.TargetStructure`.
+
+        Args:
+            target: target in dictionary format. Each element is formated by `BaseDataset.get_target_single_item()`.
+
+        Returns:
+            `horizonms.transforms.TargetStructure`: target formated by `horizonms.transforms.TargetStructure`.
         """
         target_format = dict()
         for key, value in target.items():
@@ -73,10 +96,13 @@ class BaseDataset(Dataset, ABC):
         return target_format
 
     def __getitem__(self, index: int) -> Tuple[Any, Any]:
-        r"""gets image and target for a single sample, achieves data augmentation, and converts them into PyTorch Tensor if `self.to_tensor=True`.
+        r"""Get image and target for a single sample, achieves data augmentation, and converts them into PyTorch Tensor if `self.to_tensor=True`.
 
         Args:
             index (int): index of the sample in the dataset.
+
+        Returns:
+            tupe: Tuple(image, target).
         """
         image, target = self.getitem(index)
         target = self.format_target(target)

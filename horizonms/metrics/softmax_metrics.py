@@ -5,7 +5,7 @@ from .softmax_metrics_func import softmax_accuracy, softmax_accuracy_topk, \
 from .. import METRICS
 
 
-__all__ = ("SoftmaxAccuracy", "SoftmaxAccuracyTopk", "SoftmaxCohenKappaScore")
+__all__ = ["SoftmaxAccuracy", "SoftmaxAccuracyTopk", "SoftmaxCohenKappaScore"]
 
 
 @METRICS.register_module()
@@ -13,6 +13,15 @@ class SoftmaxAccuracy():
     r"""Accuracy for softmax output.
     """
     def __call__(self, ytrue, ypred):
+        r"""Calculate accuracy.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: accuracy value. 
+        """
         return softmax_accuracy(ytrue, ypred)
 
 
@@ -27,6 +36,15 @@ class SoftmaxAccuracyTopk():
         self.k = k
         
     def __call__(self, ytrue, ypred):
+        r"""Calculate accuracy.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: top-k accuracy value. 
+        """
         return softmax_accuracy_topk(ytrue, ypred, self.k)
 
 
@@ -45,6 +63,15 @@ class SoftmaxCohenKappaScore():
         self.epsilon = epsilon
 
     def __call__(self, ytrue, ypred):
+        r"""Calculate accuracy.
+
+        Args:
+            ypred (Tensor): groud truth with shape (M, C).
+            ytrue (Tensor): network prediction with shape (M, C).
+            
+        Returns:
+            Tensor: kappa value. 
+        """
         kappa = softmax_cohen_kappa_score(ytrue, ypred, weights=self.weights,
                 category=self.category, epsilon=self.epsilon)
         return kappa

@@ -12,7 +12,7 @@ from .bbox_sigmoid_losses import MILUnaryBaselineSigmoidLoss, \
     MILUnaryBboxPosGeneralizedNegSigmoidLoss, MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss
 
 
-__all__ = ("SoftmaxBaseLoss", "SigmoidBaseLoss",
+__all__ = ["SoftmaxBaseLoss", "SigmoidBaseLoss",
            "SoftmaxCohenKappaLoss", "SoftmaxFocalLoss", "SoftmaxMixFocalLoss", "SoftmaxCrossEntropyLoss",
            "SigmoidCrossEntropyLoss", "SigmoidFocalLoss",
            "SmoothL1Loss", "RegressionIouLoss",
@@ -23,4 +23,4 @@ __all__ = ("SoftmaxBaseLoss", "SigmoidBaseLoss",
            "MILApproxUnaryBaselinePosGeneralizedNegSigmoidLoss",
            "MILUnaryParallelSigmoidLoss", "MILApproxUnaryParallelSigmoidLoss",
            "MILApproxUnaryPolarSigmoidLoss",
-           "MILUnaryBboxPosGeneralizedNegSigmoidLoss", "MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss")
+           "MILUnaryBboxPosGeneralizedNegSigmoidLoss", "MILApproxUnaryBboxPosGeneralizedNegSigmoidLoss"]

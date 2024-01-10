@@ -1,4 +1,4 @@
-__all__ = ("sigmoid_accuracy")
+__all__ = ["sigmoid_accuracy"]
 
 
 def sigmoid_accuracy(ytrue, ypred, threshold=0.5, return_average=True):
@@ -9,6 +9,9 @@ def sigmoid_accuracy(ytrue, ypred, threshold=0.5, return_average=True):
         ypred (Tensor): prediction.
         threshold (float): threshold of the sigmoid output. Default is 0.5.
         return_average (bool): whether to average among samples.
+
+    Returns:
+        Tensor: accuray value.
     """
     assert ytrue.shape == ypred.shape
     assert ytrue.dim() == 2

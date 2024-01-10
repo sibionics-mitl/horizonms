@@ -17,6 +17,8 @@ from .early_stop import EarlyStopping
 from .base import CheckpointMetric, save_checkpoints_update
 
 
+__all__ = ["Trainer"]
+
 class Trainer():
     r"""model traning class.
 
@@ -73,10 +75,22 @@ class Trainer():
         self.summary = {'epoch': []}
 
     def set_lr_scheduler(self, lr_scheduler, lr_scheduler_metric):
+        r"""Set lr scheduler and whether validation loss is used for lr update.
+
+        Args:
+            lr_scheduler (float): lr scheduler.
+            lr_scheduler_metric (bool): if True, update lr scheduler based on validation loss.
+
+        """
         self.lr_scheduler = lr_scheduler
         self.lr_scheduler_metric = lr_scheduler_metric
 
     def get_warmup_lr_scheduler(self, warmup_epochs):
+        r"""Set warmup scheduler for lr scheduler.
+
+        Args:
+            warmup_epochs: number of epochs for lr warmup.
+        """
         warmup_factor = 1. / 1000
         warmup_iters = min(1000, warmup_epochs * len(self.train_loader) - 1)
         self.lr_scheduler_warmup = warmup_lr_scheduler(self.optimizer, warmup_iters, warmup_factor)
@@ -99,15 +113,15 @@ class Trainer():
     def train(self, sub_epoch=1, epoch_per_save=1, epoch_save_start=0,
             save_checkpoints=[CheckpointMetric(name='save_all', mode='all')],
             clipnorm=0.001, print_freq=20):
-        r"""model training. An 'equivalent epoch' is defined during training, which is 
-        used as the unit for the number of training iterations. 'Equivalent epoch' is 
-        especially useful when the dataset is small.
+        r"""Model training. An 'equivalent epoch' is defined during training, which is 
+        used as the unit for the number of iterations during training. 'Equivalent epoch'
+        is especially useful when the dataset is small. 
 
         Args:
-            sub_epoch (int): equivalent epoch. Default: 1.
+            sub_epoch (int): number of epochs for equivalent epoch. Default: 1.
             epoch_per_save (int): save model in each `epoch_per_save` equivalent epochs. Default: 1.
             epoch_save_start (int): save model after `epoch_save_start` equivalent epochs. Default: 0.
-            save_checkpoints (List[CheckpointMetric]): determine which checkpoints are saved.
+            save_checkpoints (List[CheckpointMetric]): list of optimal metrics for checkpoint.
                 Default: `[CheckpointMetric(name='save_all', mode='all')]`.
             clipnorm (float): clip norm. Default: 0.001.
             print_freq (int): print training information in each `print_freq` iterations.
@@ -177,12 +191,15 @@ class Trainer():
         print("Training done")
 
     def train_one_epoch(self, epoch, clipnorm=0.001, print_freq=50):
-        r"""model training, one epoch of iterations are achieved. 
+        r"""Model training, the model is trained one epoch of iterations. 
 
         Args:
             epoch (int): index of epoch.
             clipnorm (float): clip norm. Default: 0.001.
             print_freq (int): print training information in each `print_freq` iterations.
+        
+        Returns:
+            MetricLogger: metric logger for training subset.
         """
         time.sleep(2)  # Prevent possible deadlock during epoch transition
         self.model.train()
@@ -233,7 +250,10 @@ class Trainer():
 
     @torch.no_grad()
     def evaluate_one_epoch(self):
-        r"""model evaluation. 
+        r"""Model evaluation using validation subset. 
+
+        Returns:
+            MetricLogger: metric logger for validation subset.
         """
         n_threads = torch.get_num_threads()
         metric_logger = MetricLogger(delimiter="  ")

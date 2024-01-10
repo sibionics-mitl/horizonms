@@ -1,3 +1,4 @@
+# Codes are modified from https://github.com/open-mmlab/mmengine/blob/main/mmengine/registry/registry.py. 
 # Copyright (c) OpenMMLab. All rights reserved.
 import inspect
 import warnings

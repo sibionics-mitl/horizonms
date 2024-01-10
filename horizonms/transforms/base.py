@@ -1,10 +1,11 @@
+# Part codes are borrowed from torchvision.
 import torch
 from torch import Tensor
 import numpy as np
 from typing import Tuple, Any, Union, List
 
 
-__all__ = ("TargetStructure", "Compose", "ToTensor")
+__all__ = ["TargetStructure", "Compose", "ToTensor"]
 
 
 class TargetStructure(object):
@@ -46,6 +47,11 @@ class TargetStructure(object):
 
 
 class Compose(object):
+    """Composes several transforms together. 
+
+    Args:
+        transforms (list of Transform objects): list of transforms to compose.
+    """
     def __init__(self, transforms):
         self.transforms = transforms
 
@@ -65,7 +71,7 @@ class Compose(object):
 
 
 class ToTensor(object):
-    r"""Converts image and/or target into Pytorch Tensor.
+    r"""Convert image and/or target into Pytorch Tensor.
 
     Args:
         dtype (str): type of image. It is `'uint8'` or `'float'`.

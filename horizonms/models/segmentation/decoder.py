@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 
-__all__ = ("UnetSimpleDecoder")
+__all__ = ["UnetSimpleDecoder"]
 
 
 class UnetSimpleDecoder(nn.Module):

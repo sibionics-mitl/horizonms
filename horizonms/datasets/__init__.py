@@ -7,10 +7,10 @@ from .promise import PromiseSegmentation
 from .atlas import AtlasSegmentation
 
 
-__all__ = ("BaseDataset","DataLoaderIter", "TrainDataLoaderIter", "ValidDataLoaderIter",
+__all__ = ["BaseDataset","DataLoaderIter", "TrainDataLoaderIter", "ValidDataLoaderIter",
            "EyePACSClassification", "eyepacs_preprocessing", "EyePACSClassificationPng",
            "ImageNetClassification",
            "VOCBase", "VOCSegmentation", "VOCDetection",
            "PromiseSegmentation",
            "AtlasSegmentation"
-)
+]

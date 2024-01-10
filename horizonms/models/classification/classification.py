@@ -5,7 +5,7 @@ from .classification_base import BaseClassification, get_classification_net
 from ...builder import build_losses_list, build_metrics_list, build_transforms, MODELS
 
 
-__all__ = ("Classification")
+__all__ = ["Classification"]
 
 
 @MODELS.register_module()
@@ -39,6 +39,14 @@ class Classification(BaseClassification):
             self.metric_funcs = None
 
     def calculate_loss(self, kwargs_opt, loss_func, loss_w, index_head=None):
+        """Calculate a loss for a head of the model.
+
+        Args:
+            kwargs_opt (Dict): input of loss calculation.
+            loss_func (Callable): loss function.
+            loss_w (float): loss weight.
+            index_head (int): index of the head under consideration when multiple heads are present. Default: `None`.
+        """
         loss_keys = loss_func.__call__.__code__.co_varnames
         loss_params = {key:kwargs_opt[key] for key in kwargs_opt.keys() if key in loss_keys}
         loss_v = loss_func(**loss_params)*loss_w
@@ -81,6 +89,13 @@ class Classification(BaseClassification):
         return losses
 
     def calculate_metric(self, kwargs_opt, metric_func, index_head=None):
+        """Calculate a metric for a head of the model.
+
+        Args:
+            kwargs_opt (Dict): input of metric calculation.
+            metric_func (Callable): function for an evaluation metric.
+            index_head (int): index of the head under consideration when multiple heads are present. Default: `None`.
+        """
         metric_keys = metric_func.__call__.__code__.co_varnames
         metric_params = {key:kwargs_opt[key] for key in kwargs_opt.keys() if key in metric_keys}
         metric_v = metric_func(**metric_params)

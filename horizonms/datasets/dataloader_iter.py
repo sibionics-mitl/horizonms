@@ -1,8 +1,7 @@
-"""
-codes borrowed from: https://github.com/davidtvs/pytorch-lr-finder
-"""
+# codes borrowed from: https://github.com/davidtvs/pytorch-lr-finder
 
-__all__ = ("DataLoaderIter", "TrainDataLoaderIter", "ValidDataLoaderIter")
+
+__all__ = ["DataLoaderIter", "TrainDataLoaderIter", "ValidDataLoaderIter"]
 
 
 class DataLoaderIter(object):
