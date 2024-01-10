@@ -26,6 +26,12 @@ class BaseDetection(BaseModel, ABC):
         self.batch_transforms = batch_transforms
 
     def preprocessing_input(self, images, targets=None):
+        """Preprocessing images and targets such that they can be used by the model.
+
+        Args:
+            images (List[Tensor]): list of images.
+            targets (Dict): list of targets. Default: `None`.
+        """
         if self.batch_image is not None:
             images, targets = self.batch_image(images, targets)
         if self.batch_transforms is not None:

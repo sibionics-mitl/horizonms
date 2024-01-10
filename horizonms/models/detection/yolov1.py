@@ -71,12 +71,10 @@ class YOLOv1(nn.Module):
         # self.initialize_weights()
 
     def forward(self, x):
-        """
-        x = (classification, confidence, txtytwth)
-        classification, [B, num_classes, H, W]
-        confidence, [B, num_boxes, H, W]
-        bboxes, [B, 4*num_boxes, H, W]
-        """
+        # x = (classification, confidence, txtytwth)
+        # classification, [B, num_classes, H, W]
+        # confidence, [B, num_boxes, H, W]
+        # bboxes, [B, 4*num_boxes, H, W]
         x = self.backbone(x)
         if self.neck is not None:
             x = self.neck(x)
