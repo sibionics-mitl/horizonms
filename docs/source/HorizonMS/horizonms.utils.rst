@@ -1,14 +1,6 @@
 horizonms.utils
 =======================
 
-horizonms.utils.config 
------------------------------
-
-.. automodule:: horizonms.utils.config
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 horizonms.utils.misc 
 ---------------------------
 
@@ -17,7 +9,7 @@ horizonms.utils.misc
    :undoc-members:
    :show-inheritance:
 
-horizonms.utils.pd\_utils 
+horizonms.utils.pd_utils 
 --------------------------------
 
 .. automodule:: horizonms.utils.pd_utils
@@ -41,10 +33,4 @@ horizonms.utils.summary
    :undoc-members:
    :show-inheritance:
 
-horizonms.utils.training\_utils 
---------------------------------------
 
-.. automodule:: horizonms.utils.training_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
