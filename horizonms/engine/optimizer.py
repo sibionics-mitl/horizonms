@@ -1,7 +1,10 @@
 from torch import nn
 import torch
 from torch.optim import Optimizer
-from collections import Iterable
+try:
+    from collections.abc import Iterable
+except:
+    from collections import Iterable
 
 
 def add_weight_decay(model, decay_value, skip_list=()):

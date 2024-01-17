@@ -22,7 +22,7 @@ class ClassificationPoolingNecks(nn.Module):
     ) -> None:
         super().__init__()
         assert pool in ['avg', 'max']
-        if pool == 'average':
+        if pool == 'avg':
             self.pool = nn.AdaptiveAvgPool2d(1)
         else:
             self.pool = nn.AdaptiveMaxPool2d(1)
