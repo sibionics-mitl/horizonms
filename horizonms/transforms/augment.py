@@ -56,15 +56,16 @@ SUPPORT_OPERATORS_EXTRA = [
     "CVRandomPosterize", "CVRandomSolarize", "CVRandomAutoContrast", "CVRandomEqualize", "CVRandomInvert",
     "CVRandomGaussianBlur", "CVRandomGaussianNoise", "CVRandomLighting", 
     # spatial
-    "RandomResizedCrop", "RandomMaskCrop",        
+    "RandomResizedCrop", "RandomMaskCrop",
     "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
     "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate",
-    "RandomScale",
+    "RandomScale", "RandomCrop",
     # spatial_cv
     "CVRandomResizedCrop", "CVRandomCrop", 
     "CVRandomScale", "CVRandomShift",
     "CVRandomShearX", "CVRandomShearY", "CVRandomTranslateX", "CVRandomTranslateY", 
     "CVRandomCropX", "CVRandomCropY", "CVRandomFliplr", "CVRandomFlipud", "CVRandomRotate",
+	"CVRandomMaskCrop",
     # other augment
     "CustomizedTrivialAugment", "HorizonmsTrivialAugment",
     # batch transforms

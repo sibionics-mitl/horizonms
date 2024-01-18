@@ -15,12 +15,12 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
     # dataset
     # -----------------------------------------------------------------------------
     dataset = dict(
-                root_path='/data1/home/panxc/wsis/data/voc',
+                root_path='data/voc',
                 name='voc', image_type='float', keep_difficult=False,
-                train_years=['2012'], test_years=['2012'],
+                train_years=['2007','2012'], test_years=['2007'],
                 # train_sets=["train", "train"], #
-                train_sets=["train"], 
-                test_sets=['val'])
+                train_sets=["trainval", "all"], 
+                test_sets=['test'])
     _C['dataset_params'] = dataset
 
     # -----------------------------------------------------------------------------
@@ -60,10 +60,7 @@ def get_experiment_config(net_name='YOLOv1', scheduler='MultiStepLR', optimizer=
     net_params['name'] = net_name
     if net_name == 'YOLOv1':
         backbone = dict(name='resnet_backbone', backbone_name='resnet50',
-            input_dim=3, return_stages=1,
-            #   pretrained=True
-             pretrained='imagenet'
-            )
+            input_dim=3, return_stages=1, pretrained='imagenet')
         neck = dict(name='BottlenetNeck', in_channels=2048, out_channels=256,
             stride=1, expansion=1)
         head = dict(name='Yolov1Head', in_channels=256, num_classes=20, num_boxes=2, prior=0.5)

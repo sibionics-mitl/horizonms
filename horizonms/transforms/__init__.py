@@ -21,14 +21,15 @@ from .spatial import (SpatialBase, ShearX, ShearY, TranslateX, TranslateY, \
            Resize, ResizeWidth, RandomResizedCrop, RandomMaskCrop, \
            ImagePadding, ImageHeightPaddingOrCrop, \
            RandomShearX, RandomShearY, RandomTranslateX, RandomTranslateY, \
-           RandomCropX, RandomCropY, RandomFliplr, RandomFlipud, RandomRotate, RandomScale
+           RandomCropX, RandomCropY, RandomFliplr, RandomFlipud, RandomRotate, RandomScale, \
+           RandomCrop
            )
 from .spatial_cv import (CVSpatialBase, CVShearX, CVShearY, CVTranslateX, CVTranslateY,\
            CVCropX, CVCropY, CVFliplr, CVFlipud, CVRotate, CVScale, \
            CVResize, CVResizeWidth, CVRandomResizedCrop, CVRandomCrop, \
            CVImagePadding, CVRandomShift, CVRandomShearX, CVRandomShearY,\
            CVRandomTranslateX, CVRandomTranslateY, CVRandomCropX, CVRandomCropY,\
-           CVRandomFliplr, CVRandomFlipud, CVRandomRotate, CVRandomScale
+           CVRandomFliplr, CVRandomFlipud, CVRandomRotate, CVRandomScale, CVRandomMaskCrop
            )
 from .batch_transforms import ToOnehotLabels, Mixup, SoftmaxLabelSmoothing, SigmoidLabelSmoothing
 
@@ -60,7 +61,7 @@ __all__ = [# trivalaugment
            "ImagePadding", "ImageHeightPaddingOrCrop",          
            "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
            "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate",
-           'Scale', 'RandomScale',
+           'Scale', 'RandomScale', 'RandomCrop',
            # spatial_cv
            "CVSpatialBase", "CVShearX", "CVShearY", "CVTranslateX", "CVTranslateY", 
            "CVCropX", "CVCropY", "CVFliplr", "CVFlipud", "CVRotate",
@@ -68,7 +69,7 @@ __all__ = [# trivalaugment
            "CVImagePadding","CVRandomShift",
            "CVRandomShearX", "CVRandomShearY", "CVRandomTranslateX", "CVRandomTranslateY", 
            "CVRandomCropX", "CVRandomCropY", "CVRandomFliplr", "CVRandomFlipud", "CVRandomRotate",
-           "CVScale", "CVRandomScale",
+           "CVScale", "CVRandomScale", "CVRandomMaskCrop",
            # batch_transform
            "ToOnehotLabels", "Mixup", "SoftmaxLabelSmoothing", "SigmoidLabelSmoothing",
 ]
