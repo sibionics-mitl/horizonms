@@ -1333,48 +1333,63 @@ class CVRandomScale(CVSpatialBase):
 
 @TRANSFORMS.register_module()
 class CVResize(CVSpatialBase):
-    def __init__(self, size, interpolation='cv2.INTER_LINEAR'):
-        self.image_size = size
-        self.interpolation = eval(interpolation)
+    def __init__(self, size, interpolation=cv2.INTER_LINEAR, max_size=None):
+        assert isinstance(size, int) or (isinstance(size, tuple) and len(size) == 2) or (
+                isinstance(size, list) and len(size) == 2)
+        self.resize_w_short_side = False
+        if isinstance(size, int):
+            assert size > 0
+            size = (size, size)
+        else:
+            assert size[0] > 0 and (size[1] > 0 or size[1] == -1)
+            if size[1] == -1:
+                self.resize_w_short_side = True
+
+        self.size = size
+        self.interpolation = interpolation
+        self.max_size = max_size
+        self.ignore_resize = False
 
     def calculate_image(self, image):
-        height, width = image.shape[:2]
-        self.image_size_org = (height, width)
-        image = cv2.resize(image, (self.image_size[1],self.image_size[0]), interpolation=self.interpolation)
-        if len(image.shape) == 2:
-            image = image[..., None]
+        h, w = image.shape[:2]
+        self.image_size = (h, w)
+        if self.resize_w_short_side:
+            short_side = self.size[0]
+            if (w <= h and w == short_side) or (h <= w and h == short_side):
+                self.ignore_resize = True
+            else:
+                if w < h:
+                    width = short_side
+                    height = int(short_side * h / w)
+                else:
+                    height = short_side
+                    width = int(short_side * w / h)
+        else:
+            height, width = self.size
+        self.size_sel = (height, width)
+        if not self.ignore_resize:
+            image = cv2.resize(image, (width, height), interpolation=self.interpolation)
+        self.image_size_resize = image.shape[:2]
         return image
 
     def calculate_target(self, target):
-        height, width = self.image_size_org
-        ratio_height = self.image_size[0] / height
-        ratio_width = self.image_size[1] / width
-        for key, value in target.items():
-            if value.type not in ['masks', 'bboxes', 'points']:
-                continue
-            value_resize = value.value.copy()
-            if value.type == 'masks':
-                if value.islist:
-                    value_resize = [cv2.resize(v, (self.image_size[1],self.image_size[0]),
-                                               interpolation=self.interpolation) for v in value_resize
-                                    if (v.shape[0] == height) & (v.shape[1] == width)]
-                    if len(value_resize[0].shape) == 2:
-                        value_resize = [v[..., None] for v in value_resize]
-                else:
-                    value_resize = cv2.resize(value_resize, (self.image_size[1],self.image_size[0]),
-                                              interpolation=self.interpolation)
-                    if len(value_resize.shape) == 2:
-                        value_resize = value_resize[..., None]
-
-            elif value.type == 'points':
-                value_resize[:, 0] = value_resize[:, 0] * ratio_width
-                value_resize[:, 1] = value_resize[:, 1] * ratio_height
-            elif value.type == 'bboxes':
-                value_resize[:, [0, 2]] = value_resize[:, [0, 2]] * ratio_width
-                value_resize[:, [1, 3]] = value_resize[:, [1, 3]] * ratio_height
-
-            value.value = value_resize
-            target[key] = value
+        if not self.ignore_resize:
+            height, width = self.size_sel
+            for key, value in target.items():
+                if value.type not in ['masks', 'bboxes', 'points']:
+                    continue
+                if value.type == 'masks':
+                    if value.islist:
+                        value_resize = [cv2.resize(v, (width, height), interpolation=self.interpolation) for v in
+                                        value.value]
+                    else:
+                        value_resize = cv2.resize(value.value, (width, height), interpolation=self.interpolation)
+                elif value.type == 'points':
+                    value_resize = _resize_keypoints_cv(value.value, self.image_size, self.image_size_resize)
+                elif value.type == 'bboxes':
+                    value_resize = _resize_bboxes_cv(value.value, self.image_size, self.image_size_resize)
+                value.value = value_resize
+                target[key] = value
         return target
 
     def __repr__(self):
