@@ -273,7 +273,7 @@ sequentialaugment = dict(
 
         # spatial.py
         # dict(name='RandomResizedCrop', size=(500, 800))
-        # dict(name='RandomCrop', crop_size=300, prob=0.5, mask_type='masks', obj_labels=1)  # 会报错未解决
+        # dict(name='RandomCrop', crop_size=300, prob=0.5, mask_type='masks', obj_labels=1)
         # dict(name='RandomShearX', prob=1, shear_degree=30)
         # dict(name='RandomShearY', prob=1, shear_degree=(-30, 30))
         # dict(name='RandomTranslateX', prob=1, translate_ratio=(0, 1))

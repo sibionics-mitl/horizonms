@@ -212,7 +212,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--n_exp', default=1, type=int,
                         help='the index of experiments')
+    parser.add_argument('--world-size', default=0, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist-url', default='env://',
+                        help='url used to set up distributed training')
     args = parser.parse_args()
+
+    utils.init_distributed_mode(args)
 
     torch.backends.cudnn.benchmark = True
     torch.multiprocessing.set_sharing_strategy('file_system')
@@ -271,7 +277,7 @@ if __name__ == "__main__":
     dir_save = None
     if dir_save is not None:
         os.makedirs(dir_save, exist_ok=True)
-    ytrues, ypreds = detection_evaluation(model, data_loader_test, device, dataset.voc_classes, dir_save)
+    ytrues, ypreds = detection_evaluation(model, data_loader_test, device, dataset_test.voc_classes, dir_save)
     results = voc_eval(ypreds, ytrues, dataset_test.voc_classes)
     file_name = os.path.join(output_dir, "results_summary.txt")
     with open(file_name, 'w') as fp:

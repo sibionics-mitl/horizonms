@@ -15,7 +15,8 @@ __all__ = ["SpatialBase", "ShearX", "ShearY", "TranslateX", "TranslateY",
            "Resize", "ResizeWidth", "RandomResizedCrop", "RandomMaskCrop",
            "ImagePadding", "ImageHeightPaddingOrCrop",
            "RandomShearX", "RandomShearY", "RandomTranslateX", "RandomTranslateY",
-           "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate", "RandomScale"
+           "RandomCropX", "RandomCropY", "RandomFliplr", "RandomFlipud", "RandomRotate", "RandomScale",
+           "RandomCrop",
 ]
 
 
@@ -1784,4 +1785,69 @@ class ImageHeightPaddingOrCrop(SpatialBase):
 
     def __repr__(self):
         repr_str = self.__class__.__name__
+        return repr_str
+
+
+@TRANSFORMS.register_module()
+class RandomCrop(SpatialBase):
+    """Randomly crop image.
+
+    Args:
+        crop_ratio (float): croping size.
+        prob (float): The probability of cropping image.
+    """
+
+    def __init__(self, prob=0.5, crop_ratio=0.6):
+        super().__init__()
+        self.prob = prob  # prob to crop from object region
+        self.crop_ratio = crop_ratio
+
+    def calculate_image(self, image):
+        self.randomness = False
+        if random.random() < self.prob:
+            self.randomness = True
+            height, width = image.shape[-2:]
+            self.image_size = (height, width)
+            h = random.uniform(self.crop_ratio * height, height)
+            w = random.uniform(self.crop_ratio * width, width)
+            x = random.uniform(0, width - w)
+            y = random.uniform(0, height - h)
+            x, y, h, w = int(x), int(y), int(h), int(w)
+            self.crop_sel = (x, y, h, w)
+            image = image[:, y:y + h, x:x + w]
+        return image
+
+    def calculate_target(self, target):
+        if self.randomness:
+            x, y, h, w = self.crop_sel
+            height, width = self.image_size
+            for key, value in target.items():
+                if value.type not in ['masks', 'bboxes', 'points']:
+                    continue
+                value_crop = value.value
+                if value.type == 'masks':
+                    value_crop = value_crop[:, y:y + h, x:x + w]
+                elif value.type == 'points':
+                    value_crop[:, 0] = value_crop[:, 0] - x
+                    value_crop[:, 1] = value_crop[:, 1] - y
+                    flag1 = (value_crop[:, 0] >= 0) & (value_crop[:, 0] <= w - 1)
+                    flag2 = (value_crop[:, 1] >= 0) & (value_crop[:, 1] <= h - 1)
+                    value_crop = value_crop[flag1 & flag2, :]
+                elif value.type == 'bboxes':
+                    value_crop[:, [0, 2]] = value_crop[:, [0, 2]] - x
+                    value_crop[:, [1, 3]] = value_crop[:, [1, 3]] - y
+                    value_crop[:, [0, 2]] = value_crop[:, [0, 2]].clip(0, w)
+                    value_crop[:, [1, 3]] = value_crop[:, [1, 3]].clip(0, h)
+                    flag = (value_crop[:, 2] - value_crop[:, 0] > 1) & (value_crop[:, 3] - value_crop[:, 1] > 1)
+                    value_crop = value_crop[flag, :]
+                value.value = value_crop
+                target[key] = value
+        return target
+
+    def __repr__(self):
+        repr_str = self.__class__.__name__
+        repr_str += f'(crop_size={self.crop_size}, '
+        repr_str += f'(prob={self.prob}, '
+        repr_str += f'(mask_type={self.mask_type}, '
+        repr_str += f'(obj_labels={self.obj_labels})'
         return repr_str
