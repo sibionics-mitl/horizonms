@@ -132,7 +132,7 @@ if __name__ == "__main__":
         train_params = _C['train_params']
         data_params = _C['data_params']
         model_params = _C['model_params']
-        dataset_params = _C['dataset']
+        dataset_params = _C['dataset_params']
         save_params = _C['save_params']
 
         device = torch.device(_C['device'])      
@@ -161,10 +161,10 @@ if __name__ == "__main__":
         
         file_2d = os.path.join(output_dir,'dice_2d.xlsx')
         file_3d = os.path.join(output_dir,'dice_3d.xlsx')
-        # if os.path.exists(file_2d):
-        #     os.remove(file_2d)
-        # if os.path.exists(file_3d):
-        #     os.remove(file_3d)
+        if os.path.exists(file_2d):
+            os.remove(file_2d)
+        if os.path.exists(file_3d):
+            os.remove(file_3d)
         for epoch in range(50):
             model_file = 'model_{:02d}'.format(epoch)
             print('loading model {}.pth'.format(model_file))

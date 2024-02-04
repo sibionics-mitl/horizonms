@@ -116,7 +116,7 @@ class PromiseSegmentation(BaseDataset):
             blob_mask = blobs == b
             obj_seg.append(blob_mask)
 
-            assert blob_mask.dtype == np.bool, blob_mask.dtype
+            assert blob_mask.dtype == np.bool_, blob_mask.dtype
             coords = np.argwhere(blob_mask)
             x1, y1 = coords.min(axis=0)
             x2, y2 = coords.max(axis=0)
