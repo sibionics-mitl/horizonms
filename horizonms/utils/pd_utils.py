@@ -35,8 +35,6 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
     if 'engine' in to_excel_kwargs:
         to_excel_kwargs.pop('engine')
 
-    writer = pd.ExcelWriter(filename, engine='openpyxl')
-
     # # Python 2.x: define [FileNotFoundError] exception if it doesn't exist 
     # try:
     #     FileNotFoundError
@@ -46,6 +44,7 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
 
     try:
         # try to open an existing workbook
+        writer = pd.ExcelWriter(filename, engine='openpyxl', mode='a', if_sheet_exists='replace')
         writer.book = load_workbook(filename)
         
         # get the last row in the existing Excel sheet
@@ -63,10 +62,10 @@ def append_df_to_excel(filename, df, sheet_name='Sheet1', startrow=None,
             writer.book.create_sheet(sheet_name, idx)
         
         # copy existing sheets
-        writer.sheets = {ws.title:ws for ws in writer.book.worksheets}
+        writer.sheets.update({ws.title:ws for ws in writer.book.worksheets})
     except FileNotFoundError:
         # file does not exist yet, we will create it
-        pass
+        writer = pd.ExcelWriter(filename, engine='openpyxl', mode='w')
 
     if startrow is None:
         startrow = 0

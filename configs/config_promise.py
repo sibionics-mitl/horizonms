@@ -36,7 +36,7 @@ def get_experiment_config(optimizer='Adam', scheduler='ReduceLROnPlateau'):
     )
     losses = [dict(name='MILUnarySigmoidLoss', mode='all', focal_params=dict(alpha=0.25, gamma=2.0, sampling_prob=1.0), loss_weight=1.0),
               dict(name='MILPairwiseLoss', softmax=False, exp_coef=-1, loss_weight=10.0)]
-    _C['model_params'] = dict(net_params=net_params, loss_params=losses)
+    _C['model_params'] = dict(name='BboxSegmentation', net_params=net_params, loss_params=losses)
 
     # -----------------------------------------------------------------------------
     # model training
